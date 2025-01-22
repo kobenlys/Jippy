@@ -10,5 +10,4 @@ public class JippyApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(JippyApplication.class, args);
 	}
-
 }
