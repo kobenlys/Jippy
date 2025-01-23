@@ -10,7 +10,6 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class CreateProductRequest {
-    private Long id;
     private Integer productCategoryId;
     private Integer storeId;
     private String name;
