@@ -2,7 +2,7 @@ package com.hbhw.jippy.domain.user.enumeration;
 
 import lombok.Getter;
 
-import java.util.Arrays;
+import java.util.Objects;
 
 @Getter
 public enum StaffType {
@@ -15,6 +15,11 @@ public enum StaffType {
     }
 
     public static StaffType ofLegacyCode(Integer code) {
-        return Arrays.stream(StaffType.values()).filter(type -> type.getCode().equals(code)).findFirst().orElseThrow(() -> new IllegalArgumentException("Invalid staff type code: " + code));
+        for (StaffType type : StaffType.values()) {
+            if (Objects.equals(code, type.getCode())) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException("Invalid staff type code: " + code);
     }
 }

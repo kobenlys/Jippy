@@ -4,22 +4,23 @@ import com.hbhw.jippy.domain.user.enumeration.StaffType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
-import java.util.Optional;
+import java.util.Objects;
 
 @Converter(autoApply = true)
 public class StaffTypeConverter implements AttributeConverter<StaffType, Integer> {
     @Override
     public Integer convertToDatabaseColumn(StaffType type) {
-        return Optional.ofNullable(type)
-                .map(StaffType::getCode)
-                .orElseThrow(() -> new IllegalArgumentException("StaffType cannot be null"));
+        if (!Objects.isNull(type)) {
+            return type.getCode();
+        }
+        throw new IllegalArgumentException("StaffType cannot be null!");
     }
 
     @Override
     public StaffType convertToEntityAttribute(Integer code) {
-        if (code == null) {
-            throw new IllegalArgumentException("StaffType code cannot be null");
+        if (!Objects.isNull(code)) {
+            return StaffType.ofLegacyCode(code);
         }
-        return StaffType.ofLegacyCode(code);
+        throw new IllegalArgumentException("StaffType code cannot be null!");
     }
 }
