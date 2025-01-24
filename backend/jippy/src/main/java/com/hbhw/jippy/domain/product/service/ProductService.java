@@ -1,29 +1,33 @@
 package com.hbhw.jippy.domain.product.service;
 
 import com.hbhw.jippy.domain.product.dto.request.CreateProductRequest;
+import com.hbhw.jippy.domain.product.dto.request.ProductUpdateRequest;
+import com.hbhw.jippy.domain.product.dto.response.ProductDetailResponse;
 import com.hbhw.jippy.domain.product.dto.response.ProductListResponse;
 import com.hbhw.jippy.domain.product.entity.Product;
 import com.hbhw.jippy.domain.product.mapper.ProductMapper;
 import com.hbhw.jippy.domain.product.repository.ProductRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Service
 public class ProductService {
 
     private final ProductRepository productRepository;
-    private final ProductMapper productMapper;
 
-    public ProductService(ProductRepository productRepository, ProductMapper productMapper) {
+    public ProductService(ProductRepository productRepository) {
         this.productRepository = productRepository;
-        this.productMapper = productMapper;
     }
 
     public void createProduct(CreateProductRequest createProductRequest) {
         Product product = Product.builder()
+                .storeId(createProductRequest.getStoreId())
                 .productCategoryId(createProductRequest.getProductCategoryId())
+                .name(createProductRequest.getName())
                 .storeId(createProductRequest.getStoreId())
                 .price(createProductRequest.getPrice())
                 .productStatus(createProductRequest.getProductStatus())
@@ -46,5 +50,45 @@ public class ProductService {
                 .map(ProductMapper::convertProductListResponse)
                 .toList();
     }
+
+    public ProductDetailResponse getDetailProduct(Integer storeId, Long productId){
+        Product productEntity = getProduct(storeId, productId);
+
+        return ProductDetailResponse.builder()
+                .id(productEntity.getId())
+                .name(productEntity.getName())
+                .productStatus(productEntity.getProductStatus())
+                .productCategoryId(productEntity.getProductCategoryId())
+                .image(productEntity.getImage())
+                .price(productEntity.getPrice())
+                .productType(productEntity.getProductType())
+                .size(productEntity.getSize())
+                .build();
+    }
+
+    @Transactional
+    public void modifyProduct(Integer storeId, Long productId, ProductUpdateRequest productUpdateRequest){
+        Product productEntity = getProduct(storeId, productId);
+
+        productEntity.setProductCategoryId(productUpdateRequest.getProductCategoryId());
+        productEntity.setProductStatus(productUpdateRequest.getProductStatus());
+        productEntity.setImage(productUpdateRequest.getImage());
+        productEntity.setName(productUpdateRequest.getName());
+        productEntity.setPrice(productUpdateRequest.getPrice());
+        productEntity.setProductType(productUpdateRequest.getProductType());
+        productEntity.setSize(productUpdateRequest.getSize());
+    }
+
+    public void deleteProduct(Integer storeId, Long productId){
+        Product productEntity = getProduct(storeId, productId);
+        productRepository.deleteByIdAndStoreId(storeId, productId);
+    }
+
+
+    public Product getProduct(Integer storeId, Long productId){
+        Optional<Product> product = productRepository.findByIdAndStoreId(productId, storeId);
+        return product.orElseThrow(() ->  new NoSuchElementException("존재하지 않는 상품입니다."));
+    }
+
 
 }

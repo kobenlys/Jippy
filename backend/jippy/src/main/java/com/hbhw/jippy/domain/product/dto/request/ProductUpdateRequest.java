@@ -1,16 +1,17 @@
-package com.hbhw.jippy.domain.product.dto.response;
+package com.hbhw.jippy.domain.product.dto.request;
 
 import com.hbhw.jippy.domain.product.domain.ProductStatus;
-import lombok.Builder;
+import com.hbhw.jippy.domain.product.domain.ProductType;
 import lombok.Getter;
+import lombok.ToString;
 
-@Builder
 @Getter
-public class ProductListResponse {
-    private Long id;
+public class ProductUpdateRequest {
     private Integer productCategoryId;
     private String name;
     private Integer price;
     private ProductStatus productStatus;
     private String image;
+    private ProductType productType;
+    private String size;
 }

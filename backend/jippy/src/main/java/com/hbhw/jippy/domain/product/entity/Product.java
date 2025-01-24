@@ -5,10 +5,7 @@ import com.hbhw.jippy.domain.product.domain.ProductType;
 import com.hbhw.jippy.utils.converter.ProductStatusConverter;
 import com.hbhw.jippy.utils.converter.ProductTypeConverter;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 
 @Entity
@@ -16,6 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 public class Product {
 
     @Id
