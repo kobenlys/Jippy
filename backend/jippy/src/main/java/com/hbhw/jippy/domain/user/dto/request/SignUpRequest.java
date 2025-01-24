@@ -23,5 +23,5 @@ public class SignUpRequest {
 
     @NotBlank(message = "생년월일은 필수입니다.")
     @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "생년월일은 yyyy-MM-dd 형식이어야 합니다.")
-    private String birthDate;
+    private String age;
 }

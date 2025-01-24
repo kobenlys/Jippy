@@ -23,7 +23,7 @@ public class UserFactory {
                     .email(request.getEmail())
                     .password(encodedPassword)
                     .name(request.getName())
-                    .birthDate(request.getBirthDate())
+                    .age(request.getAge())
                     .staffType(StaffType.점주)
                     .build();
 
@@ -31,7 +31,7 @@ public class UserFactory {
                     .email(request.getEmail())
                     .password(encodedPassword)
                     .name(request.getName())
-                    .birthDate(request.getBirthDate())
+                    .age(request.getAge())
                     .build();
         };
     }

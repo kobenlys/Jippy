@@ -1,7 +1,6 @@
 package com.hbhw.jippy.domain.user.service;
 
 import com.hbhw.jippy.domain.user.dto.request.SignUpRequest;
-import com.hbhw.jippy.domain.user.dto.response.SignUpResponse;
 import com.hbhw.jippy.domain.user.entity.BaseUser;
 import com.hbhw.jippy.domain.user.entity.UserOwner;
 import com.hbhw.jippy.domain.user.entity.UserStaff;
@@ -10,7 +9,6 @@ import com.hbhw.jippy.domain.user.factory.UserFactory;
 import com.hbhw.jippy.domain.user.repository.UserOwnerRepository;
 import com.hbhw.jippy.domain.user.repository.UserStaffRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,12 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserService {
     private final UserOwnerRepository userOwnerRepository;
-    private final PasswordEncoder passwordEncoder;
     private final UserFactory userFactory;
     private final UserStaffRepository userStaffRepository;
 
     @Transactional
-    public SignUpResponse signUp(SignUpRequest request, UserType userType) {
+    public void signUp(SignUpRequest request, UserType userType) {
         switch (userType) {
             case OWNER -> {
                 if (userOwnerRepository.existsByEmail(request.getEmail())) {
@@ -40,11 +37,9 @@ public class UserService {
 
         BaseUser newUser = userFactory.createUser(request, userType);
 
-        BaseUser savedUser = switch (userType) {
+        switch (userType) {
             case OWNER -> userOwnerRepository.save((UserOwner) newUser);
             case STAFF -> userStaffRepository.save((UserStaff) newUser);
-        };
-
-        return SignUpResponse.from(savedUser);
+        }
     }
 }

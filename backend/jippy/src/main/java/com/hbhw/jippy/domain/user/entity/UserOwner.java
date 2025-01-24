@@ -21,8 +21,8 @@ public class UserOwner extends BaseUser {
     private StaffType staffType;
 
     @Builder
-    public UserOwner(String email, String password, String name, String birthDate, StaffType staffType) {
-        super(email, password, name, birthDate);
+    public UserOwner(String email, String password, String name, String age, StaffType staffType) {
+        super(email, password, name, age);
         this.staffType = staffType;
     }
 }
