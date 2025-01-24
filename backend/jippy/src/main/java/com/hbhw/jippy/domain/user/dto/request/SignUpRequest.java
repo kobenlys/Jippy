@@ -21,6 +21,7 @@ public class SignUpRequest {
     @Size(min = 2, max = 50, message = "이름은 2자 이상 50자 이하여야 합니다.")
     private String name;
 
-    @NotNull(message = "나이는 필수입니다.")
-    private Integer age;
+    @NotBlank(message = "생년월일은 필수입니다.")
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "생년월일은 yyyy-MM-dd 형식이어야 합니다.")
+    private String birthDate;
 }

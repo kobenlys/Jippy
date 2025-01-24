@@ -1,4 +1,4 @@
-package com.hbhw.jippy.domain.user.converter;
+package com.hbhw.jippy.utils.converter;
 
 import com.hbhw.jippy.domain.user.enumeration.StaffType;
 import jakarta.persistence.AttributeConverter;

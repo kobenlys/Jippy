@@ -23,15 +23,15 @@ public class UserFactory {
                     .email(request.getEmail())
                     .password(encodedPassword)
                     .name(request.getName())
-                    .age(request.getAge())
-                    .staffType(StaffType.사장)
+                    .birthDate(request.getBirthDate())
+                    .staffType(StaffType.점주)
                     .build();
 
             case STAFF -> UserStaff.builder()
                     .email(request.getEmail())
                     .password(encodedPassword)
                     .name(request.getName())
-                    .age(request.getAge())
+                    .birthDate(request.getBirthDate())
                     .build();
         };
     }

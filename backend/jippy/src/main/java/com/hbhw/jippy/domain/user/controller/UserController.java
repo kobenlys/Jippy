@@ -1,6 +1,8 @@
 package com.hbhw.jippy.domain.user.controller;
 
+import com.hbhw.jippy.domain.user.dto.request.LoginRequest;
 import com.hbhw.jippy.domain.user.dto.request.SignUpRequest;
+import com.hbhw.jippy.domain.user.dto.response.LoginResponse;
 import com.hbhw.jippy.domain.user.dto.response.SignUpResponse;
 import com.hbhw.jippy.domain.user.enumeration.UserType;
 import com.hbhw.jippy.domain.user.service.UserService;
@@ -29,5 +31,11 @@ public class UserController {
     public ResponseEntity<SignUpResponse> staffSignUp(@RequestBody @Valid SignUpRequest request) {
         SignUpResponse response = userService.signUp(request, UserType.STAFF);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
+        LoginResponse response = userService.login(request);
+        return ResponseEntity.ok(response);
     }
 }

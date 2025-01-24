@@ -1,6 +1,6 @@
 package com.hbhw.jippy.domain.user.entity;
 
-import com.hbhw.jippy.domain.user.converter.StaffTypeConverter;
+import com.hbhw.jippy.utils.converter.StaffTypeConverter;
 import com.hbhw.jippy.domain.user.enumeration.StaffType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -21,8 +21,8 @@ public class UserOwner extends BaseUser {
     private StaffType staffType;
 
     @Builder
-    public UserOwner(String email, String password, String name, Integer age, StaffType staffType) {
-        super(email, password, name, age);
+    public UserOwner(String email, String password, String name, String birthDate, StaffType staffType) {
+        super(email, password, name, birthDate);
         this.staffType = staffType;
     }
 }

@@ -25,19 +25,17 @@ public abstract class BaseUser {
     @Column(nullable = false, length = 50)
     private String name;
 
-    @Column(nullable = false)
-    private Integer age;
+    @Column(name = "birth_date", nullable = false, length = 10)
+    private String birthDate;
 
     @Column(name = "created_at", nullable = false, length = 19)
     private String createdAt;
 
-    protected BaseUser(String email, String password, String name, Integer age) {
+    protected BaseUser(String email, String password, String name, String birthDate) {
         this.email = email;
         this.password = password;
         this.name = name;
-        this.age = age;
-
-        this.createdAt = LocalDateTime.now()
-                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        this.birthDate = birthDate;
+        this.createdAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 }
