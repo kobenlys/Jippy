@@ -1,10 +1,14 @@
 package com.hbhw.jippy.domain.feedback.repository;
 
+import com.hbhw.jippy.domain.feedback.entity.Category;
 import com.hbhw.jippy.domain.feedback.entity.Feedback;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
 
+    List<Feedback> findByStoreId(int storeId);
 
-
+    List<Feedback> findByStoreIdAndCategory(int storeId, Category category);
 }

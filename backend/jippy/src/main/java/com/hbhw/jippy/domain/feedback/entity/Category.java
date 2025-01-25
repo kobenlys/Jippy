@@ -1,31 +1,26 @@
 package com.hbhw.jippy.domain.feedback.entity;
 
-import java.util.Arrays;
+import lombok.Getter;
 
+@Getter
 public enum Category {
     SERVICE("1"),  // 서비스 관련
-    PRODUCT("2"),  // 제품 관련
-    ETC("3");      // 기타
+    PRODUCT("2"), // 제품 관련
+    ETC("3");     // 기타
 
-    private final String dbValue; // DB 컬럼에 저장될 실제 값
+    private final String value;
 
-    Category(String dbValue) {
-        this.dbValue = dbValue;
+    Category(String value) {
+        this.value = value;
     }
 
-    public String getDbValue() {
-        return dbValue;
-    }
-
-    /**
-     * DB에 저장된 문자열 코드로부터 Enum 객체를 찾는다.
-     * 매칭이 안될 경우 기본값으로 ETC를 리턴하거나
-     * 예외를 던지는 식으로 변경 가능.
-     */
-    public static Category fromDbValue(String dbValue) {
-        return Arrays.stream(Category.values())
-                .filter(c -> c.dbValue.equals(dbValue))
-                .findFirst()
-                .orElse(ETC);
+    // DB에서 가져온 string -> enum 변환
+    public static Category fromValue(String value) {
+        for (Category c : Category.values()) {
+            if (c.getValue().equals(value)) {
+                return c;
+            }
+        }
+        throw new IllegalArgumentException("Unknown category value: " + value);
     }
 }

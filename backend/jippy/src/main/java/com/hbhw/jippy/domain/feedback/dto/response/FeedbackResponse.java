@@ -7,8 +7,9 @@ import lombok.Getter;
 @Getter
 @Builder
 public class FeedbackResponse {
+
     private Long id;
-    private Integer storeId;
+    private int storeId;
     private Category category;
     private String content;
     private String createdAt;
