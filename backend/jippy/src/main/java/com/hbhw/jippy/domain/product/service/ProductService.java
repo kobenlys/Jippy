@@ -64,6 +64,7 @@ public class ProductService {
 
         return ProductDetailResponse.builder()
                 .id(productEntity.getId())
+                .storeId(storeId)
                 .name(productEntity.getName())
                 .productStatus(productEntity.getProductStatus())
                 .productCategoryId(productEntity.getProductCategoryId())
