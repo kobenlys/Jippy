@@ -1,9 +1,8 @@
 package com.hbhw.jippy.domain.product.dto.request;
 
-import com.hbhw.jippy.domain.product.domain.ProductStatus;
-import com.hbhw.jippy.domain.product.domain.ProductType;
+import com.hbhw.jippy.domain.product.enums.ProductStatus;
+import com.hbhw.jippy.domain.product.enums.ProductType;
 import lombok.Getter;
-import lombok.ToString;
 
 @Getter
 public class ProductUpdateRequest {

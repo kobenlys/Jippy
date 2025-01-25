@@ -1,7 +1,7 @@
 package com.hbhw.jippy.domain.product.entity;
 
-import com.hbhw.jippy.domain.product.domain.ProductStatus;
-import com.hbhw.jippy.domain.product.domain.ProductType;
+import com.hbhw.jippy.domain.product.enums.ProductStatus;
+import com.hbhw.jippy.domain.product.enums.ProductType;
 import com.hbhw.jippy.utils.converter.ProductStatusConverter;
 import com.hbhw.jippy.utils.converter.ProductTypeConverter;
 import jakarta.persistence.*;

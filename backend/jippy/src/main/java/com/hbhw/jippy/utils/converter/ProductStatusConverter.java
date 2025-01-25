@@ -1,7 +1,6 @@
 package com.hbhw.jippy.utils.converter;
 
-import com.hbhw.jippy.domain.product.domain.ProductStatus;
-import com.hbhw.jippy.domain.product.domain.ProductType;
+import com.hbhw.jippy.domain.product.enums.ProductStatus;
 import jakarta.persistence.AttributeConverter;
 
 import java.util.Objects;

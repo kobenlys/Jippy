@@ -1,6 +1,6 @@
 package com.hbhw.jippy.utils.converter;
 
-import com.hbhw.jippy.domain.product.domain.ProductType;
+import com.hbhw.jippy.domain.product.enums.ProductType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 

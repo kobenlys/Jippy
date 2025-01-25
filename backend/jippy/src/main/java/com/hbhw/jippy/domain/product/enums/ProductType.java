@@ -1,4 +1,4 @@
-package com.hbhw.jippy.domain.product.domain;
+package com.hbhw.jippy.domain.product.enums;
 
 import lombok.Getter;
 

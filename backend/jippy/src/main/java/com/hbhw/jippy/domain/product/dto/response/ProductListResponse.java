@@ -1,6 +1,6 @@
 package com.hbhw.jippy.domain.product.dto.response;
 
-import com.hbhw.jippy.domain.product.domain.ProductStatus;
+import com.hbhw.jippy.domain.product.enums.ProductStatus;
 import lombok.Builder;
 import lombok.Getter;
 
