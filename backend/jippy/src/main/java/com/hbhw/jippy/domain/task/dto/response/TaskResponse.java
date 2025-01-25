@@ -1,0 +1,19 @@
+package com.hbhw.jippy.domain.task.dto.response;
+
+import lombok.*;
+
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class TaskResponse {
+    private Long id;
+    private Integer storeId;
+    private Integer userStaffId;
+    private String title;
+    private String content;
+    private String createdAt;
+    private String author;
+    private boolean isComplete;
+}
