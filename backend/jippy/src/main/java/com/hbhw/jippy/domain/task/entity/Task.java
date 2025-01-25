@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Entity
-@Table(name = "tasks")
+@Table(name = "store_todo_list")
 @Getter
 @Setter
 @NoArgsConstructor
