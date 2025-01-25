@@ -17,6 +17,7 @@ import lombok.*;
 public class Product {
 
     @Id
+    @Column
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 

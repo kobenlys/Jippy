@@ -12,12 +12,12 @@ public enum ProductStatus {
     private Integer code;
 
     ProductStatus(Integer code) {
-    this.code = code;
+        this.code = code;
     }
 
-    public static ProductStatus ofLegacyCode(Integer code){
-        for(ProductStatus stat : ProductStatus.values()){
-            if(Objects.equals(code, stat.getCode())){
+    public static ProductStatus ofLegacyCode(Integer code) {
+        for (ProductStatus stat : ProductStatus.values()) {
+            if (Objects.equals(code, stat.getCode())) {
                 return stat;
             }
         }

@@ -23,6 +23,9 @@ public class ProductService {
         this.productRepository = productRepository;
     }
 
+    /**
+     * 상품 등록
+     */
     public void createProduct(CreateProductRequest createProductRequest) {
         Product product = Product.builder()
                 .storeId(createProductRequest.getStoreId())
@@ -39,8 +42,10 @@ public class ProductService {
         productRepository.save(product);
     }
 
+    /**
+     * 매장별 상품 목록 조회
+     */
     public List<ProductListResponse> getListAllProduct(Integer storeId) {
-
         List<Product> productList = productRepository.findByStoreId(storeId);
         if (productList == null || productList.isEmpty()) {
             throw new NoSuchElementException();
@@ -51,7 +56,10 @@ public class ProductService {
                 .toList();
     }
 
-    public ProductDetailResponse getDetailProduct(Integer storeId, Long productId){
+    /**
+     * 상품 상세 조회
+     */
+    public ProductDetailResponse getDetailProduct(Integer storeId, Long productId) {
         Product productEntity = getProduct(storeId, productId);
 
         return ProductDetailResponse.builder()
@@ -66,8 +74,11 @@ public class ProductService {
                 .build();
     }
 
+    /**
+     * 매장별 상품 수정
+     */
     @Transactional
-    public void modifyProduct(Integer storeId, Long productId, ProductUpdateRequest productUpdateRequest){
+    public void modifyProduct(Integer storeId, Long productId, ProductUpdateRequest productUpdateRequest) {
         Product productEntity = getProduct(storeId, productId);
 
         productEntity.setProductCategoryId(productUpdateRequest.getProductCategoryId());
@@ -79,15 +90,20 @@ public class ProductService {
         productEntity.setSize(productUpdateRequest.getSize());
     }
 
-    public void deleteProduct(Integer storeId, Long productId){
+    /**
+     * 매장 상품 삭제
+     */
+    public void deleteProduct(Integer storeId, Long productId) {
         Product productEntity = getProduct(storeId, productId);
         productRepository.deleteByIdAndStoreId(storeId, productId);
     }
 
-
-    public Product getProduct(Integer storeId, Long productId){
+    /**
+     * 매장번호, 상품번호로 상품 조회하기
+     */
+    public Product getProduct(Integer storeId, Long productId) {
         Optional<Product> product = productRepository.findByIdAndStoreId(productId, storeId);
-        return product.orElseThrow(() ->  new NoSuchElementException("존재하지 않는 상품입니다."));
+        return product.orElseThrow(() -> new NoSuchElementException("존재하지 않는 상품입니다."));
     }
 
 

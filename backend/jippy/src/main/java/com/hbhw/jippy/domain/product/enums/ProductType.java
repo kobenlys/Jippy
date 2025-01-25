@@ -16,9 +16,9 @@ public enum ProductType {
         this.code = code;
     }
 
-    public static ProductType ofLegacyCode(Integer code){
-        for(ProductType type : ProductType.values()){
-            if(Objects.equals(code, type.getCode())){
+    public static ProductType ofLegacyCode(Integer code) {
+        for (ProductType type : ProductType.values()) {
+            if (Objects.equals(code, type.getCode())) {
                 return type;
             }
         }

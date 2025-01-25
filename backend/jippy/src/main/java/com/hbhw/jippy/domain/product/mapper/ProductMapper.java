@@ -6,6 +6,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ProductMapper {
+
+    /**
+     * 상품 엔티티를 응답객체로 매핑하는 메서드
+     */
     public static ProductListResponse convertProductListResponse(Product product) {
         return ProductListResponse.builder()
                 .id(product.getId())
