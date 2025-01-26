@@ -47,4 +47,8 @@ public abstract class BaseUser {
             this.age = age;
         }
     }
+
+    public void updatePassword(String newPassword) {
+        this.password = newPassword;
+    }
 }

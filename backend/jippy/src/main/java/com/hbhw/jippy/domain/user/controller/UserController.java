@@ -2,6 +2,7 @@ package com.hbhw.jippy.domain.user.controller;
 
 import com.hbhw.jippy.domain.user.dto.request.LoginRequest;
 import com.hbhw.jippy.domain.user.dto.request.SignUpRequest;
+import com.hbhw.jippy.domain.user.dto.request.UpdatePasswordRequest;
 import com.hbhw.jippy.domain.user.dto.request.UpdateUserRequest;
 import com.hbhw.jippy.domain.user.dto.response.LoginResponse;
 import com.hbhw.jippy.domain.user.dto.response.UpdateUserResponse;
@@ -37,9 +38,15 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/update")
+    @PutMapping("/update/userInfo")
     public ResponseEntity<UpdateUserResponse> updateUser(@RequestBody @Valid UpdateUserRequest request) {
         UpdateUserResponse response = userService.updateUser(request);
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/update/password")
+    public ResponseEntity<?> updatePassword(@RequestBody @Valid UpdatePasswordRequest request) {
+        userService.updatePassword(request);
+        return ResponseEntity.ok().build();
     }
 }
