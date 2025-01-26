@@ -16,7 +16,6 @@ public class StockController {
 
     @PostMapping("/{storeId}/create")
     public ResponseEntity<StockResponse> addInventory(@PathVariable Integer storeId, @RequestBody StockRequest request) {
-        request.setStoreId(storeId);
-        return ResponseEntity.ok(stockService.addInventory(request));
+        return ResponseEntity.ok(stockService.addInventory(storeId, request));
     }
 }

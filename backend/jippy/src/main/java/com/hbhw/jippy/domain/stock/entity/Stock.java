@@ -6,9 +6,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "stock")
@@ -19,7 +21,8 @@ import java.util.List;
 @AllArgsConstructor
 public class Stock {
     @Id
+    @Indexed(unique = true)
     @Field("store_id")
-    private int storeId;
-    private List<InventoryItem> inventory;
+    private Integer storeId;
+    private List<InventoryItem> inventory = new ArrayList<>();
 }
