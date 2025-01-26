@@ -1,6 +1,8 @@
 package com.hbhw.jippy.domain.user.controller;
 
+import com.hbhw.jippy.domain.user.dto.request.LoginRequest;
 import com.hbhw.jippy.domain.user.dto.request.SignUpRequest;
+import com.hbhw.jippy.domain.user.dto.response.LoginResponse;
 import com.hbhw.jippy.domain.user.enumeration.UserType;
 import com.hbhw.jippy.domain.user.service.UserService;
 import jakarta.validation.Valid;
@@ -30,9 +32,9 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-//    @PostMapping("/login")
-//    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
-//        LoginResponse response = userService.login(request);
-//        return ResponseEntity.ok(response);
-//    }
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
+        LoginResponse response = userService.login(request);
+        return ResponseEntity.ok(response);
+    }
 }
