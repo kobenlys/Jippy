@@ -1,9 +1,6 @@
 package com.hbhw.jippy.domain.user.service;
 
-import com.hbhw.jippy.domain.user.dto.request.LoginRequest;
-import com.hbhw.jippy.domain.user.dto.request.SignUpRequest;
-import com.hbhw.jippy.domain.user.dto.request.UpdatePasswordRequest;
-import com.hbhw.jippy.domain.user.dto.request.UpdateUserRequest;
+import com.hbhw.jippy.domain.user.dto.request.*;
 import com.hbhw.jippy.domain.user.dto.response.LoginResponse;
 import com.hbhw.jippy.domain.user.dto.response.UpdateUserResponse;
 import com.hbhw.jippy.domain.user.entity.BaseUser;
@@ -16,13 +13,14 @@ import com.hbhw.jippy.domain.user.repository.UserStaffRepository;
 import com.hbhw.jippy.global.auth.JwtProvider;
 import com.hbhw.jippy.global.auth.UserPrincipal;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +30,7 @@ public class UserService {
     private final UserStaffRepository userStaffRepository;
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     @Transactional
     public void signUp(SignUpRequest request, UserType userType) {
@@ -109,5 +108,47 @@ public class UserService {
         };
 
         user.updatePassword(passwordEncoder.encode(request.getNewPassword()));
+    }
+
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        BaseUser user = switch (request.getUserType()) {
+            case OWNER -> userOwnerRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 점주입니다."));
+            case STAFF -> userStaffRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 직원입니다."));
+        };
+
+        String tempPassword = generateTempPassword();
+
+        try {
+            emailService.sendTempPassword(user.getName(), user.getEmail(), tempPassword);
+            user.updatePassword(passwordEncoder.encode(tempPassword));
+        } catch (Exception e) {
+            throw new RuntimeException("이메일 발송 실패");
+        }
+    }
+
+    private String generateTempPassword() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+        StringBuilder sb = new StringBuilder();
+        Random random = new Random();
+
+        sb.append("A").append("a").append("1").append("!");
+
+        for (int i = 0; i < 8; i++) {
+            int index = random.nextInt(chars.length());
+            sb.append(chars.charAt(index));
+        }
+
+        char[] password = sb.toString().toCharArray();
+        for (int i = password.length - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1);
+            char temp = password[i];
+            password[i] = password[j];
+            password[j] = temp;
+        }
+
+        return new String(password);
     }
 }

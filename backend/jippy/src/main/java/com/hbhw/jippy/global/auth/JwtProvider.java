@@ -44,7 +44,6 @@ public class JwtProvider {
         String token = Jwts.builder()
                 .subject(userPrincipal.getEmail())
                 .claim("id", userPrincipal.getId())
-                .claim("name", userPrincipal.getName())
                 .claim("userType", userPrincipal.getUserType().name())
                 .issuedAt(now)
                 .expiration(validity)
