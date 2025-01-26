@@ -2,17 +2,16 @@ package com.hbhw.jippy.domain.user.controller;
 
 import com.hbhw.jippy.domain.user.dto.request.LoginRequest;
 import com.hbhw.jippy.domain.user.dto.request.SignUpRequest;
+import com.hbhw.jippy.domain.user.dto.request.UpdateUserRequest;
 import com.hbhw.jippy.domain.user.dto.response.LoginResponse;
+import com.hbhw.jippy.domain.user.dto.response.UpdateUserResponse;
 import com.hbhw.jippy.domain.user.enumeration.UserType;
 import com.hbhw.jippy.domain.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/user")
@@ -35,6 +34,12 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
         LoginResponse response = userService.login(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/update")
+    public ResponseEntity<UpdateUserResponse> updateUser(@RequestBody @Valid UpdateUserRequest request) {
+        UpdateUserResponse response = userService.updateUser(request);
         return ResponseEntity.ok(response);
     }
 }

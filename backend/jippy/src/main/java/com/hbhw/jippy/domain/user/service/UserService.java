@@ -2,7 +2,9 @@ package com.hbhw.jippy.domain.user.service;
 
 import com.hbhw.jippy.domain.user.dto.request.LoginRequest;
 import com.hbhw.jippy.domain.user.dto.request.SignUpRequest;
+import com.hbhw.jippy.domain.user.dto.request.UpdateUserRequest;
 import com.hbhw.jippy.domain.user.dto.response.LoginResponse;
+import com.hbhw.jippy.domain.user.dto.response.UpdateUserResponse;
 import com.hbhw.jippy.domain.user.entity.BaseUser;
 import com.hbhw.jippy.domain.user.entity.UserOwner;
 import com.hbhw.jippy.domain.user.entity.UserStaff;
@@ -75,5 +77,21 @@ public class UserService {
         String refreshToken = jwtProvider.createRefreshToken();
 
         return LoginResponse.of(user, accessToken, refreshToken);
+    }
+
+    @Transactional
+    public UpdateUserResponse updateUser(UpdateUserRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+
+        BaseUser user = switch (principal.getUserType()) {
+            case OWNER -> userOwnerRepository.findByEmail(principal.getEmail())
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 점주입니다."));
+            case STAFF -> userStaffRepository.findByEmail(principal.getEmail())
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 직원입니다."));
+        };
+
+        user.updateInfo(request.getName(), request.getAge());
+        return UpdateUserResponse.of(user);
     }
 }

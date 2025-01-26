@@ -38,4 +38,13 @@ public abstract class BaseUser {
         this.age = age;
         this.createdAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
+
+    public void updateInfo(String name, String age) {
+        if (name != null) {
+            this.name = name;
+        }
+        if (age != null) {
+            this.age = age;
+        }
+    }
 }
