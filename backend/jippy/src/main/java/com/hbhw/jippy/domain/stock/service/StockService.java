@@ -45,14 +45,14 @@ public class StockService {
 
         Stock stock = stockRepository.findByStoreId(storeId)
             .orElseGet(() -> Stock.builder()
-                    .storeId(storeId)
-                    .inventory(new ArrayList<>())
-                    .build());
+                .storeId(storeId)
+                .inventory(new ArrayList<>())
+                .build());
 
         request.getInventory().forEach(newItem -> {
             Optional<InventoryItem> existingItem = stock.getInventory().stream()
-                    .filter(item -> item.getStockName().equals(newItem.getStockName()))
-                    .findFirst();
+                .filter(item -> item.getStockName().equals(newItem.getStockName()))
+                .findFirst();
 
             if (existingItem.isPresent()) {
                 updateInventoryItem(existingItem.get(), newItem);
@@ -62,7 +62,6 @@ public class StockService {
         });
 
         recalculateTotalValues(stock);
-//        return mapEntityToResponse(stockRepository.save(stock));
 
         Query query = new Query(Criteria.where("store_id").is(storeId));
         Update update = new Update().set("inventory", stock.getInventory());
@@ -80,10 +79,10 @@ public class StockService {
     private void mergeStockDetails(InventoryItem existingItem, InventoryItemRequest newItem) {
         newItem.getStock().forEach(newStock -> {
             Optional<StockDetail> existingStock = existingItem.getStock().stream()
-                    .filter(stock ->
-                            stock.getStockUnitSize().equals(newStock.getStockUnitSize()) &&
-                            stock.getStockUnit().equals(newStock.getStockUnit()))
-                    .findFirst();
+                .filter(stock ->
+                    stock.getStockUnitSize().equals(newStock.getStockUnitSize()) &&
+                    stock.getStockUnit().equals(newStock.getStockUnit()))
+                .findFirst();
 
             if (existingStock.isPresent()) {
                 existingStock.get().setStockCount(
@@ -102,13 +101,13 @@ public class StockService {
     private void recalculateTotalValues(Stock stock) {
         stock.getInventory().forEach(item -> {
             int totalValue = item.getStock().stream()
-                    .mapToInt(detail -> {
-                        int unitSize = detail.getStockUnitSize();
-                        int conversionFactor = UNIT_CONVERSION.getOrDefault(detail.getStockUnit(), 1);
-                        int baseUnitSize = convertToBaseUnit(detail.getStockUnit()) == "kg" ? unitSize * conversionFactor : unitSize;
-                        return unitSize * conversionFactor * detail.getStockCount();
-                    })
-                    .sum();
+                .mapToInt(detail -> {
+                    int unitSize = detail.getStockUnitSize();
+                    int conversionFactor = UNIT_CONVERSION.getOrDefault(detail.getStockUnit(), 1);
+                    int baseUnitSize = convertToBaseUnit(detail.getStockUnit()) == "kg" ? unitSize * conversionFactor : unitSize;
+                    return unitSize * conversionFactor * detail.getStockCount();
+                })
+                .sum();
             item.setStockTotalValue(totalValue);
         });
     }
@@ -123,26 +122,26 @@ public class StockService {
         }
 
         return unit.toLowerCase().startsWith("k") ? unit.substring(1) :
-                unit.equals("l") ? "ml" : unit;
+            unit.equals("l") ? "ml" : unit;
     }
 
     private InventoryItem mapToInventoryItem(InventoryItemRequest request) {
         return InventoryItem.builder()
-                .stockName(request.getStockName())
-                .stockTotalValue(request.getStockTotalValue())
-                .updatedAt(request.getUpdatedAt())
-                .stock(request.getStock().stream()
-                        .map(this::mapToStockDetail)
-                        .collect(Collectors.toList()))
-                .build();
+            .stockName(request.getStockName())
+            .stockTotalValue(request.getStockTotalValue())
+            .updatedAt(request.getUpdatedAt())
+            .stock(request.getStock().stream()
+                .map(this::mapToStockDetail)
+                .collect(Collectors.toList()))
+            .build();
     }
 
     private StockDetail mapToStockDetail(StockDetailRequest request) {
         return StockDetail.builder()
-                .stockCount(request.getStockCount())
-                .stockUnitSize(request.getStockUnitSize())
-                .stockUnit(request.getStockUnit())
-                .build();
+            .stockCount(request.getStockCount())
+            .stockUnitSize(request.getStockUnitSize())
+            .stockUnit(request.getStockUnit())
+            .build();
     }
 
     private StockResponse mapEntityToResponse(Stock entity) {
