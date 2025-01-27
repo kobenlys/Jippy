@@ -1,6 +1,6 @@
-package com.hbhw.jippy.global.converter;
+package com.hbhw.jippy.utils.converter;
 
-import com.hbhw.jippy.domain.feedback.entity.Category;
+import com.hbhw.jippy.domain.feedback.enums.Category;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
