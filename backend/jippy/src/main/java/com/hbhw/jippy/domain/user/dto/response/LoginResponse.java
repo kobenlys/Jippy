@@ -2,7 +2,7 @@ package com.hbhw.jippy.domain.user.dto.response;
 
 import com.hbhw.jippy.domain.user.entity.BaseUser;
 import com.hbhw.jippy.domain.user.entity.UserOwner;
-import com.hbhw.jippy.domain.user.enumeration.UserType;
+import com.hbhw.jippy.domain.user.enums.UserType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

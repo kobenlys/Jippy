@@ -1,6 +1,6 @@
 package com.hbhw.jippy.domain.user.dto.request;
 
-import com.hbhw.jippy.domain.user.enumeration.UserType;
+import com.hbhw.jippy.domain.user.enums.UserType;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

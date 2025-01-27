@@ -1,4 +1,4 @@
-package com.hbhw.jippy.domain.user.enumeration;
+package com.hbhw.jippy.domain.user.enums;
 
 import lombok.Getter;
 

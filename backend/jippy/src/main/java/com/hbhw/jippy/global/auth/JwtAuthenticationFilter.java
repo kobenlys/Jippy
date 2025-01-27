@@ -1,6 +1,6 @@
 package com.hbhw.jippy.global.auth;
 
-import com.hbhw.jippy.domain.user.enumeration.UserType;
+import com.hbhw.jippy.domain.user.enums.UserType;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

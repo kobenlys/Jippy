@@ -2,7 +2,7 @@ package com.hbhw.jippy.global.auth;
 
 import com.hbhw.jippy.domain.user.entity.BaseUser;
 import com.hbhw.jippy.domain.user.entity.UserOwner;
-import com.hbhw.jippy.domain.user.enumeration.UserType;
+import com.hbhw.jippy.domain.user.enums.UserType;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

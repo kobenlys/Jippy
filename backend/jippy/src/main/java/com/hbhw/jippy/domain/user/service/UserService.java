@@ -6,7 +6,7 @@ import com.hbhw.jippy.domain.user.dto.response.UpdateUserResponse;
 import com.hbhw.jippy.domain.user.entity.BaseUser;
 import com.hbhw.jippy.domain.user.entity.UserOwner;
 import com.hbhw.jippy.domain.user.entity.UserStaff;
-import com.hbhw.jippy.domain.user.enumeration.UserType;
+import com.hbhw.jippy.domain.user.enums.UserType;
 import com.hbhw.jippy.domain.user.factory.UserFactory;
 import com.hbhw.jippy.domain.user.repository.UserOwnerRepository;
 import com.hbhw.jippy.domain.user.repository.UserStaffRepository;

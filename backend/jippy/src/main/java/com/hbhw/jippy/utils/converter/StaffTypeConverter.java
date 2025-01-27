@@ -1,6 +1,6 @@
 package com.hbhw.jippy.utils.converter;
 
-import com.hbhw.jippy.domain.user.enumeration.StaffType;
+import com.hbhw.jippy.domain.user.enums.StaffType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 

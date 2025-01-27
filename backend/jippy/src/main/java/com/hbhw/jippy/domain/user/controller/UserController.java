@@ -3,7 +3,7 @@ package com.hbhw.jippy.domain.user.controller;
 import com.hbhw.jippy.domain.user.dto.request.*;
 import com.hbhw.jippy.domain.user.dto.response.LoginResponse;
 import com.hbhw.jippy.domain.user.dto.response.UpdateUserResponse;
-import com.hbhw.jippy.domain.user.enumeration.UserType;
+import com.hbhw.jippy.domain.user.enums.UserType;
 import com.hbhw.jippy.domain.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

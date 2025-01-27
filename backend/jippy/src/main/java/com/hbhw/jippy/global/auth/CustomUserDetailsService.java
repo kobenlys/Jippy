@@ -1,7 +1,7 @@
 package com.hbhw.jippy.global.auth;
 
 import com.hbhw.jippy.domain.user.entity.BaseUser;
-import com.hbhw.jippy.domain.user.enumeration.UserType;
+import com.hbhw.jippy.domain.user.enums.UserType;
 import com.hbhw.jippy.domain.user.repository.UserOwnerRepository;
 import com.hbhw.jippy.domain.user.repository.UserStaffRepository;
 import lombok.RequiredArgsConstructor;
