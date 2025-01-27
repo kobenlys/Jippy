@@ -5,6 +5,7 @@ import com.hbhw.jippy.domain.feedback.dto.response.FeedbackResponse;
 import com.hbhw.jippy.domain.feedback.enums.Category;
 import com.hbhw.jippy.domain.feedback.service.FeedbackService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,10 +25,10 @@ public class FeedbackController {
      */
     @PostMapping("/{storeId}/create")
     //@PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<FeedbackResponse> createFeedback(@PathVariable int storeId,
+    public ResponseEntity<Boolean> createFeedback(@PathVariable int storeId,
                                                            @RequestBody FeedbackRequest request) {
-        FeedbackResponse response = feedbackService.createFeedback(storeId, request);
-        return ResponseEntity.ok(response);
+        feedbackService.createFeedback(storeId, request);
+        return ResponseEntity.status(HttpStatus.OK).body(true);
     }
 
     /**
@@ -37,9 +38,9 @@ public class FeedbackController {
      */
     @GetMapping("/{storeId}/select")
     //@PreAuthorize("hasRole('OWNER')")
-    public ResponseEntity<List<FeedbackResponse>> getFeedbacks(@PathVariable int storeId) {
-        List<FeedbackResponse> responseList = feedbackService.getFeedbacksByStore(storeId);
-        return ResponseEntity.ok(responseList);
+    public ResponseEntity<?> getFeedbacks(@PathVariable int storeId) {
+
+        return ResponseEntity.ok(feedbackService.getFeedbacksByStore(storeId));
     }
 
     /**
@@ -49,12 +50,11 @@ public class FeedbackController {
      */
     @GetMapping("/{storeId}/select/{category}")
     //@PreAuthorize("hasRole('OWNER')")
-    public ResponseEntity<List<FeedbackResponse>> getFeedbacksByCategory(
+    public ResponseEntity<?> getFeedbacksByCategory(
             @PathVariable int storeId,
             @PathVariable Category category
     ) {
-        List<FeedbackResponse> responseList = feedbackService.getFeedbacksByCategory(storeId, category);
-        return ResponseEntity.ok(responseList);
+        return ResponseEntity.ok(feedbackService.getFeedbacksByCategory(storeId, category));
     }
 
     /**
@@ -64,9 +64,9 @@ public class FeedbackController {
      */
     @DeleteMapping("/{storeId}/delete/{feedbackId}")
     //@PreAuthorize("hasRole('OWNER')")
-    public ResponseEntity<Void> deleteFeedback(@PathVariable int storeId,
+    public ResponseEntity<Boolean> deleteFeedback(@PathVariable int storeId,
                                                @PathVariable Long feedbackId) {
         feedbackService.deleteFeedback(storeId, feedbackId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.OK).body(true);
     }
 }
