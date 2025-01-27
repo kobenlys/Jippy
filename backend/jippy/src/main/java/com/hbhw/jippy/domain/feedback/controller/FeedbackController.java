@@ -2,11 +2,10 @@ package com.hbhw.jippy.domain.feedback.controller;
 
 import com.hbhw.jippy.domain.feedback.dto.request.FeedbackRequest;
 import com.hbhw.jippy.domain.feedback.dto.response.FeedbackResponse;
-import com.hbhw.jippy.domain.feedback.entity.Category;
+import com.hbhw.jippy.domain.feedback.enums.Category;
 import com.hbhw.jippy.domain.feedback.service.FeedbackService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

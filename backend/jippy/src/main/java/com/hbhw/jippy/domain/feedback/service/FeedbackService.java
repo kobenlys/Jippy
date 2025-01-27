@@ -4,7 +4,7 @@ import com.hbhw.jippy.domain.feedback.dto.request.FeedbackRequest;
 import com.hbhw.jippy.domain.feedback.dto.response.FeedbackResponse;
 import com.hbhw.jippy.domain.feedback.entity.Feedback;
 import com.hbhw.jippy.domain.feedback.repository.FeedbackRepository;
-import com.hbhw.jippy.domain.feedback.entity.Category;
+import com.hbhw.jippy.domain.feedback.enums.Category;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
