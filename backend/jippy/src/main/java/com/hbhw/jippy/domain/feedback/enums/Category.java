@@ -1,4 +1,4 @@
-package com.hbhw.jippy.domain.feedback.entity;
+package com.hbhw.jippy.domain.feedback.enums;
 
 import lombok.Getter;
 

@@ -1,6 +1,7 @@
 package com.hbhw.jippy.domain.feedback.entity;
 
-import com.hbhw.jippy.global.converter.CategoryConverter;
+import com.hbhw.jippy.domain.feedback.enums.Category;
+import com.hbhw.jippy.utils.converter.CategoryConverter;
 import jakarta.persistence.*;
 import lombok.*;
 

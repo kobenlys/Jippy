@@ -51,11 +51,4 @@ public class Task {
     @Column(name = "is_complete", nullable = false)
     private boolean isComplete;
 
-    /** 등록 전(createdAt 자동 설정) */
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = DateTimeFormatter
-                .ofPattern("yyyy-MM-dd HH:mm:ss")
-                .format(LocalDateTime.now());
-    }
 }

@@ -1,6 +1,6 @@
 package com.hbhw.jippy.domain.feedback.dto.response;
 
-import com.hbhw.jippy.domain.feedback.entity.Category;
+import com.hbhw.jippy.domain.feedback.enums.Category;
 import lombok.Builder;
 import lombok.Getter;
 

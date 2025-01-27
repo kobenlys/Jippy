@@ -4,6 +4,7 @@ import com.hbhw.jippy.domain.task.dto.request.TaskRequest;
 import com.hbhw.jippy.domain.task.dto.response.TaskResponse;
 import com.hbhw.jippy.domain.task.entity.Task;
 import com.hbhw.jippy.domain.task.repository.TaskRepository;
+import com.hbhw.jippy.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,7 @@ public class TaskService {
     /**
      * 매장별 할 일 등록
      */
-    public TaskResponse createTask(Integer storeId, TaskRequest request) {
+    public void createTask(Integer storeId, TaskRequest request) {
         Task task = Task.builder()
                 .storeId(storeId)
                 .userStaffId(request.getUserStaffId())
@@ -27,10 +28,10 @@ public class TaskService {
                 .content(request.getContent())
                 .author(request.getAuthor())
                 .isComplete(request.isComplete())
+                .createdAt(DateTimeUtils.nowString())
                 .build();
 
         Task saved = taskRepository.save(task);
-        return toResponse(saved);
     }
 
     /**
@@ -54,15 +55,13 @@ public class TaskService {
     /**
      * 할 일 수정
      */
-    public TaskResponse updateTask(Integer storeId, Long todoId, TaskRequest request) {
+    public void updateTask(Integer storeId, Long todoId, TaskRequest request) {
         Task task = findTaskByStoreAndId(storeId, todoId);
-        task.setUserStaffId(request.getUserStaffId());
         task.setTitle(request.getTitle());
         task.setContent(request.getContent());
         task.setAuthor(request.getAuthor());
-        task.setComplete(request.isComplete()); // Lombok setter: isComplete -> setComplete
-        Task updated = taskRepository.save(task);
-        return toResponse(updated);
+        task.setComplete(request.isComplete());
+
     }
 
     /**
