@@ -11,8 +11,12 @@ import com.hbhw.jippy.domain.user.factory.UserFactory;
 import com.hbhw.jippy.domain.user.repository.UserOwnerRepository;
 import com.hbhw.jippy.domain.user.repository.UserStaffRepository;
 import com.hbhw.jippy.global.auth.JwtProvider;
+import com.hbhw.jippy.global.auth.RefreshToken;
+import com.hbhw.jippy.global.auth.RefreshTokenRepository;
 import com.hbhw.jippy.global.auth.UserPrincipal;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Random;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -31,6 +36,10 @@ public class UserService {
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final RefreshTokenRepository refreshTokenRepository;
+
+    @Value("${jwt.refresh.expiration}")
+    private Long refreshTokenExpireTime;
 
     @Transactional
     public void signUp(SignUpRequest request, UserType userType) {
@@ -74,9 +83,50 @@ public class UserService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String accessToken = jwtProvider.createAccessToken(authentication);
-        String refreshToken = jwtProvider.createRefreshToken();
+        String refreshToken = jwtProvider.createRefreshToken(user.getEmail());
+
+        RefreshToken redisRefreshToken = RefreshToken.builder()
+                .id(user.getEmail())
+                .token(refreshToken)
+                .userType(request.getUserType().name())
+                .ttl(refreshTokenExpireTime / 1000)
+                .build();
+
+        refreshTokenRepository.save(redisRefreshToken);
+
+        /**
+         * redis 저장 확인용
+         */
+        RefreshToken savedToken = refreshTokenRepository.findById(redisRefreshToken.getId())
+                .orElse(null);
+        log.info("Redis에 저장된 값: " + savedToken);
 
         return LoginResponse.of(user, accessToken, refreshToken);
+    }
+
+    @Transactional
+    public void logout() {
+        UserPrincipal principal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        refreshTokenRepository.deleteById(principal.getEmail());
+        SecurityContextHolder.clearContext();
+    }
+
+    @Transactional
+    public void deleteUser() {
+        UserPrincipal principal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        BaseUser user = switch (principal.getUserType()) {
+            case OWNER -> userOwnerRepository.findByEmail(principal.getEmail())
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 점주입니다."));
+            case STAFF -> userStaffRepository.findByEmail(principal.getEmail())
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 직원입니다."));
+        };
+
+        String deleteUserName = user.getName() + " (탈퇴)";
+        user.updateInfo(deleteUserName, user.getAge());
+
+        refreshTokenRepository.deleteById(principal.getEmail());
+        SecurityContextHolder.clearContext();
     }
 
     @Transactional

@@ -2,6 +2,7 @@ package com.hbhw.jippy.global.auth;
 
 import com.hbhw.jippy.domain.user.enums.UserType;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,8 +34,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String token = extractToken(request);
 
-            if (StringUtils.hasText(token) && jwtProvider.validateToken(token)) {
-                Claims claims = jwtProvider.getClaims(token);
+            if (StringUtils.hasText(token)) {
+                Claims claims = jwtProvider.validateTokenAndGetClaims(token);
+
                 String email = claims.getSubject();
                 UserType userType = UserType.valueOf(claims.get("userType", String.class));
 
@@ -43,8 +45,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
+        } catch (ExpiredJwtException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Access Token 만료");
+            return;
         } catch (Exception e) {
-            log.error("토큰 검증 실패");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
         }
 
         filterChain.doFilter(request, response);

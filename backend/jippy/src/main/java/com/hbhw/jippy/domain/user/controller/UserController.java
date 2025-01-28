@@ -35,6 +35,18 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        userService.logout();
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteUser() {
+        userService.deleteUser();
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping("/update/userInfo")
     public ResponseEntity<UpdateUserResponse> updateUser(@RequestBody @Valid UpdateUserRequest request) {
         UpdateUserResponse response = userService.updateUser(request);
