@@ -1,5 +1,6 @@
 package com.hbhw.jippy.global.auth;
 
+import com.hbhw.jippy.utils.DateTimeUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -25,11 +26,13 @@ public class JwtProvider {
     @Value("${jwt.secret.key}")
     private String secretKey;
 
+    @Value("${jwt.access.expiration}")
+    private Long accessTokenExpireTime;
+
+    @Value("${jwt.refresh.expiration}")
+    private Long refreshTokenExpireTime;
+
     private SecretKey key;
-
-    private static final long ACCESS_TOKEN_EXPIRE_TIME = 30 * 60 * 1000L;
-    private static final long REFRESH_TOKEN_EXPIRE_TIME = 4 * 7 * 24 * 60 * 60 * 1000L;
-
     @PostConstruct  // 객체 생성 시 단 한 번만 키 생성
     protected void init() {
         byte[] keyBytes = Base64.getDecoder().decode(secretKey);
@@ -38,15 +41,13 @@ public class JwtProvider {
 
     public String createAccessToken(Authentication authentication) {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + ACCESS_TOKEN_EXPIRE_TIME);
 
         String token = Jwts.builder()
                 .subject(userPrincipal.getEmail())
                 .claim("id", userPrincipal.getId())
                 .claim("userType", userPrincipal.getUserType().name())
-                .issuedAt(now)
-                .expiration(validity)
+                .issuedAt(DateTimeUtils.now())
+                .expiration(DateTimeUtils.getExpirationTime(accessTokenExpireTime))
                 .signWith(key)
                 .compact();
 
@@ -55,12 +56,9 @@ public class JwtProvider {
     }
 
     public String createRefreshToken() {
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + REFRESH_TOKEN_EXPIRE_TIME);
-
         String token = Jwts.builder()
-                .issuedAt(now)
-                .expiration(validity)
+                .issuedAt(DateTimeUtils.now())
+                .expiration(DateTimeUtils.getExpirationTime(refreshTokenExpireTime))
                 .signWith(key)
                 .compact();
 
