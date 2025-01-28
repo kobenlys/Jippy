@@ -23,4 +23,9 @@ public class StockController {
     public ResponseEntity<StockResponse> getInventory(@PathVariable Integer storeId) {
         return ResponseEntity.ok(stockService.getInventory(storeId));
     }
+
+    @PutMapping("/{storeId}/update/{stockName}")
+    public ResponseEntity<StockResponse> updateInventory(@PathVariable Integer storeId, @PathVariable String stockName, @RequestBody StockRequest request) {
+        return ResponseEntity.ok(stockService.updateInventory(storeId, stockName, request));
+    }
 }

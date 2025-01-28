@@ -43,15 +43,15 @@ public class StockService {
         }
 
         Stock stock = stockRepository.findByStoreId(storeId)
-            .orElseGet(() -> Stock.builder()
-                .storeId(storeId)
-                .inventory(new ArrayList<>())
-                .build());
+                .orElseGet(() -> Stock.builder()
+                        .storeId(storeId)
+                        .inventory(new ArrayList<>())
+                        .build());
 
         request.getInventory().forEach(newItem -> {
             Optional<InventoryItem> existingItem = stock.getInventory().stream()
-                .filter(item -> item.getStockName().equals(newItem.getStockName()))
-                .findFirst();
+                    .filter(item -> item.getStockName().equals(newItem.getStockName()))
+                    .findFirst();
 
             if (existingItem.isPresent()) {
                 updateInventoryItem(existingItem.get(), newItem);
@@ -78,14 +78,14 @@ public class StockService {
     private void mergeStockDetails(InventoryItem existingItem, InventoryItemRequest newItem) {
         newItem.getStock().forEach(newStock -> {
             Optional<StockDetail> existingStock = existingItem.getStock().stream()
-                .filter(stock ->
-                    stock.getStockUnitSize().equals(newStock.getStockUnitSize()) &&
-                    stock.getStockUnit().equals(newStock.getStockUnit()))
-                .findFirst();
+                    .filter(stock ->
+                            stock.getStockUnitSize().equals(newStock.getStockUnitSize()) &&
+                                    stock.getStockUnit().equals(newStock.getStockUnit()))
+                    .findFirst();
 
             if (existingStock.isPresent()) {
                 existingStock.get().setStockCount(
-                    existingStock.get().getStockCount() + newStock.getStockCount()
+                        existingStock.get().getStockCount() + newStock.getStockCount()
                 );
             } else {
                 existingItem.getStock().add(mapToStockDetail(newStock));
@@ -100,73 +100,130 @@ public class StockService {
     private void recalculateTotalValues(Stock stock) {
         stock.getInventory().forEach(item -> {
             int totalValue = item.getStock().stream()
-                .mapToInt(detail -> {
-                    String unit = detail.getStockUnit();
-                    int unitSize = detail.getStockUnitSize();
-                    int conversionFactor = UNIT_CONVERSION.getOrDefault(unit, 1);
-                    boolean needsConversion = unit.equals("kg") || unit.equals("l");
-                    return needsConversion ?
-                            unitSize * conversionFactor * detail.getStockCount() :
-                            unitSize * detail.getStockCount();
-                })
-                .sum();
+                    .mapToInt(detail -> {
+                        String unit = detail.getStockUnit();
+                        int unitSize = detail.getStockUnitSize();
+                        int conversionFactor = UNIT_CONVERSION.getOrDefault(unit, 1);
+                        boolean needsConversion = unit.equals("kg") || unit.equals("l");
+                        return needsConversion ?
+                                unitSize * conversionFactor * detail.getStockCount() :
+                                unitSize * detail.getStockCount();
+                    })
+                    .sum();
             item.setStockTotalValue(totalValue);
         });
     }
 
     private InventoryItem mapToInventoryItem(InventoryItemRequest request) {
         return InventoryItem.builder()
-            .stockName(request.getStockName())
-            .stockTotalValue(request.getStockTotalValue())
-            .updatedAt(request.getUpdatedAt())
-            .stock(request.getStock().stream()
-                .map(this::mapToStockDetail)
-                .collect(Collectors.toList()))
-            .build();
+                .stockName(request.getStockName())
+                .stockTotalValue(request.getStockTotalValue())
+                .updatedAt(request.getUpdatedAt())
+                .stock(request.getStock().stream()
+                        .map(this::mapToStockDetail)
+                        .collect(Collectors.toList()))
+                .build();
     }
 
     private StockDetail mapToStockDetail(StockDetailRequest request) {
         return StockDetail.builder()
-            .stockCount(request.getStockCount())
-            .stockUnitSize(request.getStockUnitSize())
-            .stockUnit(request.getStockUnit())
-            .build();
+                .stockCount(request.getStockCount())
+                .stockUnitSize(request.getStockUnitSize())
+                .stockUnit(request.getStockUnit())
+                .build();
     }
 
     private StockResponse mapEntityToResponse(Stock entity) {
         return StockResponse.builder()
-            .storeId(entity.getStoreId())
-            .inventory(entity.getInventory().stream()
-                .map(this::mapToInventoryItemResponse)
-                .collect(Collectors.toList()))
-            .build();
+                .storeId(entity.getStoreId())
+                .inventory(entity.getInventory().stream()
+                        .map(this::mapToInventoryItemResponse)
+                        .collect(Collectors.toList()))
+                .build();
     }
 
     private InventoryItemResponse mapToInventoryItemResponse(InventoryItem item) {
         return InventoryItemResponse.builder()
-            .stockName(item.getStockName())
-            .stockTotalValue(item.getStockTotalValue())
-            .updatedAt(item.getUpdatedAt())
-            .stock(item.getStock().stream()
-                .map(this::mapToStockDetailResponse)
-                .collect(Collectors.toList()))
-            .build();
+                .stockName(item.getStockName())
+                .stockTotalValue(item.getStockTotalValue())
+                .updatedAt(item.getUpdatedAt())
+                .stock(item.getStock().stream()
+                        .map(this::mapToStockDetailResponse)
+                        .collect(Collectors.toList()))
+                .build();
     }
 
     private StockDetailResponse mapToStockDetailResponse(StockDetail detail) {
         return StockDetailResponse.builder()
-            .stockCount(detail.getStockCount())
-            .stockUnitSize(detail.getStockUnitSize())
-            .stockUnit(detail.getStockUnit())
-            .build();
+                .stockCount(detail.getStockCount())
+                .stockUnitSize(detail.getStockUnitSize())
+                .stockUnit(detail.getStockUnit())
+                .build();
     }
 
     public StockResponse getInventory(Integer storeId) {
         return stockRepository.findByStoreId(storeId)
-            .map(this::mapEntityToResponse)
-            .orElse(StockResponse.builder()
-                .storeId(storeId)
-                .inventory(new ArrayList<>())
-                .build());
+                .map(this::mapEntityToResponse)
+                .orElse(StockResponse.builder()
+                        .storeId(storeId)
+                        .inventory(new ArrayList<>())
+                        .build());
+    }
+
+    @Transactional
+    public StockResponse updateInventory(Integer storeId, String stockName, StockRequest request) {
+        Stock stock = stockRepository.findByStoreId(storeId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 매장의 재고 정보를 찾을 수 없습니다"));
+
+        InventoryItem targetItem = stock.getInventory().stream()
+                .filter(item -> item.getStockName().equals(stockName))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("해당 상품의 재고 정보를 찾을 수 없습니다"));
+
+        if (request.getInventory() == null || request.getInventory().isEmpty()) {
+            throw new IllegalArgumentException("수정할 재고 정보가 필요합니다");
+        }
+
+        InventoryItemRequest updateRequest = request.getInventory().get(0);
+
+        String newStockName = updateRequest.getStockName();
+
+        if (!stockName.equals(newStockName)) {
+            boolean isDuplicate = stock.getInventory().stream()
+                    .anyMatch(item -> item.getStockName().equals(newStockName));
+
+            if (isDuplicate) {
+                throw new IllegalArgumentException("이미 존재하는 상품명입니다: " + newStockName);
+            }
+
+            targetItem.setStockName(newStockName);
+        }
+
+        updateRequest.getStock().forEach(newStock -> {
+            Optional<StockDetail> existingStock = targetItem.getStock().stream()
+                .filter(detail ->
+                    detail.getStockUnitSize().equals(newStock.getStockUnitSize()) &&
+                        detail.getStockUnit().equals(newStock.getStockUnit()))
+                .findFirst();
+            if (existingStock.isPresent()) {
+                existingStock.get().setStockCount(newStock.getStockCount());
+            } else {
+                throw new IllegalArgumentException(
+                    String.format("해당 용량과 단위의 재고가 존재하지 않습니다",
+                        newStock.getStockUnitSize(),
+                        newStock.getStockUnit())
+                );
+            }
+        });
+
+        targetItem.setUpdatedAt(updateRequest.getUpdatedAt());
+
+        recalculateTotalValues(stock);
+
+        Query query = new Query(Criteria.where("store_id").is(storeId));
+        Update update = new Update().set("inventory", stock.getInventory());
+        mongoTemplate.upsert(query, update, Stock.class);
+
+        return mapEntityToResponse(stock);
     }
 }
