@@ -67,12 +67,7 @@ public class UserService {
 
     @Transactional
     public LoginResponse login(LoginRequest request) {
-        BaseUser user = switch (request.getUserType()) {
-            case OWNER -> userOwnerRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 점주입니다."));
-            case STAFF -> userStaffRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 직원입니다."));
-        };
+        BaseUser user = findUser(request.getEmail(), request.getUserType());
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
@@ -113,62 +108,28 @@ public class UserService {
 
     @Transactional
     public void deleteUser() {
-        UserPrincipal principal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        BaseUser user = switch (principal.getUserType()) {
-            case OWNER -> userOwnerRepository.findByEmail(principal.getEmail())
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 점주입니다."));
-            case STAFF -> userStaffRepository.findByEmail(principal.getEmail())
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 직원입니다."));
-        };
-
+        BaseUser user = getCurrentUser();
         String deleteUserName = user.getName() + " (탈퇴)";
         user.updateInfo(deleteUserName, user.getAge());
-
-        refreshTokenRepository.deleteById(principal.getEmail());
-        SecurityContextHolder.clearContext();
+        logout();
     }
 
     @Transactional
     public UpdateUserResponse updateUser(UpdateUserRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
-
-        BaseUser user = switch (principal.getUserType()) {
-            case OWNER -> userOwnerRepository.findByEmail(principal.getEmail())
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 점주입니다."));
-            case STAFF -> userStaffRepository.findByEmail(principal.getEmail())
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 직원입니다."));
-        };
-
+        BaseUser user = getCurrentUser();
         user.updateInfo(request.getName(), request.getAge());
         return UpdateUserResponse.of(user);
     }
 
     @Transactional
     public void updatePassword(UpdatePasswordRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
-
-        BaseUser user = switch (principal.getUserType()) {
-            case OWNER -> userOwnerRepository.findByEmail(principal.getEmail())
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 점주입니다."));
-            case STAFF -> userStaffRepository.findByEmail(principal.getEmail())
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 직원입니다."));
-        };
-
+        BaseUser user = getCurrentUser();
         user.updatePassword(passwordEncoder.encode(request.getNewPassword()));
     }
 
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
-        BaseUser user = switch (request.getUserType()) {
-            case OWNER -> userOwnerRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 점주입니다."));
-            case STAFF -> userStaffRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 직원입니다."));
-        };
-
+        BaseUser user = findUser(request.getEmail(), request.getUserType());
         String tempPassword = generateTempPassword();
 
         try {
@@ -177,6 +138,26 @@ public class UserService {
         } catch (Exception e) {
             throw new RuntimeException("이메일 발송 실패");
         }
+    }
+
+    /**
+     * 사용자 조회 메서드
+     */
+    private BaseUser findUser(String email, UserType userType) {
+        return switch (userType) {
+            case OWNER -> userOwnerRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 점주입니다."));
+            case STAFF -> userStaffRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 직원입니다."));
+        };
+    }
+
+    /**
+     * 현재 인증된 사용자 조회 메서드
+     */
+    private BaseUser getCurrentUser() {
+        UserPrincipal principal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return findUser(principal.getEmail(), principal.getUserType());
     }
 
     private String generateTempPassword() {
