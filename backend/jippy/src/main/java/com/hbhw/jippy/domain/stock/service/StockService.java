@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -102,27 +101,17 @@ public class StockService {
         stock.getInventory().forEach(item -> {
             int totalValue = item.getStock().stream()
                 .mapToInt(detail -> {
+                    String unit = detail.getStockUnit();
                     int unitSize = detail.getStockUnitSize();
-                    int conversionFactor = UNIT_CONVERSION.getOrDefault(detail.getStockUnit(), 1);
-                    int baseUnitSize = convertToBaseUnit(detail.getStockUnit()) == "kg" ? unitSize * conversionFactor : unitSize;
-                    return unitSize * conversionFactor * detail.getStockCount();
+                    int conversionFactor = UNIT_CONVERSION.getOrDefault(unit, 1);
+                    boolean needsConversion = unit.equals("kg") || unit.equals("l");
+                    return needsConversion ?
+                            unitSize * conversionFactor * detail.getStockCount() :
+                            unitSize * detail.getStockCount();
                 })
                 .sum();
             item.setStockTotalValue(totalValue);
         });
-    }
-
-    private String convertToBaseUnit(String unit) {
-        if (unit == null) {
-            throw new IllegalArgumentException("단위가 null입니다");
-        }
-
-        if(!UNIT_CONVERSION.containsKey(unit)) {
-            throw new IllegalArgumentException("지원하지 않는 단위입니다 틀린 단위 : " + unit);
-        }
-
-        return unit.toLowerCase().startsWith("k") ? unit.substring(1) :
-            unit.equals("l") ? "ml" : unit;
     }
 
     private InventoryItem mapToInventoryItem(InventoryItemRequest request) {
@@ -170,5 +159,14 @@ public class StockService {
             .stockUnitSize(detail.getStockUnitSize())
             .stockUnit(detail.getStockUnit())
             .build();
+    }
+
+    public StockResponse getInventory(Integer storeId) {
+        return stockRepository.findByStoreId(storeId)
+            .map(this::mapEntityToResponse)
+            .orElse(StockResponse.builder()
+                .storeId(storeId)
+                .inventory(new ArrayList<>())
+                .build());
     }
 }
