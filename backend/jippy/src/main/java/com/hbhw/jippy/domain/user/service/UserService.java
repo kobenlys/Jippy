@@ -144,12 +144,18 @@ public class UserService {
      * 사용자 조회 메서드
      */
     private BaseUser findUser(String email, UserType userType) {
-        return switch (userType) {
+        BaseUser user = switch (userType) {
             case OWNER -> userOwnerRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("존재하지 않는 점주입니다."));
             case STAFF -> userStaffRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("존재하지 않는 직원입니다."));
         };
+
+        if (user.getName().contains("(탈퇴)")) {
+            throw new RuntimeException("탈퇴한 회원입니다.");
+        }
+
+        return user;
     }
 
     /**
