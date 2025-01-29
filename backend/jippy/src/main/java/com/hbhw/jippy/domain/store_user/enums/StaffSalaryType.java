@@ -1,23 +1,22 @@
-package com.hbhw.jippy.domain.user.enums;
+package com.hbhw.jippy.domain.store_user.enums;
 
 import lombok.Getter;
 
 import java.util.Objects;
 
 @Getter
-public enum StaffType {
-    점주(1),
-    직원(2),
-    매니저(3);
+public enum StaffSalaryType {
+    시급(1),
+    월급(2);
 
     private final Integer code;
 
-    StaffType(Integer code) {
+    StaffSalaryType(Integer code) {
         this.code = code;
     }
 
-    public static StaffType ofLegacyCode(Integer code) {
-        for (StaffType type : StaffType.values()) {
+    public static StaffSalaryType ofLegacyCode(Integer code) {
+        for (StaffSalaryType type : StaffSalaryType.values()) {
             if (Objects.equals(code, type.getCode())) {
                 return type;
             }
