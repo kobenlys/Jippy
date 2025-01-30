@@ -39,6 +39,11 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
 	implementation ('org.springframework.boot:spring-boot-starter-data-mongodb')
+	implementation group: 'org.openpnp', name: 'opencv', version: '4.9.0-0'
+	implementation group: 'org.json', name: 'json', version: '20250107'
+	implementation group: 'commons-io', name: 'commons-io', version: '2.18.0'
+
+
 
 
 
