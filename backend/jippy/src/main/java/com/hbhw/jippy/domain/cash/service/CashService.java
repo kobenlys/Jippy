@@ -48,4 +48,35 @@ public class CashService {
                 .tenWon(savedCash.getTenWon())
                 .build();
     }
+
+    @Transactional
+    public CashResponse updateCash(Integer storeId, CashRequest request) {
+
+        Cash cash = cashRepository.findByStoreId(storeId)
+                .orElseThrow(() -> new IllegalStateException("해당 매장의 시재 정보가 존재하지 않습니다"));
+
+        cash.setFiftyThousandWon(request.getFiftyThousandWon());
+        cash.setTenThousandWon(request.getTenThousandWon());
+        cash.setFiveThousandWon(request.getFiveThousandWon());
+        cash.setOneThousandWon(request.getOneThousandWon());
+        cash.setFiveHundredWon(request.getFiveHundredWon());
+        cash.setOneHundredWon(request.getOneHundredWon());
+        cash.setFiftyWon(request.getFiftyWon());
+        cash.setTenWon(request.getTenWon());
+
+        Cash updatedCash = cashRepository.save(cash);
+
+        return CashResponse.builder()
+                .id(updatedCash.getId())
+                .storeId(updatedCash.getStoreId())
+                .fiftyThousandWon(updatedCash.getFiftyThousandWon())
+                .tenThousandWon(updatedCash.getTenThousandWon())
+                .fiveThousandWon(updatedCash.getFiveThousandWon())
+                .oneThousandWon(updatedCash.getOneThousandWon())
+                .fiveHundedWon(updatedCash.getFiveHundredWon())
+                .oneHundredWon(updatedCash.getOneHundredWon())
+                .fiftyWon(updatedCash.getFiftyWon())
+                .tenWon(updatedCash.getTenWon())
+                .build();
+    }
 }
