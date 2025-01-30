@@ -28,4 +28,12 @@ public class SwaggerConfig {
                 .build();
     }
 
+    @Bean
+    public GroupedOpenApi cashApi() {
+        return GroupedOpenApi.builder()
+                .group("시재 - cash")
+                .pathsToMatch("/api/cash/**")
+                .build();
+    }
+
 }

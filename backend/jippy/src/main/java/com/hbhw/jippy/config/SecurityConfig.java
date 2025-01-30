@@ -58,7 +58,17 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/user/signup/**", "/api/user/login/**", "/api/user/reset/password").permitAll()
+                        .requestMatchers(
+                                "/api/user/signup/**",
+                                "/api/user/login/**",
+                                "/api/user/reset/password",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "swagger-resources/**",
+                                // 개발 시 임시 권한 설정
+                                "/api/**"
+                        ).permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
