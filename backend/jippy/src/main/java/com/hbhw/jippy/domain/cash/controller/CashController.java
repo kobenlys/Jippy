@@ -4,7 +4,6 @@ import com.hbhw.jippy.domain.cash.dto.request.CashRequest;
 import com.hbhw.jippy.domain.cash.dto.response.CashResponse;
 import com.hbhw.jippy.domain.cash.service.CashService;
 import com.hbhw.jippy.global.response.ApiResponse;
-import io.lettuce.core.dynamic.annotation.Param;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,6 +39,15 @@ public class CashController {
             @Valid
             @RequestBody CashRequest request) {
         CashResponse response = cashService.updateCash(storeId, request);
+        return ApiResponse.success(response);
+    }
+
+    @Operation(summary = "시재 조회", description = "매장의 시재 정보를 조회합니다")
+    @GetMapping("/select")
+    public ApiResponse<CashResponse> getCash(
+            @Parameter(description = "매장 ID")
+            @PathVariable Integer storeId) {
+        CashResponse response = cashService.getCash(storeId);
         return ApiResponse.success(response);
     }
 }

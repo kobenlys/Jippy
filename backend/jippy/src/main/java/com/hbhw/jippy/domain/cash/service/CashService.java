@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class CashService {
 
     private final CashRepository cashRepository;
@@ -34,19 +33,7 @@ public class CashService {
                 .build();
 
         Cash savedCash = cashRepository.save(cash);
-
-        return CashResponse.builder()
-                .id(savedCash.getId())
-                .storeId(savedCash.getStoreId())
-                .fiftyThousandWon(savedCash.getFiftyThousandWon())
-                .fiveThousandWon(savedCash.getFiveThousandWon())
-                .tenThousandWon(savedCash.getTenThousandWon())
-                .oneThousandWon(request.getOneThousandWon())
-                .fiveHundedWon(savedCash.getFiveHundredWon())
-                .oneHundredWon(savedCash.getOneHundredWon())
-                .fiftyWon(savedCash.getFiftyWon())
-                .tenWon(savedCash.getTenWon())
-                .build();
+        return convertToResponse(savedCash);
     }
 
     @Transactional
@@ -65,18 +52,27 @@ public class CashService {
         cash.setTenWon(request.getTenWon());
 
         Cash updatedCash = cashRepository.save(cash);
+        return convertToResponse(updatedCash);
+    }
 
+    public CashResponse getCash(Integer storeId) {
+        Cash cash = cashRepository.findByStoreId(storeId)
+                .orElseThrow(() -> new IllegalStateException("해당 매장의 시재 정보가 존재하지 않습니다"));
+        return convertToResponse(cash);
+    }
+
+    private CashResponse convertToResponse(Cash cash) {
         return CashResponse.builder()
-                .id(updatedCash.getId())
-                .storeId(updatedCash.getStoreId())
-                .fiftyThousandWon(updatedCash.getFiftyThousandWon())
-                .tenThousandWon(updatedCash.getTenThousandWon())
-                .fiveThousandWon(updatedCash.getFiveThousandWon())
-                .oneThousandWon(updatedCash.getOneThousandWon())
-                .fiveHundedWon(updatedCash.getFiveHundredWon())
-                .oneHundredWon(updatedCash.getOneHundredWon())
-                .fiftyWon(updatedCash.getFiftyWon())
-                .tenWon(updatedCash.getTenWon())
+                .id(cash.getId())
+                .storeId(cash.getStoreId())
+                .fiftyThousandWon(cash.getFiftyThousandWon())
+                .tenThousandWon(cash.getTenThousandWon())
+                .fiveThousandWon(cash.getFiveThousandWon())
+                .oneThousandWon(cash.getOneThousandWon())
+                .fiveHundedWon(cash.getFiveHundredWon())
+                .oneHundredWon(cash.getOneHundredWon())
+                .fiftyWon(cash.getFiftyWon())
+                .tenWon(cash.getTenWon())
                 .build();
     }
 }
