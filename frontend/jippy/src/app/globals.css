@@ -2,26 +2,121 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* 전체 페이지에 적용할 css */
+
+/* Pretendard 폰트 설정 */
+@font-face {
+  font-family: 'Pretendard';
+  src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* 전체 HTML과 BODY에 폰트 적용 */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  font-family: 'Pretendard', sans-serif; /* Pretendard 폰트를 기본 폰트로 설정 */
+  background: #F8F8F8;
+  color: #21272A;
+  overflow-x: hidden; /* 가로 스크롤 방지 */
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+/* 페이지 컨텐츠 */
+.page-content {
+  box-sizing: border-box;
+  position: absolute;
+  width: 680px;
+  height: 680px;
+  left: calc(50% - 680px / 2);
+  top: calc(50% - 682px / 2);
+  background: #FFFFFF;
+  border: 1px solid #E4E4E4;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/* 헤더 */
+.header {
+  position: absolute;
+  width: 277px;
+  height: 58px;
+  left: 202px;
+  top: 79px;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 48px;
+  line-height: 58px;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #21272A;
 }
+
+/* 버튼 그룹 */
+.buttons-group {
+  position: absolute;
+  width: 520px;
+  height: 48px;
+  left: 80px;
+  top: 478px;
+  border-radius: 20px;
+}
+
+/* 버튼 */
+.button {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 16px 12px;
+  position: absolute;
+  width: 520px;
+  height: 48px;
+  background: #21272A;
+  border: 2px solid #21272A;
+  border-radius: 20px;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 24px;
+}
+
+/* 계정이 이미 있으신가요? */
+.login-prompt {
+  position: absolute;
+  width: 263px;
+  height: 24px;
+  left: 209px;
+  top: 566px;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 24px;
+  text-align: center;
+  color: #21272A;
+}
+
+/* 입력 필드 */
+.input-container {
+  position: absolute;
+  width: 520px;
+  height: 80px;
+  background: #F6F6F6;
+  border-bottom: 1px solid #D4D4D4;
+}
+
+.input-label {
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 24px;
+  color: #21272A;
+}
+
+.input-field {
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 24px;
+  color: #697077;
+}
+
