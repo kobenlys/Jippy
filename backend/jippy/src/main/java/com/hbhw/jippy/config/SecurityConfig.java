@@ -58,7 +58,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/user/signup/**", "/api/user/login/**", "/api/user/reset/password").permitAll()
+                        .requestMatchers("/api/user/signup/**", "/api/user/login/**", "/api/user/reset/password", "/api/auth/refresh").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
