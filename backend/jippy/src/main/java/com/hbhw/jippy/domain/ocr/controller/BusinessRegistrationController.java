@@ -5,11 +5,9 @@ import com.hbhw.jippy.domain.ocr.dto.response.OcrResponse;
 import com.hbhw.jippy.domain.ocr.service.BusinessVerificationService;
 import com.hbhw.jippy.domain.ocr.service.OcrService;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.regex.Matcher;
@@ -41,6 +39,17 @@ public class BusinessRegistrationController {
             return ResponseEntity.ok(verificationResponse);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error processing request: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/ocr")
+    public ResponseEntity<OcrResponse> performOcr(@RequestParam("document") MultipartFile image) {
+        try {
+            OcrResponse response = ocrService.performOcr(image);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
         }
     }
 
