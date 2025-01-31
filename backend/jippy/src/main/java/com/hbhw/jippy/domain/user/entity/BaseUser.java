@@ -1,5 +1,6 @@
 package com.hbhw.jippy.domain.user.entity;
 
+import com.hbhw.jippy.utils.DateTimeUtils;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -36,7 +37,7 @@ public abstract class BaseUser {
         this.password = password;
         this.name = name;
         this.age = age;
-        this.createdAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        this.createdAt = DateTimeUtils.nowString();
     }
 
     public void updateInfo(String name, String age) {
