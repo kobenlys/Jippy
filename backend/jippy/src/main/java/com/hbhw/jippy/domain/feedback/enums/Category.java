@@ -5,8 +5,9 @@ import lombok.Getter;
 @Getter
 public enum Category {
     SERVICE("1"),  // 서비스 관련
-    PRODUCT("2"), // 제품 관련
-    ETC("3");     // 기타
+    LIVE("2"), // 실시간 서비스
+    PRODUCT("3"), // 제품 관련
+    ETC("4");     // 기타
 
     private final String value;
 
