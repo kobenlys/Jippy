@@ -13,7 +13,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Tag(name = "피드백 API", description = "매장 피드백 등록 및 조회/삭제 관련 API")
 @RestController
@@ -23,6 +27,9 @@ public class FeedbackController {
 
     private final FeedbackService feedbackService;
 
+    // Redis에 저장
+    private static final Set<String> processedRequestIds = Collections.newSetFromMap(new ConcurrentHashMap<>());
+
 
     @Operation(summary = "고객 피드백 등록", description = "고객이 특정 매장에 피드백을 등록합니다.")
     @PostMapping("/{storeId}/create")
@@ -31,6 +38,20 @@ public class FeedbackController {
             @Parameter(description = "매장 ID") @PathVariable int storeId,
             @RequestBody FeedbackRequest request
     ) {
+        // 1) requestId가 없는 경우(프론트에서 미처 생성 안 한 경우)
+        if (request.getRequestId() == null) {
+            request.setRequestId(UUID.randomUUID().toString());
+        }
+
+        synchronized (this) {
+            if (processedRequestIds.contains(request.getRequestId())) {
+                // 중복 요청이므로 에러 또는 중복임을 알려줄 수 있음
+                return ApiResponse.success(null);
+            }
+            // 중복이 아니면 등록
+            processedRequestIds.add(request.getRequestId());
+        }
+
         feedbackService.createFeedback(storeId, request);
         return ApiResponse.success(HttpStatus.OK);
     }
