@@ -9,12 +9,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -51,7 +52,7 @@ public class ErrorResponse {
 
     // NullPointer에러 처리 등 메세지와 에러 코드만 전달할때.
     public static ErrorResponse of(final ErrorCode errorCode, final String errorMessage) {
-        return new ErrorResponse(errorCode, getSafeMessage(errorCode.getMessage()), CustomFieldError.of("", "", errorMessage));
+        return new ErrorResponse(errorCode, getSafeMessage(errorCode.getMessage()), CustomFieldError.of(errorMessage));
     }
 
     // ConstraintViolation 예외 처리
@@ -64,9 +65,17 @@ public class ErrorResponse {
         return new ErrorResponse(errorCode, getSafeMessage(errorCode.getMessage()), CustomFieldError.of(missingServletRequestParameterException));
     }
 
+    public static ErrorResponse of(final ErrorCode errorCode, final NoSuchElementException noSuchElementException) {
+        return new ErrorResponse(errorCode, getSafeMessage(errorCode.getMessage()), CustomFieldError.of(noSuchElementException));
+    }
+
     // 파라미터로 전달된 값이 타입이 맞지 않을때 발생
     public static ErrorResponse of(final ErrorCode errorCode, final MethodArgumentTypeMismatchException methodArgumentTypeMismatchException) {
         return new ErrorResponse(errorCode, getSafeMessage(errorCode.getMessage()), CustomFieldError.of(methodArgumentTypeMismatchException));
+    }
+
+    public static ErrorResponse of(final ErrorCode errorCode, final NoResourceFoundException noResourceFoundException) {
+        return new ErrorResponse(errorCode, getSafeMessage(errorCode.getMessage()), CustomFieldError.of(noResourceFoundException));
     }
 
     public static ErrorResponse of(final ErrorCode errorCode) {
@@ -89,6 +98,11 @@ public class ErrorResponse {
         private String field;
         private String value;
         private String reason;
+        private static final boolean isProd = EnvironmentUtil.isProduction();
+
+        public CustomFieldError(String reason) {
+            this.reason = reason;
+        }
 
         public CustomFieldError(String field, String reason) {
             this.field = field;
@@ -101,14 +115,18 @@ public class ErrorResponse {
             this.reason = reason;
         }
 
-        // 기본 커스텀에러 객체
         public static List<CustomFieldError> of(String field, String reason) {
             List<CustomFieldError> errorList = new ArrayList<>();
             errorList.add(new CustomFieldError(field, reason));
             return errorList;
         }
 
-        // 기본 커스텀에러 객체
+        public static List<CustomFieldError> of(String reason) {
+            List<CustomFieldError> errorList = new ArrayList<>();
+            errorList.add(new CustomFieldError(reason));
+            return errorList;
+        }
+
         public static List<CustomFieldError> of(String field, String value, String reason) {
             List<CustomFieldError> errorList = new ArrayList<>();
             errorList.add(new CustomFieldError(field, value, reason));
@@ -117,36 +135,63 @@ public class ErrorResponse {
 
         // @Valid, @Validated 으로 필드에 대한 검증결과 응답
         public static List<CustomFieldError> of(BindingResult bindingResult) {
-            boolean isProd = EnvironmentUtil.isProduction();
+            if (isProd) {
+                return safeMessageProvider();
+            }
             return bindingResult.getFieldErrors().stream()
                     .map(error -> new CustomFieldError(
                             error.getField(),
-                            isProd ? "******" : error.getRejectedValue().toString(),
-                            isProd ? "입력값에 문제가 발생했습니다. 다시 시도해 주세요" : error.getDefaultMessage()
+                            error.getRejectedValue().toString(),
+                            error.getDefaultMessage()
                     )).collect(Collectors.toList());
         }
 
         // 객체에 대한 검증결과 응답
         public static List<CustomFieldError> of(Set<ConstraintViolation<?>> constraintViolation) {
-            //List<ConstraintViolation<?>> errorList = new ArrayList<>(constraintViolation);
-            final boolean isProd = EnvironmentUtil.isProduction();
+            if (isProd) {
+                return safeMessageProvider();
+            }
             return constraintViolation.stream()
                     .map(error -> new CustomFieldError(
                             error.getPropertyPath().toString(),
-                            isProd ? "잘못된 입력입니다. 다시 시도해 주세요" : error.getMessage()
+                            error.getMessage()
                     )).collect(Collectors.toList());
         }
 
         // 메서드 파라미터타입이 기대한 타입과 다를때 발생
         public static List<CustomFieldError> of(final MethodArgumentTypeMismatchException e) {
-            final boolean isProd = EnvironmentUtil.isProduction();
-            return CustomFieldError.of(e.getName(), e.getValue().toString(), isProd ? "잘못된 경로입니다. 다시 시도해 주세요" : e.getErrorCode());
+            if (isProd) {
+                return safeMessageProvider();
+            }
+            return CustomFieldError.of(e.getName(), e.getValue().toString(), e.getErrorCode());
         }
 
         // URL에 쿼리 파라미터 누락시 발생
         public static List<CustomFieldError> of(final MissingServletRequestParameterException e) {
-            final boolean isProd = EnvironmentUtil.isProduction();
-            return CustomFieldError.of(isProd ? null: e.getParameterName(), e.getMessage());
+            if (isProd) {
+                return safeMessageProvider();
+            }
+            return CustomFieldError.of(e.getParameterName(), e.getMessage());
+        }
+
+        // PathVariable 누락및 엔드포인트 존재하지 않을때 발생
+        public static List<CustomFieldError> of(final NoResourceFoundException e){
+            if (isProd) {
+                return safeMessageProvider();
+            }
+            return CustomFieldError.of(e.getResourcePath(), e.getMessage());
+        }
+
+        // 존재하지않는 리소스를 조회했을때
+        public static List<CustomFieldError> of(final NoSuchElementException e){
+            if (isProd) {
+                return safeMessageProvider();
+            }
+            return CustomFieldError.of(e.getMessage());
+        }
+
+        private static List<CustomFieldError> safeMessageProvider(){
+            return CustomFieldError.of("잠시후 다시 시도해 주세요");
         }
     }
 }
