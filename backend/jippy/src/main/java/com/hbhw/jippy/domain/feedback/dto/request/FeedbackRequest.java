@@ -11,7 +11,6 @@ import lombok.Setter;
 @Setter
 public class FeedbackRequest {
 
-    private Integer storeId;    // 매장 아이디
     private Category category;  // 카테고리(enum)
     private String content;     // 피드백 내용
 }
