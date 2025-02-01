@@ -7,11 +7,11 @@ import com.hbhw.jippy.domain.feedback.repository.FeedbackRepository;
 import com.hbhw.jippy.domain.feedback.enums.Category;
 import com.hbhw.jippy.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,10 +20,31 @@ public class FeedbackService {
 
     private final FeedbackRepository feedbackRepository;
 
+    private final RedisTemplate<String, String> redisTemplate;
+
+
     /**
      * 고객 피드백 등록
      */
     public void createFeedback(int storeId, FeedbackRequest request) {
+        // 1) requestId 유효성 체크
+        if (request.getRequestId() == null || request.getRequestId().isEmpty()) {
+            // 상황에 따라 예외처리 혹은 내부에서 UUID 생성 등
+            throw new IllegalArgumentException("requestId is required");
+        }
+
+        // 2) Redis에 해당 requestId가 이미 존재하는지(중복 요청인지) 체크
+        //    setIfAbsent == true -> 새 요청
+        //    setIfAbsent == false -> 이미 존재(중복 요청)
+        Boolean isNewRequest = redisTemplate.opsForValue()
+                .setIfAbsent(request.getRequestId(), "LOCK", 24, TimeUnit.HOURS);
+        // ★ 여기서 TTL(5분)은 예시이므로, 실제로는 비즈니스 로직에 맞춰 변경하세요.
+
+        if (Boolean.FALSE.equals(isNewRequest)) {
+            // 이미 동일 requestId가 Redis에 존재 -> 중복 요청
+            throw new RuntimeException("중복 요청입니다.");
+        }
+
         Feedback feedback = Feedback.builder()
                 .storeId(storeId)
                 .category(request.getCategory())
