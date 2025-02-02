@@ -1,5 +1,6 @@
 'use client';
 
+import Link from "next/link";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -116,12 +117,13 @@ const SignupOwner = () => {
 
           <div className="h-px bg-gray-300 my-6"></div>
 
-          <p className="text-center text-sm">
-            계정이 이미 있으신가요?{' '}
-            <a href="/login" className="text-blue-500 hover:underline">
+          <div className="text-center text-sm">
+            <span className="text-gray-600">이미 계정이 있으신가요? </span>
+            <Link href="/login" className="text-blue-500 hover:text-blue-600">
               로그인
-            </a>
-          </p>
+            </Link>
+          </div>
+
         </form>
       </div>
     </div>

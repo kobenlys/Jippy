@@ -1,19 +1,36 @@
-import "./globals.css"; // 글로벌 CSS 파일 임포트
-import { ReactNode } from "react";
+"use client"; // 클라이언트 컴포넌트로 지정
 
-export const metadata = {
-  title: "Jippy",
-  description: "Pretendard 폰트가 적용된 페이지",
-};
+import { Provider } from "react-redux";
+import { store } from "@/redux/store";
+import { Archivo_Black } from 'next/font/google'
+import '@/app/globals.css';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+// Archivo Black 설정
+const archivoBlack = Archivo_Black({
+  weight: ['400'],
+  subsets: ['latin'],
+  variable: '--font-archivo-black',
+  display: 'swap',
+})
 
 export default function RootLayout({
   children,
 }: {
-  children: ReactNode;
+  children: React.ReactNode
 }) {
   return (
-    <html lang="ko">
-      <body>{children}</body>
+    <html lang="ko" className={`${archivoBlack.variable}`}>
+      <head>
+        <link rel="icon" href="/icons/favicon.ico" />
+      </head>
+      <body>
+        <Provider store={store}>
+          {children}
+          <ToastContainer />
+        </Provider>
+      </body>
     </html>
   );
 }

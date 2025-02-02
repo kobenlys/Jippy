@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent, ChangeEvent } from "react";
+import Link from "next/link";
 
 interface FormData {
   email: string;
@@ -130,12 +131,13 @@ const ResetPassword = () => {
 
         <div className="w-64 h-px bg-gray-300 my-6"></div>
 
-        <button
-          onClick={() => window.location.href = '/login'}
-          className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-        >
-          로그인하러 가기
-        </button>
+        <Link href="/login">
+          <button
+            className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          >
+            로그인하러 가기
+          </button>
+        </Link>
 
       </form>
     </div>
