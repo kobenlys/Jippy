@@ -1,4 +1,4 @@
-package com.hbhw.jippy.global.auth;
+package com.hbhw.jippy.global.auth.config;
 
 import com.hbhw.jippy.utils.DateTimeUtils;
 import io.jsonwebtoken.Claims;

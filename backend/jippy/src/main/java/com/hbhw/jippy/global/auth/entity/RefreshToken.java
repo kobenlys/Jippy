@@ -1,4 +1,4 @@
-package com.hbhw.jippy.global.auth;
+package com.hbhw.jippy.global.auth.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

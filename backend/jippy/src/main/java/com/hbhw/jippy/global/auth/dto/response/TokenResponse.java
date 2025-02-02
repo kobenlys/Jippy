@@ -1,4 +1,4 @@
-package com.hbhw.jippy.domain.user.dto.response;
+package com.hbhw.jippy.global.auth.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;

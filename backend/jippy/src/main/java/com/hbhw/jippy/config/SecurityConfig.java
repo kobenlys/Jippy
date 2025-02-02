@@ -1,6 +1,6 @@
 package com.hbhw.jippy.config;
 
-import com.hbhw.jippy.global.auth.JwtAuthenticationFilter;
+import com.hbhw.jippy.global.auth.config.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,6 +1,5 @@
-package com.hbhw.jippy.global.auth;
+package com.hbhw.jippy.global.auth.config;
 
-import com.hbhw.jippy.domain.user.enums.UserType;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;

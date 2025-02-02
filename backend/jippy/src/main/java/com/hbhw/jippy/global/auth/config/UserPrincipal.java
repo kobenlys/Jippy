@@ -1,9 +1,7 @@
-package com.hbhw.jippy.global.auth;
+package com.hbhw.jippy.global.auth.config;
 
 import com.hbhw.jippy.domain.user.entity.BaseUser;
-import com.hbhw.jippy.domain.user.entity.UserOwner;
 import com.hbhw.jippy.domain.user.enums.StaffType;
-import com.hbhw.jippy.domain.user.enums.UserType;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

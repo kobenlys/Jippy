@@ -1,7 +1,6 @@
 package com.hbhw.jippy.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import org.springdoc.core.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
@@ -41,6 +40,14 @@ public class SwaggerConfig {
         return GroupedOpenApi.builder()
                 .group("사용자 - user")
                 .pathsToMatch("/api/user/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi authApi() {
+        return GroupedOpenApi.builder()
+                .group("인증 - auth")
+                .pathsToMatch("/api/auth/**")
                 .build();
     }
 }

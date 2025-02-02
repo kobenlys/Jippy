@@ -7,7 +7,7 @@ import com.hbhw.jippy.domain.store_user.repository.StoreStaffRepository;
 import com.hbhw.jippy.domain.user.entity.UserStaff;
 import com.hbhw.jippy.domain.user.enums.StaffType;
 import com.hbhw.jippy.domain.user.repository.UserStaffRepository;
-import com.hbhw.jippy.global.auth.UserPrincipal;
+import com.hbhw.jippy.global.auth.config.UserPrincipal;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;

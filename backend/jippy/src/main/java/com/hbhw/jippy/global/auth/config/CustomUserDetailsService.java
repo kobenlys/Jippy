@@ -1,16 +1,13 @@
-package com.hbhw.jippy.global.auth;
+package com.hbhw.jippy.global.auth.config;
 
 import com.hbhw.jippy.domain.store_user.entity.StoreUserStaff;
 import com.hbhw.jippy.domain.store_user.repository.StoreStaffRepository;
-import com.hbhw.jippy.domain.user.entity.BaseUser;
 import com.hbhw.jippy.domain.user.entity.UserOwner;
 import com.hbhw.jippy.domain.user.entity.UserStaff;
 import com.hbhw.jippy.domain.user.enums.StaffType;
-import com.hbhw.jippy.domain.user.enums.UserType;
 import com.hbhw.jippy.domain.user.repository.UserOwnerRepository;
 import com.hbhw.jippy.domain.user.repository.UserStaffRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
