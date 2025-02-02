@@ -37,7 +37,7 @@ public class StoreStaffService {
         StoreUserStaff storeUserStaff = StoreUserStaff.builder()
                 .userStaff(staff)
                 .storeId(storeId)
-                .staffType(StaffType.직원)
+                .staffType(StaffType.STAFF)
                 .staffSalary(request.getStaffSalary())
                 .staffSalaryType(request.getStaffSalaryType())
                 .build();
@@ -55,7 +55,7 @@ public class StoreStaffService {
 
     public void updateStaffInfo(Integer storeId, Integer staffId) {
         StoreUserStaff storeUserStaff = findStoreStaff(storeId, staffId);
-        storeUserStaff.updateStaffType(StaffType.매니저);
+        storeUserStaff.updateStaffType(StaffType.MANAGER);
     }
 
     public void deleteStaff(Integer storeId, Integer staffId) {

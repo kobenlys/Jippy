@@ -1,14 +1,22 @@
 package com.hbhw.jippy.global.auth;
 
+import com.hbhw.jippy.domain.store_user.entity.StoreUserStaff;
+import com.hbhw.jippy.domain.store_user.repository.StoreStaffRepository;
 import com.hbhw.jippy.domain.user.entity.BaseUser;
+import com.hbhw.jippy.domain.user.entity.UserOwner;
+import com.hbhw.jippy.domain.user.entity.UserStaff;
+import com.hbhw.jippy.domain.user.enums.StaffType;
 import com.hbhw.jippy.domain.user.enums.UserType;
 import com.hbhw.jippy.domain.user.repository.UserOwnerRepository;
 import com.hbhw.jippy.domain.user.repository.UserStaffRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 /**
  * 사용자 정보를 로드하는 서비스
@@ -20,20 +28,30 @@ import org.springframework.stereotype.Service;
 public class CustomUserDetailsService implements UserDetailsService {
     private final UserOwnerRepository userOwnerRepository;
     private final UserStaffRepository userStaffRepository;
+    private final StoreStaffRepository storeStaffRepository;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        String[] parts = email.split(":");
-        String userEmail = parts[0];
-        UserType userType = UserType.valueOf(parts[1]);
+        /**
+         * 점주 테이블에서 찾기
+         */
+        Optional<UserOwner> owner = userOwnerRepository.findByEmail(email);
+        if (owner.isPresent()) {
+            return new UserPrincipal(owner.get(), StaffType.OWNER);
+        }
 
-        BaseUser user = switch (userType) {
-            case OWNER -> userOwnerRepository.findByEmail(userEmail)
-                    .orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 점주입니다."));
-            case STAFF -> userStaffRepository.findByEmail(userEmail)
-                    .orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 직원입니다."));
-        };
+        /**
+         * 직원 테이블에서 찾기
+         */
+        UserStaff staff = userStaffRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
 
-        return new UserPrincipal(user);
+        /**
+         * 직원 권한 찾기
+         */
+        StoreUserStaff storeStaff = storeStaffRepository.findByUserStaff(staff)
+                .orElseThrow(() -> new RuntimeException("매장 정보를 찾을 수 없습니다."));
+
+        return new UserPrincipal(staff, storeStaff.getStaffType());
     }
 }

@@ -24,20 +24,22 @@ public class TokenController {
 
     @PostMapping("/refresh")
     public ResponseEntity<TokenResponse> refresh(@RequestHeader("Authorization") String refreshToken) {
-        log.info("Origianl Token: {}", refreshToken);
         refreshToken = refreshToken.substring(7);
         log.info("Refresh Token: {}", refreshToken);
+
         try {
             Claims claims = jwtProvider.validateTokenAndGetClaims(refreshToken);
             log.info("토큰 검증 완료");
+
             RefreshToken redisRefreshToken = refreshTokenRepository.findById(claims.getSubject())
                     .orElseThrow(() -> new RuntimeException("저장된 Refresh Token이 없습니다."));
             log.info("Redis Refresh Token: {}", redisRefreshToken);
+
             if (!redisRefreshToken.getToken().equals(refreshToken)) {
                 throw new RuntimeException("Refresh Token이 일치하지 않습니다.");
             }
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(redisRefreshToken.getId() + ":" + redisRefreshToken.getUserType());
+            UserDetails userDetails = userDetailsService.loadUserByUsername(redisRefreshToken.getId());
             Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
             String newAccessToken = jwtProvider.createAccessToken(authentication);
