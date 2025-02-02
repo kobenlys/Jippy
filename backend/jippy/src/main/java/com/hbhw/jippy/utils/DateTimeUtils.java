@@ -2,6 +2,7 @@ package com.hbhw.jippy.utils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 public class DateTimeUtils {
 
@@ -17,6 +18,20 @@ public class DateTimeUtils {
     public static String nowString() {
         return LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    }
+
+    /**
+     * Jwt 생성 시간용 메서드
+     */
+    public static Date now() {
+        return new Date();
+    }
+
+    /**
+     * Jwt 만료 시간용 메서드
+     */
+    public static Date getExpirationTime(long expirationMillis) {
+        return new Date(now().getTime() + expirationMillis);
     }
 
     /**

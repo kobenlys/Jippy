@@ -10,6 +10,7 @@ import com.hbhw.jippy.domain.stock.entity.InventoryItem;
 import com.hbhw.jippy.domain.stock.entity.StockDetail;
 import com.hbhw.jippy.domain.stock.repository.StockRepository;
 import com.hbhw.jippy.domain.stock.entity.Stock;
+import com.hbhw.jippy.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
@@ -19,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -28,10 +28,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class StockService {
     private static final Map<String, Integer> UNIT_CONVERSION = Map.of(
-            "kg", 1000,
-            "g", 1,
-            "l", 1000,
-            "ml", 1
+        "kg", 1000,
+        "g", 1,
+        "l", 1000,
+        "ml", 1
     );
 
     private final StockRepository stockRepository;
@@ -57,6 +57,7 @@ public class StockService {
             if (existingItem.isPresent()) {
                 updateInventoryItem(existingItem.get(), newItem);
             } else {
+                newItem.setUpdatedAt(DateTimeUtils.nowString());
                 addNewInventoryItem(stock, newItem);
             }
         });
@@ -72,7 +73,7 @@ public class StockService {
     }
 
     private void updateInventoryItem(InventoryItem existingItem, InventoryItemRequest newItem) {
-        existingItem.setUpdatedAt(newItem.getUpdatedAt());
+        existingItem.setUpdatedAt(DateTimeUtils.nowString());
         mergeStockDetails(existingItem, newItem);
     }
 
@@ -102,27 +103,17 @@ public class StockService {
         stock.getInventory().forEach(item -> {
             int totalValue = item.getStock().stream()
                 .mapToInt(detail -> {
+                    String unit = detail.getStockUnit();
                     int unitSize = detail.getStockUnitSize();
-                    int conversionFactor = UNIT_CONVERSION.getOrDefault(detail.getStockUnit(), 1);
-                    int baseUnitSize = convertToBaseUnit(detail.getStockUnit()) == "kg" ? unitSize * conversionFactor : unitSize;
-                    return unitSize * conversionFactor * detail.getStockCount();
+                    int conversionFactor = UNIT_CONVERSION.getOrDefault(unit, 1);
+                    boolean needsConversion = unit.equals("kg") || unit.equals("l");
+                    return needsConversion ?
+                        unitSize * conversionFactor * detail.getStockCount() :
+                        unitSize * detail.getStockCount();
                 })
                 .sum();
             item.setStockTotalValue(totalValue);
         });
-    }
-
-    private String convertToBaseUnit(String unit) {
-        if (unit == null) {
-            throw new IllegalArgumentException("단위가 null입니다");
-        }
-
-        if(!UNIT_CONVERSION.containsKey(unit)) {
-            throw new IllegalArgumentException("지원하지 않는 단위입니다 틀린 단위 : " + unit);
-        }
-
-        return unit.toLowerCase().startsWith("k") ? unit.substring(1) :
-            unit.equals("l") ? "ml" : unit;
     }
 
     private InventoryItem mapToInventoryItem(InventoryItemRequest request) {
@@ -170,5 +161,112 @@ public class StockService {
             .stockUnitSize(detail.getStockUnitSize())
             .stockUnit(detail.getStockUnit())
             .build();
+    }
+
+    public StockResponse getInventory(Integer storeId) {
+        return stockRepository.findByStoreId(storeId)
+            .map(this::mapEntityToResponse)
+            .orElse(StockResponse.builder()
+                .storeId(storeId)
+                .inventory(new ArrayList<>())
+                .build());
+    }
+
+    @Transactional
+    public StockResponse updateInventory(Integer storeId, String stockName, StockRequest request) {
+        Stock stock = stockRepository.findByStoreId(storeId)
+            .orElseThrow(() -> new IllegalArgumentException("해당 매장의 재고 정보를 찾을 수 없습니다"));
+
+        InventoryItem targetItem = stock.getInventory().stream()
+            .filter(item -> item.getStockName().equals(stockName))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("해당 상품의 재고 정보를 찾을 수 없습니다"));
+
+        if (request.getInventory() == null || request.getInventory().isEmpty()) {
+            throw new IllegalArgumentException("수정할 재고 정보가 필요합니다");
+        }
+
+        InventoryItemRequest updateRequest = request.getInventory().get(0);
+
+        String newStockName = updateRequest.getStockName();
+
+        if (!stockName.equals(newStockName)) {
+            boolean isDuplicate = stock.getInventory().stream()
+                .anyMatch(item -> item.getStockName().equals(newStockName));
+
+            if (isDuplicate) {
+                throw new IllegalArgumentException("이미 존재하는 상품명입니다: " + newStockName);
+            }
+
+            targetItem.setStockName(newStockName);
+        }
+
+        updateRequest.getStock().forEach(newStock -> {
+            Optional<StockDetail> existingStock = targetItem.getStock().stream()
+                .filter(detail ->
+                    detail.getStockUnitSize().equals(newStock.getStockUnitSize()) &&
+                        detail.getStockUnit().equals(newStock.getStockUnit()))
+                .findFirst();
+            if (existingStock.isPresent()) {
+                existingStock.get().setStockCount(newStock.getStockCount());
+            } else {
+                throw new IllegalArgumentException(
+                    String.format("해당 용량과 단위의 재고가 존재하지 않습니다",
+                        newStock.getStockUnitSize(),
+                        newStock.getStockUnit())
+                );
+            }
+        });
+
+        targetItem.setUpdatedAt(DateTimeUtils.nowString());
+
+        recalculateTotalValues(stock);
+
+        Query query = new Query(Criteria.where("store_id").is(storeId));
+        Update update = new Update().set("inventory", stock.getInventory());
+        mongoTemplate.upsert(query, update, Stock.class);
+
+        return mapEntityToResponse(stock);
+    }
+
+    @Transactional
+    public StockResponse deleteInventoryItem(Integer storeId, String stockName, StockRequest request) {
+        if (request.getInventory() == null || request.getInventory().isEmpty()) {
+            throw new IllegalArgumentException("삭제할 재고 정보가 필요합니다");
+        }
+
+        Stock stock = stockRepository.findByStoreId(storeId)
+            .orElseThrow(() -> new IllegalArgumentException("해당 매장의 재고 정보를 찾을 수 없습니다"));
+
+        InventoryItem targetItem = stock.getInventory().stream()
+            .filter(item -> item.getStockName().equals(stockName))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("해당 상품의 재고 정보를 찾을 수 없습니다"));
+
+        request.getInventory().forEach(deleteRequest -> {
+            boolean removed = targetItem.getStock().removeIf(stockDetail ->
+                stockDetail.getStockUnitSize().equals(deleteRequest.getStock().get(0).getStockUnitSize()) &&
+                stockDetail.getStockUnit().equals(deleteRequest.getStock().get(0).getStockUnit())
+            );
+
+            if (!removed) {
+                throw new IllegalArgumentException(String.format("해당 용량의 재고를 찾을 수 없습니다",
+                        deleteRequest.getStock().get(0).getStockUnitSize(),
+                        deleteRequest.getStock().get(0).getStockUnit()));
+            }
+            targetItem.setUpdatedAt(DateTimeUtils.nowString());
+        });
+
+        if (targetItem.getStock().isEmpty()) {
+            stock.getInventory().remove(targetItem);
+        }
+
+        recalculateTotalValues(stock);
+
+        Query query = new Query(Criteria.where("store_id").is(storeId));
+        Update update = new Update().set("inventory", stock.getInventory());
+        mongoTemplate.upsert(query, update, Stock.class);
+
+        return mapEntityToResponse(stock);
     }
 }

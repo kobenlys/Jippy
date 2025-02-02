@@ -1,11 +1,7 @@
-package com.hbhw.jippy.domain.stock.entity;
+package com.hbhw.jippy.domain.chat.entity;
 
 import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -13,16 +9,18 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-@Document(collection = "stock")
+@Document(collection = "store_chat_room")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Stock {
+public class Chat {
     @Id
     @Indexed(unique = true)
     @Field("store_id")
     private Integer storeId;
-    private List<InventoryItem> inventory = new ArrayList<>();
+
+    @Field("messages")
+    private List<Message> messages = new ArrayList<>();
 }

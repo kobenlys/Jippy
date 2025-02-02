@@ -58,7 +58,19 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/user/signup/**", "/api/user/login/**", "/api/user/reset/password", "api/product/**").permitAll()
+                        .requestMatchers(
+                                "/api/user/signup/**",
+                                "/api/user/login/**",
+                                "/api/user/reset/password",
+                                "/api/auth/refresh",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "swagger-resources/**",
+                                // 개발 시 임시 권한 설정
+                                "/api/**"
+                        ).permitAll()
+>>>>>>> backend/jippy/src/main/java/com/hbhw/jippy/config/SecurityConfig.java
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
