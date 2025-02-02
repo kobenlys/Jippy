@@ -137,7 +137,7 @@ public class OcrService {
      */
     private String extractRepresentativeName(String text) {
         // 1) "성 명 :"
-        Pattern pattern1 = Pattern.compile("성\\s*명\\s*:\\s*(.*?)\\s*(?=개\\s*업|등록번호|법인명|상\\s*호|$)");
+        Pattern pattern1 = Pattern.compile("성\\s*명\\s*:\\s*(.*?)\\s*(?=생\\s*년\\s*월\\s*일|개\\s*업|$)");
         Matcher matcher1 = pattern1.matcher(text);
         if (matcher1.find()) {
             return matcher1.group(1).trim();
