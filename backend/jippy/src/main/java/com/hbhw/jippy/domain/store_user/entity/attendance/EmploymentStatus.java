@@ -1,6 +1,7 @@
-package com.hbhw.jippy.domain.store_user.entity;
+package com.hbhw.jippy.domain.store_user.entity.attendance;
 
 import com.hbhw.jippy.domain.store.entity.Store;
+import com.hbhw.jippy.domain.store_user.entity.StoreUserStaff;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -38,7 +39,4 @@ public class EmploymentStatus {
 
     @Column(name = "is_early_leave", nullable = false)
     private Boolean isEarlyLeave;
-
-    @Column(name = "break_time")
-    private Integer breakTime;
 }
