@@ -24,7 +24,7 @@ public class UserFactory {
                     .password(encodedPassword)
                     .name(request.getName())
                     .age(request.getAge())
-                    .staffType(StaffType.점주)
+                    .staffType(StaffType.OWNER)
                     .build();
 
             case STAFF -> UserStaff.builder()

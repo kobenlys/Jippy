@@ -1,6 +1,5 @@
-package com.hbhw.jippy.global.auth;
+package com.hbhw.jippy.global.auth.config;
 
-import com.hbhw.jippy.domain.user.enums.UserType;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -41,11 +40,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (StringUtils.hasText(token)) {
                 Claims claims = jwtProvider.validateTokenAndGetClaims(token);
-
                 String email = claims.getSubject();
-                UserType userType = UserType.valueOf(claims.get("userType", String.class));
 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(email + ":" + userType);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);

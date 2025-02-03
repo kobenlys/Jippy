@@ -4,16 +4,21 @@ import lombok.Getter;
 
 import java.util.Objects;
 
+/**
+ * 권한 관리용
+ */
 @Getter
 public enum StaffType {
-    점주(1),
-    직원(2),
-    매니저(3);
+    OWNER(1, "ROLE_OWNER"),
+    STAFF(2, "ROLE_STAFF"),
+    MANAGER(3, "ROLE_MANAGER");
 
     private final Integer code;
+    private final String role;
 
-    StaffType(Integer code) {
+    StaffType(Integer code, String role) {
         this.code = code;
+        this.role = role;
     }
 
     public static StaffType ofLegacyCode(Integer code) {

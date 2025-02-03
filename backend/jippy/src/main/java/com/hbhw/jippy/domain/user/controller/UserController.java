@@ -5,63 +5,74 @@ import com.hbhw.jippy.domain.user.dto.response.LoginResponse;
 import com.hbhw.jippy.domain.user.dto.response.UpdateUserResponse;
 import com.hbhw.jippy.domain.user.enums.UserType;
 import com.hbhw.jippy.domain.user.service.UserService;
+import com.hbhw.jippy.global.response.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "User", description = "사용자 관리 API")
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
 
+    @Operation(summary = "점주 회원가입", description = "점주 계정으로 회원가입을 진행합니다")
     @PostMapping("/signup/owner")
-    public ResponseEntity<?> ownerSignUp(@RequestBody @Valid SignUpRequest request) {
+    public ApiResponse<?> ownerSignUp(@RequestBody @Valid SignUpRequest request) {
         userService.signUp(request, UserType.OWNER);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ApiResponse.success(HttpStatus.CREATED);
     }
 
+    @Operation(summary = "직원 회원가입", description = "직원 계정으로 회원가입을 진행합니다")
     @PostMapping("/signup/staff")
-    public ResponseEntity<?> staffSignUp(@RequestBody @Valid SignUpRequest request) {
+    public ApiResponse<?> staffSignUp(@RequestBody @Valid SignUpRequest request) {
         userService.signUp(request, UserType.STAFF);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ApiResponse.success(HttpStatus.CREATED);
     }
 
+    @Operation(summary = "로그인", description = "사용자 로그인을 진행합니다")
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
+    public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
         LoginResponse response = userService.login(request);
-        return ResponseEntity.ok(response);
+        return ApiResponse.success(response);
     }
 
+    @Operation(summary = "로그아웃", description = "현재 로그인된 사용자를 로그아웃합니다")
     @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
+    public ApiResponse<?> logout() {
         userService.logout();
-        return ResponseEntity.ok().build();
+        return ApiResponse.success(HttpStatus.OK);
     }
 
+    @Operation(summary = "회원 탈퇴", description = "현재 로그인된 사용자의 계정을 탈퇴시킵니다")
     @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteUser() {
+    public ApiResponse<?> deleteUser() {
         userService.deleteUser();
-        return ResponseEntity.noContent().build();
+        return ApiResponse.success(HttpStatus.NO_CONTENT);
     }
 
+    @Operation(summary = "회원정보 수정", description = "사용자의 기본 정보를 수정합니다")
     @PutMapping("/update/userInfo")
-    public ResponseEntity<UpdateUserResponse> updateUser(@RequestBody @Valid UpdateUserRequest request) {
+    public ApiResponse<UpdateUserResponse> updateUser(@RequestBody @Valid UpdateUserRequest request) {
         UpdateUserResponse response = userService.updateUser(request);
-        return ResponseEntity.ok(response);
+        return ApiResponse.success(response);
     }
 
+    @Operation(summary = "비밀번호 변경", description = "사용자의 비밀번호를 변경합니다")
     @PutMapping("/update/password")
-    public ResponseEntity<?> updatePassword(@RequestBody @Valid UpdatePasswordRequest request) {
+    public ApiResponse<?> updatePassword(@RequestBody @Valid UpdatePasswordRequest request) {
         userService.updatePassword(request);
-        return ResponseEntity.ok().build();
+        return ApiResponse.success(HttpStatus.OK);
     }
 
+    @Operation(summary = "비밀번호 재발급", description = "사용자의 비밀번호를 초기화합니다")
     @PostMapping("/reset/password")
-    public ResponseEntity<?> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
+    public ApiResponse<?> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
         userService.resetPassword(request);
-        return ResponseEntity.ok().build();
+        return ApiResponse.success(HttpStatus.OK);
     }
 }

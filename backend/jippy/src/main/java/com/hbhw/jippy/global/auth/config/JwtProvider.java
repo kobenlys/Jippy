@@ -1,4 +1,4 @@
-package com.hbhw.jippy.global.auth;
+package com.hbhw.jippy.global.auth.config;
 
 import com.hbhw.jippy.utils.DateTimeUtils;
 import io.jsonwebtoken.Claims;
@@ -45,7 +45,7 @@ public class JwtProvider {
         String token = Jwts.builder()
                 .subject(userPrincipal.getEmail())
                 .claim("id", userPrincipal.getId())
-                .claim("userType", userPrincipal.getUserType().name())
+                .claim("staffType", userPrincipal.getStaffType().name())
                 .issuedAt(DateTimeUtils.now())
                 .expiration(DateTimeUtils.getExpirationTime(accessTokenExpireTime))
                 .signWith(key)

@@ -1,8 +1,7 @@
-package com.hbhw.jippy.global.auth;
+package com.hbhw.jippy.global.auth.config;
 
 import com.hbhw.jippy.domain.user.entity.BaseUser;
-import com.hbhw.jippy.domain.user.entity.UserOwner;
-import com.hbhw.jippy.domain.user.enums.UserType;
+import com.hbhw.jippy.domain.user.enums.StaffType;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,18 +22,18 @@ public class UserPrincipal implements UserDetails {
     private final String password;
     private final String name;
     private final String age;
-    private final UserType userType;
+    private final StaffType staffType;
     private final Collection<? extends GrantedAuthority> authorities;
 
-    public UserPrincipal(BaseUser user) {
+    public UserPrincipal(BaseUser user, StaffType staffType) {
         this.id = user.getId();
         this.email = user.getEmail();
         this.password = user.getPassword();
         this.name = user.getName();
         this.age = user.getAge();
-        this.userType = user instanceof UserOwner ? UserType.OWNER : UserType.STAFF;
+        this.staffType = staffType;
         this.authorities = Collections.singletonList(
-                new SimpleGrantedAuthority("ROLE_" + this.userType.name())
+                new SimpleGrantedAuthority(staffType.getRole())
         );
     }
 

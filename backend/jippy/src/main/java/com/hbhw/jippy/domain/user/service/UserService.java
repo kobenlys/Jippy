@@ -1,19 +1,22 @@
 package com.hbhw.jippy.domain.user.service;
 
+import com.hbhw.jippy.domain.store_user.entity.StoreUserStaff;
+import com.hbhw.jippy.domain.store_user.repository.StoreStaffRepository;
 import com.hbhw.jippy.domain.user.dto.request.*;
 import com.hbhw.jippy.domain.user.dto.response.LoginResponse;
 import com.hbhw.jippy.domain.user.dto.response.UpdateUserResponse;
 import com.hbhw.jippy.domain.user.entity.BaseUser;
 import com.hbhw.jippy.domain.user.entity.UserOwner;
 import com.hbhw.jippy.domain.user.entity.UserStaff;
+import com.hbhw.jippy.domain.user.enums.StaffType;
 import com.hbhw.jippy.domain.user.enums.UserType;
 import com.hbhw.jippy.domain.user.factory.UserFactory;
 import com.hbhw.jippy.domain.user.repository.UserOwnerRepository;
 import com.hbhw.jippy.domain.user.repository.UserStaffRepository;
-import com.hbhw.jippy.global.auth.JwtProvider;
-import com.hbhw.jippy.global.auth.RefreshToken;
-import com.hbhw.jippy.global.auth.RefreshTokenRepository;
-import com.hbhw.jippy.global.auth.UserPrincipal;
+import com.hbhw.jippy.global.auth.config.JwtProvider;
+import com.hbhw.jippy.global.auth.entity.RefreshToken;
+import com.hbhw.jippy.global.auth.repository.RefreshTokenRepository;
+import com.hbhw.jippy.global.auth.config.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,6 +40,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final StoreStaffRepository storeStaffRepository;
 
     @Value("${jwt.refresh.expiration}")
     private Long refreshTokenExpireTime;
@@ -73,7 +77,17 @@ public class UserService {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
 
-        UserPrincipal principal = new UserPrincipal(user);
+        StaffType staffType;
+        if (user instanceof UserOwner) {
+            staffType = StaffType.OWNER;
+        } else {
+            UserStaff staff = (UserStaff) user;
+            StoreUserStaff storeStaff = storeStaffRepository.findByUserStaff(staff)
+                    .orElseThrow(() -> new RuntimeException("매장 정보를 찾을 수 없습니다."));
+            staffType = storeStaff.getStaffType();
+        }
+
+        UserPrincipal principal = new UserPrincipal(user, staffType);
         Authentication authentication = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -83,7 +97,7 @@ public class UserService {
         RefreshToken redisRefreshToken = RefreshToken.builder()
                 .id(user.getEmail())
                 .token(refreshToken)
-                .userType(request.getUserType().name())
+                .staffType(staffType.name())
                 .ttl(refreshTokenExpireTime / 1000)
                 .build();
 
@@ -96,7 +110,7 @@ public class UserService {
                 .orElse(null);
         log.info("Redis에 저장된 값: " + savedToken);
 
-        return LoginResponse.of(user, accessToken, refreshToken);
+        return LoginResponse.of(user, staffType, accessToken, refreshToken);
     }
 
     @Transactional
@@ -163,7 +177,12 @@ public class UserService {
      */
     private BaseUser getCurrentUser() {
         UserPrincipal principal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return findUser(principal.getEmail(), principal.getUserType());
+        return switch (principal.getStaffType()) {
+            case OWNER -> userOwnerRepository.findByEmail(principal.getEmail())
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 점주입니다."));
+            case STAFF, MANAGER -> userStaffRepository.findByEmail(principal.getEmail())
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 직원입니다."));
+        };
     }
 
     private String generateTempPassword() {
