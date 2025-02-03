@@ -30,9 +30,6 @@ public class StoreService {
         this.userOwnerRepository = userOwnerRepository;
     }
 
-    /**
-     * 매장 등록
-     */
     @Transactional
     public StoreResponse createStore(StoreCreateRequest request) {
         // UserOwner 조회
@@ -53,9 +50,7 @@ public class StoreService {
         return toResponse(saved);
     }
 
-    /**
-     * 매장 정보 수정
-     */
+
     @Transactional
     public StoreResponse updateStore(Integer storeId, StoreUpdateRequest request) {
         Store store = storeRepository.findById(storeId)
@@ -65,15 +60,11 @@ public class StoreService {
         store.setAddress(request.getAddress());
         store.setOpeningDate(request.getOpeningDate());
         store.setTotalCash(request.getTotalCash());
-        store.setBusinessRegistrationNumber(request.getBusinessRegistrationNumber());
 
         // 변경 사항 자동 감지(더티 체크)로 업데이트
         return toResponse(store);
     }
 
-    /**
-     * 매장 전체 조회
-     */
     @Transactional(readOnly = true)
     public List<StoreResponse> getStores() {
         List<Store> storeList = storeRepository.findAll();
@@ -82,9 +73,7 @@ public class StoreService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 매장 상세 조회
-     */
+
     @Transactional(readOnly = true)
     public StoreResponse getStore(Integer storeId) {
         Store store = storeRepository.findById(storeId)
@@ -92,9 +81,7 @@ public class StoreService {
         return toResponse(store);
     }
 
-    /**
-     * 매장 삭제
-     */
+
     @Transactional
     public void deleteStore(Integer storeId) {
         Store store = storeRepository.findById(storeId)

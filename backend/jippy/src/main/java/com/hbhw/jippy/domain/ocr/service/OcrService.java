@@ -2,6 +2,7 @@ package com.hbhw.jippy.domain.ocr.service;
 
 import com.hbhw.jippy.domain.ocr.dto.response.OcrExtractedData;
 import com.hbhw.jippy.domain.ocr.dto.response.OcrResponse;
+import com.hbhw.jippy.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -61,9 +62,14 @@ public class OcrService {
     /**
      * OCR 수행 후, 필요한 사업자정보(등록번호, 법인명, 대표자, 개업연월일)를 추출해서 리턴
      */
-    public OcrExtractedData performOcr(MultipartFile file) throws IOException {
+    public OcrExtractedData performOcr(MultipartFile file) {
         // 1. OCR API 호출
-        OcrResponse ocrResponse = callOcrApi(file);
+        OcrResponse ocrResponse = null;
+        try {
+            ocrResponse = callOcrApi(file);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         // 2. OCR 결과에서 전체 문자열 합치기
         String combinedText = String.join(
@@ -162,22 +168,7 @@ public class OcrService {
         Matcher matcher = fieldPattern.matcher(text);
         if (matcher.find()) {
             String dateRaw = matcher.group(1).trim();
-            return convertDateFormat(dateRaw);
-        }
-        return null;
-    }
-
-    /**
-     * "YYYY 년 MM 월 DD 일" → "YYYY-MM-DD 00:00:00"
-     */
-    private String convertDateFormat(String raw) {
-        Pattern p = Pattern.compile("(\\d{4})\\s*년\\s*(\\d{1,2})\\s*월\\s*(\\d{1,2})\\s*일");
-        Matcher m = p.matcher(raw);
-        if (m.find()) {
-            String year  = m.group(1);
-            int month    = Integer.parseInt(m.group(2));
-            int day      = Integer.parseInt(m.group(3));
-            return String.format("%s-%02d-%02d 00:00:00", year, month, day);
+            return DateTimeUtils.convertDateFormat(dateRaw);
         }
         return null;
     }

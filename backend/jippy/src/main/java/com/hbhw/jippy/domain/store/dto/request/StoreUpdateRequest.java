@@ -17,5 +17,4 @@ public class StoreUpdateRequest {
     private String address;
     private String openingDate; // yyyy-MM-dd hh:ss:mm
     private Integer totalCash;
-    private String businessRegistrationNumber;
 }
