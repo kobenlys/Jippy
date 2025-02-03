@@ -17,5 +17,6 @@ public class StoreCreateRequest {
     private String name;
     private String address;
     private String openingDate; // yyyy-MM-dd hh:ss:mm
+    private Integer totalCash = 0; // default 값 0으로 설정
     private String businessRegistrationNumber;
 }

@@ -39,6 +39,7 @@ public class StoreService {
                 .name(request.getName())
                 .address(request.getAddress())
                 .openingDate(request.getOpeningDate())
+                .totalCash(request.getTotalCash())
                 .businessRegistrationNumber(request.getBusinessRegistrationNumber())
                 .build();
 

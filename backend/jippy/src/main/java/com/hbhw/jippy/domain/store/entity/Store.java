@@ -29,7 +29,7 @@ public class Store {
     @Column(name = "opening_date", nullable = false, length = 20)
     private String openingDate;
 
-    @Column(name = "total_cash", nullable = false)
+    @Column(name = "total_cash")
     private Integer totalCash;
 
     @Column(name = "business_registration_number", nullable = false, length = 20)
