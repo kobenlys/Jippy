@@ -1,6 +1,6 @@
 package com.hbhw.jippy.domain.feedback.repository;
 
-import com.hbhw.jippy.domain.feedback.entity.Category;
+import com.hbhw.jippy.domain.feedback.enums.Category;
 import com.hbhw.jippy.domain.feedback.entity.Feedback;
 import org.springframework.data.jpa.repository.JpaRepository;
 

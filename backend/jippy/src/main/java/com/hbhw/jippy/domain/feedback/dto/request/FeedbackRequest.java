@@ -1,6 +1,6 @@
 package com.hbhw.jippy.domain.feedback.dto.request;
 
-import com.hbhw.jippy.domain.feedback.entity.Category;
+import com.hbhw.jippy.domain.feedback.enums.Category;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,7 +11,8 @@ import lombok.Setter;
 @Setter
 public class FeedbackRequest {
 
-    private Integer storeId;    // 매장 아이디
     private Category category;  // 카테고리(enum)
     private String content;     // 피드백 내용
+    private String createdAt; // 생성날짜
+    private String requestId;   // 프론트에서 생성한 UUID
 }

@@ -17,8 +17,8 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-@Builder
 @AllArgsConstructor
+@Builder
 public class Stock {
     @Id
     @Indexed(unique = true)
