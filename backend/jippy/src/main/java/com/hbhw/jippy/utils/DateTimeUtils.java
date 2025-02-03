@@ -23,6 +23,14 @@ public class DateTimeUtils {
     }
 
     /**
+     * 현재 날짜("yyyy-MM-dd") 문자열 반환
+     */
+    public static String todayString() {
+        return LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
+
+    /**
      * Jwt 생성 시간용 메서드
      */
     public static Date now() {
