@@ -32,7 +32,7 @@ public class DateTimeUtils {
      * 문자열을 LocalDateTime으로 변환
      */
     public static LocalDateTime parseDateTime(String dateTimestr) {
-        return LocalDateTime.parse(dateTimestr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        return LocalDateTime.parse(dateTimestr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 
     /**
