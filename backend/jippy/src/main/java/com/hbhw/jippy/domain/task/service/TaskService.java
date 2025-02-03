@@ -23,10 +23,8 @@ public class TaskService {
     public void createTask(Integer storeId, TaskRequest request) {
         Task task = Task.builder()
                 .storeId(storeId)
-                .userStaffId(request.getUserStaffId())
                 .title(request.getTitle())
                 .content(request.getContent())
-                .author(request.getAuthor())
                 .isComplete(request.isComplete())
                 .createdAt(DateTimeUtils.nowString())
                 .build();
@@ -59,8 +57,7 @@ public class TaskService {
         Task task = findTaskByStoreAndId(storeId, todoId);
         task.setTitle(request.getTitle());
         task.setContent(request.getContent());
-        task.setAuthor(request.getAuthor());
-        task.setComplete(request.isComplete());
+        task.setIsComplete(request.isComplete());
 
     }
 
@@ -88,12 +85,10 @@ public class TaskService {
         return TaskResponse.builder()
                 .id(task.getId())
                 .storeId(task.getStoreId())
-                .userStaffId(task.getUserStaffId())
                 .title(task.getTitle())
                 .content(task.getContent())
                 .createdAt(task.getCreatedAt())
-                .author(task.getAuthor())
-                .isComplete(task.isComplete())
+                .isComplete(task.getIsComplete())
                 .build();
     }
 }
