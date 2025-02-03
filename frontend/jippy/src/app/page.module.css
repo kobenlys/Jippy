@@ -1,0 +1,10 @@
+.title {
+  font-family: var(--font-archivo-black);
+  font-weight: 400;
+  font-size: 64px;
+  line-height: 1.1;
+  letter-spacing: -0.07em;
+  color: #F27B39;
+  text-shadow: 4px 4px 4px rgba(0, 0, 0, 0.25);
+  margin-bottom: 24px;
+}
