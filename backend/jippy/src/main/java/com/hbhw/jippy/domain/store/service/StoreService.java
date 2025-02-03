@@ -12,12 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
-/**
- * Service는 ServiceImpl 대신 빌더 패턴 등으로 처리할 수 있지만,
- * 여기서는 하나의 클래스로 구성하여 예시로 보여드립니다.
- */
 @Service
 public class StoreService {
 
@@ -34,7 +31,7 @@ public class StoreService {
     public StoreResponse createStore(StoreCreateRequest request) {
         // UserOwner 조회
         UserOwner userOwner = userOwnerRepository.findById(request.getUserOwnerId())
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 점주입니다."));
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 점주입니다."));
 
         // 엔티티 빌드
         Store store = Store.builder()
@@ -54,7 +51,7 @@ public class StoreService {
     @Transactional
     public StoreResponse updateStore(Integer storeId, StoreUpdateRequest request) {
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new RuntimeException("해당 매장은 존재하지 않습니다."));
+                .orElseThrow(() -> new NoSuchElementException("해당 매장은 존재하지 않습니다."));
 
         store.setName(request.getName());
         store.setAddress(request.getAddress());
@@ -77,7 +74,7 @@ public class StoreService {
     @Transactional(readOnly = true)
     public StoreResponse getStore(Integer storeId) {
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new RuntimeException("해당 매장은 존재하지 않습니다."));
+                .orElseThrow(() -> new NoSuchElementException("해당 매장은 존재하지 않습니다."));
         return toResponse(store);
     }
 
@@ -85,7 +82,7 @@ public class StoreService {
     @Transactional
     public void deleteStore(Integer storeId) {
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new RuntimeException("해당 매장은 존재하지 않습니다."));
+                .orElseThrow(() -> new NoSuchElementException("해당 매장은 존재하지 않습니다."));
         storeRepository.delete(store);
     }
 
