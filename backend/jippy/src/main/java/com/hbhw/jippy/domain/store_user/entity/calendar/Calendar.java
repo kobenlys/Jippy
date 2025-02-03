@@ -1,5 +1,8 @@
-package com.hbhw.jippy.domain.store_user.entity;
+package com.hbhw.jippy.domain.store_user.entity.calendar;
 
+import com.hbhw.jippy.domain.store_user.entity.StoreUserStaff;
+import com.hbhw.jippy.domain.store_user.enums.DayOfWeek;
+import com.hbhw.jippy.utils.converter.DayOfWeekConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,7 +13,7 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class Calender {
+public class Calendar {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -19,11 +22,9 @@ public class Calender {
     @JoinColumn(name = "store_user_staff_id", nullable = false)
     private StoreUserStaff storeUserStaff;
 
-    /**
-     * @Column(name = "day_of_week")
-     * @Convert(converter = DayOfWeekConverter.class)
-     * private DayOfWeek dayOfWeek;
-     */
+    @Column(name = "day_of_week")
+    @Convert(converter = DayOfWeekConverter.class)
+    private DayOfWeek dayOfWeek;
 
     @Column(name = "start_time", nullable = false, length = 20)
     private String startTime;
