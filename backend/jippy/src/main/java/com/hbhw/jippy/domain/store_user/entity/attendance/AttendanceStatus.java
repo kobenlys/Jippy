@@ -17,11 +17,11 @@ import org.springframework.data.redis.core.RedisHash;
 public class AttendanceStatus {
     @Id
     private String id;
-    private String staffId;
+    private Integer storeUserStaffId;
     private String staffName;
     private String timestamp;
 
-    public static String generateId(Integer storeId, Integer storeUserStaffId) {
-        return String.format("%d:%d:%s", storeId, storeUserStaffId, DateTimeUtils.todayString());
+    public static String generateId(Integer storeUserStaffId) {
+        return String.format("%d:%d:%s", storeUserStaffId, DateTimeUtils.todayString());
     }
 }

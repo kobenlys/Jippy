@@ -29,6 +29,13 @@ public class DateTimeUtils {
     }
 
     /**
+     * 문자열을 LocalDateTime으로 변환
+     */
+    public static LocalDateTime parseDateTime(String dateTimestr) {
+        return LocalDateTime.parse(dateTimestr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+    }
+
+    /**
      * Jwt 생성 시간용 메서드
      */
     public static Date now() {
