@@ -5,18 +5,20 @@ import lombok.Getter;
 import java.util.Objects;
 
 @Getter
-public enum ProductStatus {
-    ACTIVATE(1),
-    DEACTIVATE(2);
+public enum ProductSize {
+    S(1),
+    M(2),
+    L(3),
+    F(4);
 
     private Integer code;
 
-    ProductStatus(Integer code) {
+    ProductSize(Integer code) {
         this.code = code;
     }
 
-    public static ProductStatus ofLegacyCode(Integer code) {
-        for (ProductStatus stat : ProductStatus.values()) {
+    public static ProductSize ofLegacyCode(Integer code) {
+        for (ProductSize stat : ProductSize.values()) {
             if (Objects.equals(code, stat.getCode())) {
                 return stat;
             }

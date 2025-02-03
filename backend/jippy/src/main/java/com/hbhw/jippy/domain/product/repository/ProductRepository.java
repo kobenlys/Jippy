@@ -19,7 +19,5 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findByIdAndStoreId(Long id, Integer storeId);
 
     @Transactional
-    @Modifying
-    @Query("DELETE FROM Product p WHERE p.storeId = :storeId AND p.id = :id")
-    void deleteByIdAndStoreId(@Param("storeId") Integer storeId, @Param("id") Long id);
+    void deleteByIdAndStoreId(Integer id, Long storeId);
 }
