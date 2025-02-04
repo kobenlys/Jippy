@@ -9,7 +9,7 @@
   let complaintCategory = "SERVICE";
   let complaintContent = "";
   let isLoading = false;
-  let customerId = ""; // SSG에서는 SSR 방지를 위해 초기값 설정
+  let customerId = "";
 
   // 브라우저에서 customerId 설정
   onMount(() => {
@@ -52,12 +52,9 @@
       }
 
       const result = await response.json();
-      console.log("Feedback Submitted:", result);
-
       alert("불편 사항이 성공적으로 접수되었습니다!");
       goto("/customer/feedback/success");
     } catch (error) {
-      console.error("Error submitting feedback:", error);
       alert("피드백 전송 중 오류가 발생했습니다. 다시 시도해주세요.");
     } finally {
       isLoading = false;
