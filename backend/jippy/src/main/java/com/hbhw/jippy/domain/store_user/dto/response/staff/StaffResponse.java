@@ -1,18 +1,23 @@
-package com.hbhw.jippy.domain.store_user.dto.response;
+package com.hbhw.jippy.domain.store_user.dto.response.staff;
 
 import com.hbhw.jippy.domain.store_user.entity.staff.StoreUserStaff;
+import com.hbhw.jippy.domain.store_user.enums.StaffSalaryType;
 import com.hbhw.jippy.domain.user.enums.StaffType;
 import lombok.Getter;
 
 @Getter
-public class StaffListResponse {
+public class StaffResponse {
     private Integer staffId;
     private String staffName;
     private StaffType staffType;
+    private Integer staffSalary;
+    private StaffSalaryType staffSalaryType;
 
-    public StaffListResponse(StoreUserStaff storeUserStaff) {
+    public StaffResponse(StoreUserStaff storeUserStaff) {
         this.staffId = storeUserStaff.getUserStaff().getId();
         this.staffName = storeUserStaff.getUserStaff().getName();
         this.staffType = storeUserStaff.getStaffType();
+        this.staffSalary = storeUserStaff.getStaffSalary();
+        this.staffSalaryType = storeUserStaff.getStaffSalaryType();
     }
 }

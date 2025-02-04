@@ -1,16 +1,12 @@
 package com.hbhw.jippy.domain.store_user.service.staff;
 
-import com.hbhw.jippy.domain.store_user.dto.request.CreateStaffRequest;
-import com.hbhw.jippy.domain.store_user.dto.response.StaffListResponse;
+import com.hbhw.jippy.domain.store.repository.StoreRepository;
+import com.hbhw.jippy.domain.store_user.dto.request.staff.UpdateStaffRequest;
+import com.hbhw.jippy.domain.store_user.dto.response.staff.StaffResponse;
 import com.hbhw.jippy.domain.store_user.entity.staff.StoreUserStaff;
 import com.hbhw.jippy.domain.store_user.repository.staff.StoreStaffRepository;
-import com.hbhw.jippy.domain.user.entity.UserStaff;
-import com.hbhw.jippy.domain.user.enums.StaffType;
-import com.hbhw.jippy.domain.user.repository.UserStaffRepository;
-import com.hbhw.jippy.global.auth.config.UserPrincipal;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,50 +17,68 @@ import java.util.stream.Collectors;
 @Transactional
 @RequiredArgsConstructor
 public class StoreStaffService {
-    private final UserStaffRepository userStaffRepository;
     private final StoreStaffRepository storeStaffRepository;
-
-//    public void createStaff(Integer storeId, CreateStaffRequest request) {
-//        UserPrincipal principal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-//
-//        UserStaff staff = userStaffRepository.findById(principal.getId())
-//                .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
-//
-//        if (storeStaffRepository.existsByStoreIdAndUserStaff(storeId, staff)) {
-//            throw new IllegalArgumentException("이미 등록된 직원입니다.");
-//        }
-//
-//        StoreUserStaff storeUserStaff = StoreUserStaff.builder()
-//                .userStaff(staff)
-//                .store(storeId)
-//                .staffType(StaffType.STAFF)
-//                .staffSalary(request.getStaffSalary())
-//                .staffSalaryType(request.getStaffSalaryType())
-//                .build();
-//
-//        storeStaffRepository.save(storeUserStaff);
-//    }
+    private final StoreRepository storeRepository;
 
     @Transactional(readOnly = true)
-    public List<StaffListResponse> getStaffList(Integer storeId) {
-        List<StoreUserStaff> staffList = storeStaffRepository.findAllByStoreIdWithUserStaff(storeId);
-        return staffList.stream()
-                .map(StaffListResponse::new)
+    public List<StaffResponse> getStaffList(Integer storeId) {
+        validateStore(storeId);
+
+        return storeStaffRepository.findAllByStoreIdWithUserStaff(storeId).stream()
+                .map(StaffResponse::new)
                 .collect(Collectors.toList());
     }
 
-    public void updateStaffInfo(Integer storeId, Integer staffId) {
-        StoreUserStaff storeUserStaff = findStoreStaff(storeId, staffId);
-        storeUserStaff.updateStaffType(StaffType.MANAGER);
+    @Transactional(readOnly = true)
+    public StaffResponse getStaff(Integer storeId, Integer staffId) {
+        validateStore(storeId);
+        StoreUserStaff staff = findStoreStaff(storeId, staffId);
+        return new StaffResponse(staff);
+    }
+
+    public StaffResponse updateStaff(Integer storeId, Integer staffId, UpdateStaffRequest request) {
+        validateStore(storeId);
+        StoreUserStaff staff = findStoreStaff(storeId, staffId);
+        updateStaffInfo(staff, request);
+        return new StaffResponse(staff);
     }
 
     public void deleteStaff(Integer storeId, Integer staffId) {
-        StoreUserStaff storeUserStaff = findStoreStaff(storeId, staffId);
-        storeStaffRepository.delete(storeUserStaff);
+        validateStore(storeId);
+        StoreUserStaff staff = findStoreStaff(storeId, staffId);
+        storeStaffRepository.delete(staff);
     }
 
+    /**
+     * 매장 존재 여부 확인 메서드
+     */
+    private void validateStore(Integer storeId) {
+        storeRepository.findById(storeId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 매장입니다."));
+    }
+
+    /**
+     * 매장 직원 찾는 메서드
+     */
     private StoreUserStaff findStoreStaff(Integer storeId, Integer staffId) {
         return storeStaffRepository.findByStoreIdAndUserStaffId(storeId, staffId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 직원을 찾을 수 없습니다."));
+    }
+
+    /**
+     * 정보 수정 메서드
+     */
+    private void updateStaffInfo(StoreUserStaff staff, UpdateStaffRequest request) {
+        if (request.getStaffType() != null) {
+            staff.updateStaffType(request.getStaffType());
+        }
+
+        if (request.getStaffSalary() != null) {
+            staff.updateStaffSalary(request.getStaffSalary());
+        }
+
+        if (request.getStaffSalaryType() != null) {
+            staff.updateStaffSalaryType(request.getStaffSalaryType());
+        }
     }
 }

@@ -49,4 +49,12 @@ public class StoreUserStaff {
     public void updateStaffType(StaffType staffType) {
         this.staffType = staffType;
     }
+
+    public void updateStaffSalary(Integer staffSalary) {
+        this.staffSalary = staffSalary;
+    }
+
+    public void updateStaffSalaryType(StaffSalaryType staffSalaryType) {
+        this.staffSalaryType = staffSalaryType;
+    }
 }
