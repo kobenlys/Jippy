@@ -23,4 +23,7 @@ public class StockDetailCreateUpdateRequest {
     @Schema(description = "재고 단위 크기", example = "g")
     @JsonProperty("stock_unit")
     private String stockUnit;
+
+    @Schema(description = "삭제 이유 확인용(폐기할 경우만 이외에는 삭제 가능, true일 때만 폐기)", example = "true")
+    private Boolean isDisposal;
 }

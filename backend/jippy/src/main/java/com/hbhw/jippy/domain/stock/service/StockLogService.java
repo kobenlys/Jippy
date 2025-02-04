@@ -5,7 +5,6 @@ import com.hbhw.jippy.domain.stock.entity.StockLog;
 import com.hbhw.jippy.domain.stock.repository.StockLogRepository;
 import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
-import jakarta.transaction.Transactional;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +13,9 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -48,5 +50,14 @@ public class StockLogService {
         } catch (Exception e) {
             throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<StockLog> findStockLogsByStoreId(Integer storeId) {
+        List<StockLog> stockLogs = stockLogRepository.findStockLogsByStoreId(storeId);
+        if (stockLogs.isEmpty()) {
+            throw new BusinessException(CommonErrorCode.NOT_FOUND);
+        }
+        return stockLogs;
     }
 }
