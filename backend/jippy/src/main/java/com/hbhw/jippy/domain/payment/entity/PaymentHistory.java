@@ -2,8 +2,6 @@ package com.hbhw.jippy.domain.payment.entity;
 
 import com.hbhw.jippy.domain.payment.enums.PaymentStatus;
 import com.hbhw.jippy.domain.payment.enums.PaymentType;
-import com.hbhw.jippy.utils.converter.PaymentStatusConverter;
-import com.hbhw.jippy.utils.converter.PaymentTypeConverter;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Id;
 import lombok.*;
@@ -19,6 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
 public class PaymentHistory {
 
     @Id
@@ -36,12 +35,10 @@ public class PaymentHistory {
     private String createdAt;
 
     @Field("payment_status")
-    @Convert(converter = PaymentStatusConverter.class)
-    private PaymentStatus paymentStatus;
+    private String paymentStatus;
 
     @Field("payment_type")
-    @Convert(converter = PaymentTypeConverter.class)
-    private PaymentType paymentType;
+    private String paymentType;
 
     @Field("buyProduct")
     private List<BuyProduct> buyProductHistories;

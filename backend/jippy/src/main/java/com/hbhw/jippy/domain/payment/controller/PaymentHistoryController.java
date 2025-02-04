@@ -2,6 +2,7 @@ package com.hbhw.jippy.domain.payment.controller;
 
 
 import com.hbhw.jippy.domain.payment.dto.request.PaymentUUIDRequest;
+import com.hbhw.jippy.domain.payment.dto.response.PaymentDetailResponse;
 import com.hbhw.jippy.domain.payment.dto.response.PaymentHistoryListResponse;
 import com.hbhw.jippy.domain.payment.entity.BuyProduct;
 import com.hbhw.jippy.domain.payment.entity.PaymentHistory;
@@ -29,7 +30,7 @@ public class PaymentHistoryController {
      * 결제 후 결제 내역 저장하는 테스트 API
      * 결제 도메인 완성 전까지 사용하시면 됩니다.
      */
-    @GetMapping("/add")
+    @PostMapping("/add")
     public ApiResponse<?> addTestPaymentHistory(@RequestParam("storeId") Integer storeId) {
 
         // 덤프 데이터 (삭제 예정)
@@ -52,15 +53,14 @@ public class PaymentHistoryController {
         buyProductHistories.add(buyProduct2);
 
         PaymentHistory paymentHistory = PaymentHistory.builder()
-                .UUID("payment-uuid-001")  // 예시 UUID
-                .storeId(1)  // 예시 storeId
-                .paymentStatus(PaymentStatus.PURCHASE)
-                .paymentType(PaymentType.QRCODE)
+                .UUID("payment-uuid-deleteTEST1")  // 예시 UUID
+                .storeId(storeId)  // 예시 storeId
+                .paymentStatus(PaymentStatus.PURCHASE.getDescription())
+                .paymentType(PaymentType.QRCODE.getDescription())
                 .createdAt(DateTimeUtils.nowString())
                 .buyProductHistories(buyProductHistories)
                 .totalCost(250000)
                 .build();
-
         paymentHistoryService.savePaymentHistory(paymentHistory);
         return ApiResponse.success(HttpStatus.CREATED);
     }
@@ -71,16 +71,33 @@ public class PaymentHistoryController {
         return ApiResponse.success(HttpStatus.OK, paymentHistoryListResponses);
     }
 
-    @PutMapping("/cancel")
-    public ApiResponse<List<PaymentHistoryListResponse>> cancelPaymentHistory(@RequestBody PaymentUUIDRequest paymentUUIDRequest) {
-        paymentHistoryService.deletePaymentHistory(paymentUUIDRequest);
+    @PutMapping("/change/status")
+    public ApiResponse<?> changeStatusPaymentHistory(@RequestBody PaymentUUIDRequest paymentUUIDRequest) {
+        paymentHistoryService.changeStatusPaymentHistory(paymentUUIDRequest);
+        return ApiResponse.success(HttpStatus.OK);
+    }
+
+    @PutMapping("/change/type")
+    public ApiResponse<?> changeTypePaymentHistory(@RequestBody PaymentUUIDRequest paymentUUIDRequest) {
+        paymentHistoryService.changeTypePaymentHistory(paymentUUIDRequest);
         return ApiResponse.success(HttpStatus.OK);
     }
 
     @GetMapping("/detail")
+    public ApiResponse<PaymentDetailResponse> getDetailPaymentHistory(@RequestBody PaymentUUIDRequest paymentUUIDRequest) {
+        PaymentDetailResponse paymentDetailResponse = paymentHistoryService.selectDetailPaymentHistory(paymentUUIDRequest);
+        return ApiResponse.success(HttpStatus.OK, paymentDetailResponse);
+    }
 
-//    @GetMapping("/success/list")
-//
-//    @GetMapping("/cancel/list")
+    @GetMapping("/list/success")
+    public ApiResponse<List<PaymentHistoryListResponse>> getSuccessHistoryList(@RequestParam("storeId") Integer storeId) {
+        List<PaymentHistoryListResponse> paymentHistoryListResponses = paymentHistoryService.getSuccessHistoryList(storeId);
+        return ApiResponse.success(HttpStatus.OK, paymentHistoryListResponses);
+    }
 
+    @GetMapping("/list/cancel")
+    public ApiResponse<List<PaymentHistoryListResponse>> getCancelHistoryList(@RequestParam("storeId") Integer storeId) {
+        List<PaymentHistoryListResponse> paymentHistoryListResponses = paymentHistoryService.getCancelHistoryList(storeId);
+        return ApiResponse.success(HttpStatus.OK, paymentHistoryListResponses);
+    }
 }

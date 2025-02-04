@@ -16,5 +16,4 @@ public class PaymentMapper {
                 .totalCost(paymentHistory.getTotalCost())
                 .build();
     }
-
 }

@@ -1,28 +1,15 @@
 package com.hbhw.jippy.domain.payment.enums;
 
-import com.hbhw.jippy.domain.product.enums.ProductSize;
 import lombok.Getter;
-
-import java.util.Objects;
 
 @Getter
 public enum PaymentType {
-    QRCODE(1),
-    CASH(2);
+    QRCODE("QR코드"),
+    CASH("현금");
 
-    private Integer code;
+    private final String description;
 
-    PaymentType(Integer code) {
-        this.code = code;
+    PaymentType(String description) {
+        this.description = description;
     }
-
-    public static PaymentType ofLegacyCode(Integer code) {
-        for (PaymentType stat : PaymentType.values()) {
-            if (Objects.equals(code, stat.getCode())) {
-                return stat;
-            }
-        }
-        throw new IllegalArgumentException("Error!");
-    }
-
 }
