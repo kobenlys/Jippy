@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,15 +64,13 @@ public class OcrService {
      * OCR 수행 후, 필요한 사업자정보(등록번호, 법인명, 대표자, 개업연월일)를 추출해서 리턴
      */
     public OcrExtractedData performOcr(MultipartFile file) {
-        // 1. OCR API 호출
-        OcrResponse ocrResponse = null;
+        OcrResponse ocrResponse;
         try {
             ocrResponse = callOcrApi(file);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        // 2. OCR 결과에서 전체 문자열 합치기
         String combinedText = String.join(
                 " ",
                 ocrResponse.getPages().stream()
@@ -80,18 +79,11 @@ public class OcrService {
                         .toList()
         );
 
-        // 3. 정규표현식을 통해 필요한 정보 추출
-        String businessNumber     = extractBusinessNumber(combinedText);     // 사업자등록번호
-        String corporateName      = extractStoreName(combinedText);      // 법인명(단체명) or 상호
-        String representativeName = extractRepresentativeName(combinedText); // 대표자 or 성명
-        String openDate           = extractOpenDate(combinedText);           // 개업연월일
-
-        // 4. DTO 반환
         return OcrExtractedData.builder()
-                .businessNumber(businessNumber)
-                .corporateName(corporateName)
-                .representativeName(representativeName)
-                .openDate(openDate)
+                .businessNumber(Optional.ofNullable(extractBusinessNumber(combinedText)).orElse(""))
+                .corporateName(Optional.ofNullable(extractStoreName(combinedText)).orElse(""))
+                .representativeName(Optional.ofNullable(extractRepresentativeName(combinedText)).orElse(""))
+                .openDate(Optional.ofNullable(extractOpenDate(combinedText)).orElse(""))
                 .build();
     }
 
