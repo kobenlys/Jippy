@@ -24,26 +24,26 @@ public class StoreStaffService {
     private final UserStaffRepository userStaffRepository;
     private final StoreStaffRepository storeStaffRepository;
 
-    public void createStaff(Integer storeId, CreateStaffRequest request) {
-        UserPrincipal principal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        UserStaff staff = userStaffRepository.findById(principal.getId())
-                .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
-
-        if (storeStaffRepository.existsByStoreIdAndUserStaff(storeId, staff)) {
-            throw new IllegalArgumentException("이미 등록된 직원입니다.");
-        }
-
-        StoreUserStaff storeUserStaff = StoreUserStaff.builder()
-                .userStaff(staff)
-                .storeId(storeId)
-                .staffType(StaffType.STAFF)
-                .staffSalary(request.getStaffSalary())
-                .staffSalaryType(request.getStaffSalaryType())
-                .build();
-
-        storeStaffRepository.save(storeUserStaff);
-    }
+//    public void createStaff(Integer storeId, CreateStaffRequest request) {
+//        UserPrincipal principal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//
+//        UserStaff staff = userStaffRepository.findById(principal.getId())
+//                .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
+//
+//        if (storeStaffRepository.existsByStoreIdAndUserStaff(storeId, staff)) {
+//            throw new IllegalArgumentException("이미 등록된 직원입니다.");
+//        }
+//
+//        StoreUserStaff storeUserStaff = StoreUserStaff.builder()
+//                .userStaff(staff)
+//                .store(storeId)
+//                .staffType(StaffType.STAFF)
+//                .staffSalary(request.getStaffSalary())
+//                .staffSalaryType(request.getStaffSalaryType())
+//                .build();
+//
+//        storeStaffRepository.save(storeUserStaff);
+//    }
 
     @Transactional(readOnly = true)
     public List<StaffListResponse> getStaffList(Integer storeId) {

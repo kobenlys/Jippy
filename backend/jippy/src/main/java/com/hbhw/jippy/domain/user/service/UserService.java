@@ -1,6 +1,9 @@
 package com.hbhw.jippy.domain.user.service;
 
+import com.hbhw.jippy.domain.store.entity.Store;
+import com.hbhw.jippy.domain.store.repository.StoreRepository;
 import com.hbhw.jippy.domain.store_user.entity.staff.StoreUserStaff;
+import com.hbhw.jippy.domain.store_user.enums.StaffSalaryType;
 import com.hbhw.jippy.domain.store_user.repository.staff.StoreStaffRepository;
 import com.hbhw.jippy.domain.user.dto.request.*;
 import com.hbhw.jippy.domain.user.dto.response.LoginResponse;
@@ -17,6 +20,7 @@ import com.hbhw.jippy.global.auth.config.JwtProvider;
 import com.hbhw.jippy.global.auth.entity.RefreshToken;
 import com.hbhw.jippy.global.auth.repository.RefreshTokenRepository;
 import com.hbhw.jippy.global.auth.config.UserPrincipal;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,32 +45,45 @@ public class UserService {
     private final EmailService emailService;
     private final RefreshTokenRepository refreshTokenRepository;
     private final StoreStaffRepository storeStaffRepository;
+    private final StoreRepository storeRepository;
 
     @Value("${jwt.refresh.expiration}")
     private Long refreshTokenExpireTime;
 
     @Transactional
-    public void signUp(SignUpRequest request, UserType userType) {
-        switch (userType) {
-            case OWNER -> {
-                if (userOwnerRepository.existsByEmail(request.getEmail())) {
-                    throw new RuntimeException("이미 사용 중인 이메일입니다.");
-                }
-            }
-
-            case STAFF -> {
-                if (userStaffRepository.existsByEmail(request.getEmail())) {
-                    throw new RuntimeException("이미 사용 중인 이메일입니다.");
-                }
-            }
+    public void ownerSignUp(OwnerSignUpRequest request) {
+        if (userOwnerRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("이미 사용 중인 이메일입니다.");
         }
 
-        BaseUser newUser = userFactory.createUser(request, userType);
+        BaseUser newUser = userFactory.createUser(request, UserType.OWNER);
+        userOwnerRepository.save((UserOwner) newUser);
+    }
 
-        switch (userType) {
-            case OWNER -> userOwnerRepository.save((UserOwner) newUser);
-            case STAFF -> userStaffRepository.save((UserStaff) newUser);
+    @Transactional
+    public void staffSignUp(StaffSignUpRequest request) {
+        if (userStaffRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("이미 사용 중인 이메일입니다.");
         }
+
+        Store store = storeRepository.findById(request.getStoreId())
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 매장입니다."));
+
+        BaseUser newUser = userFactory.createUser(request, UserType.STAFF);
+        UserStaff savedUser = userStaffRepository.save((UserStaff) newUser);
+
+        /**
+         * 매장에 직원 등록
+         */
+        StoreUserStaff storeStaff = StoreUserStaff.builder()
+                .userStaff(savedUser)
+                .store(store)
+                .staffType(StaffType.STAFF)
+                .staffSalary(0)
+                .staffSalaryType(StaffSalaryType.시급)
+                .build();
+
+        storeStaffRepository.save(storeStaff);
     }
 
     @Transactional
