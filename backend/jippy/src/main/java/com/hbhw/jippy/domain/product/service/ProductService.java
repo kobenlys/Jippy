@@ -5,9 +5,14 @@ import com.hbhw.jippy.domain.product.dto.request.ProductUpdateRequest;
 import com.hbhw.jippy.domain.product.dto.response.ProductDetailResponse;
 import com.hbhw.jippy.domain.product.dto.response.ProductListResponse;
 import com.hbhw.jippy.domain.product.entity.Product;
+import com.hbhw.jippy.domain.product.entity.ProductCategory;
 import com.hbhw.jippy.domain.product.mapper.ProductMapper;
 import com.hbhw.jippy.domain.product.repository.ProductRepository;
+import com.hbhw.jippy.domain.store.entity.Store;
+import com.hbhw.jippy.domain.user.entity.UserOwner;
+import com.hbhw.jippy.domain.user.enums.StaffType;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,28 +20,32 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class ProductService {
 
     private final ProductRepository productRepository;
-
-    public ProductService(ProductRepository productRepository) {
-        this.productRepository = productRepository;
-    }
 
     /**
      * 상품 등록
      */
     public void createProduct(CreateProductRequest createProductRequest) {
+//        Store store = storeRepository.findById(createProductRequest.getStoreId())
+//                .orElseThrow(() -> new RuntimeException("Store not found"));
+
+//        ProductCategory productCategory = productCategoryRepository.findById(createProductRequest.getProductCategoryId())
+//                .orElseThrow(() -> new RuntimeException("ProductCategory not found"));
+
+        Store storeDump = new Store(1, new UserOwner("dwa", "dwa", "Dwa", "dwa", StaffType.STAFF), "dwa", "daw", "dwa", 2, "dwa");
+        ProductCategory categoryDump = new ProductCategory(0, storeDump, "상점");
         Product product = Product.builder()
-                .storeId(createProductRequest.getStoreId())
-                .productCategoryId(createProductRequest.getProductCategoryId())
+                .store(storeDump)
+                .productCategory(categoryDump)
                 .name(createProductRequest.getName())
-                .storeId(createProductRequest.getStoreId())
                 .price(createProductRequest.getPrice())
-                .productStatus(createProductRequest.getProductStatus())
+                .status(createProductRequest.isStatus())
                 .image(createProductRequest.getImage())
                 .productType(createProductRequest.getProductType())
-                .size(createProductRequest.getSize())
+                .productSize(createProductRequest.getProductSize())
                 .build();
 
         productRepository.save(product);
@@ -66,12 +75,12 @@ public class ProductService {
                 .id(productEntity.getId())
                 .storeId(storeId)
                 .name(productEntity.getName())
-                .productStatus(productEntity.getProductStatus())
-                .productCategoryId(productEntity.getProductCategoryId())
+                .status(productEntity.isStatus())
+                .productCategoryId(productEntity.getProductCategory().getId())
                 .image(productEntity.getImage())
                 .price(productEntity.getPrice())
                 .productType(productEntity.getProductType())
-                .size(productEntity.getSize())
+                .productSize(productEntity.getProductSize())
                 .build();
     }
 
@@ -82,13 +91,13 @@ public class ProductService {
     public void modifyProduct(Integer storeId, Long productId, ProductUpdateRequest productUpdateRequest) {
         Product productEntity = getProduct(storeId, productId);
 
-        productEntity.setProductCategoryId(productUpdateRequest.getProductCategoryId());
-        productEntity.setProductStatus(productUpdateRequest.getProductStatus());
+        productEntity.getProductCategory().setId(productUpdateRequest.getProductCategoryId());
+        productEntity.setStatus(productUpdateRequest.isStatus());
         productEntity.setImage(productUpdateRequest.getImage());
         productEntity.setName(productUpdateRequest.getName());
         productEntity.setPrice(productUpdateRequest.getPrice());
         productEntity.setProductType(productUpdateRequest.getProductType());
-        productEntity.setSize(productUpdateRequest.getSize());
+        productEntity.setProductSize(productUpdateRequest.getProductSize());
     }
 
     /**

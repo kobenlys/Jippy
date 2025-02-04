@@ -1,6 +1,6 @@
 package com.hbhw.jippy.domain.product.dto.request;
 
-import com.hbhw.jippy.domain.product.enums.ProductStatus;
+import com.hbhw.jippy.domain.product.enums.ProductSize;
 import com.hbhw.jippy.domain.product.enums.ProductType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,8 +14,9 @@ public class CreateProductRequest {
     private Integer storeId;
     private String name;
     private Integer price;
-    private ProductStatus productStatus;
+    private boolean status;
     private String image;
     private ProductType productType;
-    private String size;
+    private ProductSize productSize;
 }
+

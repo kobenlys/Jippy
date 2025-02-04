@@ -1,6 +1,6 @@
 package com.hbhw.jippy.domain.product.dto.response;
 
-import com.hbhw.jippy.domain.product.enums.ProductStatus;
+import com.hbhw.jippy.domain.product.enums.ProductSize;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -11,6 +11,6 @@ public class ProductListResponse {
     private Integer productCategoryId;
     private String name;
     private Integer price;
-    private ProductStatus productStatus;
+    private boolean status;
     private String image;
 }
