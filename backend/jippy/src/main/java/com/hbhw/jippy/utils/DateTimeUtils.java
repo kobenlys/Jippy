@@ -3,6 +3,8 @@ package com.hbhw.jippy.utils;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DateTimeUtils {
 
@@ -37,4 +39,15 @@ public class DateTimeUtils {
     /**
      * 원하는 시간/포맷에 대한 메서드를 더 만들 수도 있습니다
      */
+    public static String convertDateFormat(String raw) {
+        Pattern p = Pattern.compile("(\\d{4})\\s*년\\s*(\\d{1,2})\\s*월\\s*(\\d{1,2})\\s*일");
+        Matcher m = p.matcher(raw);
+        if (m.find()) {
+            String year  = m.group(1);
+            int month    = Integer.parseInt(m.group(2));
+            int day      = Integer.parseInt(m.group(3));
+            return String.format("%s-%02d-%02d 00:00:00", year, month, day);
+        }
+        return null;
+    }
 }
