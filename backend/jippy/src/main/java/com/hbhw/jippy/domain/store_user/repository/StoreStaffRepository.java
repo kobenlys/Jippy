@@ -20,4 +20,6 @@ public interface StoreStaffRepository extends JpaRepository<StoreUserStaff, Inte
     Optional<StoreUserStaff> findByStoreIdAndUserStaffId(Integer storeId, Integer staffId);
 
     Optional<StoreUserStaff> findByUserStaff(UserStaff userStaff);
+
+    Optional<StoreUserStaff> findByUserStaffId(Integer userStaffId);
 }
