@@ -1,9 +1,9 @@
-package com.hbhw.jippy.domain.store_user.service;
+package com.hbhw.jippy.domain.store_user.service.staff;
 
 import com.hbhw.jippy.domain.store_user.dto.request.CreateStaffRequest;
 import com.hbhw.jippy.domain.store_user.dto.response.StaffListResponse;
-import com.hbhw.jippy.domain.store_user.entity.StoreUserStaff;
-import com.hbhw.jippy.domain.store_user.repository.StoreStaffRepository;
+import com.hbhw.jippy.domain.store_user.entity.staff.StoreUserStaff;
+import com.hbhw.jippy.domain.store_user.repository.staff.StoreStaffRepository;
 import com.hbhw.jippy.domain.user.entity.UserStaff;
 import com.hbhw.jippy.domain.user.enums.StaffType;
 import com.hbhw.jippy.domain.user.repository.UserStaffRepository;

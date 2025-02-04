@@ -1,6 +1,6 @@
-package com.hbhw.jippy.domain.store_user.repository;
+package com.hbhw.jippy.domain.store_user.repository.staff;
 
-import com.hbhw.jippy.domain.store_user.entity.StoreUserStaff;
+import com.hbhw.jippy.domain.store_user.entity.staff.StoreUserStaff;
 import com.hbhw.jippy.domain.user.entity.UserStaff;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

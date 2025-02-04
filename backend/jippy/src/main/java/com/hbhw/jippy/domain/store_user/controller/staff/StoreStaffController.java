@@ -1,8 +1,8 @@
-package com.hbhw.jippy.domain.store_user.controller;
+package com.hbhw.jippy.domain.store_user.controller.staff;
 
 import com.hbhw.jippy.domain.store_user.dto.request.CreateStaffRequest;
 import com.hbhw.jippy.domain.store_user.dto.response.StaffListResponse;
-import com.hbhw.jippy.domain.store_user.service.StoreStaffService;
+import com.hbhw.jippy.domain.store_user.service.staff.StoreStaffService;
 import com.hbhw.jippy.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -26,13 +26,16 @@ public class StoreStaffController {
     }
 
     @Operation(summary = "매장 직원 목록 조회", description = "매장의 모든 직원 목록을 조회합니다")
-    @GetMapping("/{storeId}/select/staff")
+    @GetMapping("/{storeId}/select")
     public ApiResponse<List<StaffListResponse>> getStaffList(@PathVariable Integer storeId) {
         List<StaffListResponse> staffList = storeStaffService.getStaffList(storeId);
         return ApiResponse.success(staffList);
     }
 
-    @Operation(summary = "매니저 등록", description = "매장에 등록된 직원을 매니저로 지정합니다")
+//    @Operation(summary = "매장 직원 상세 조회", description = "각 매장 직원의 상세 정보를 조회합니다")
+//    @GetMapping("/{storeId}/select/{staffId}")
+
+    @Operation(summary = "매장 직원 정보 수정", description = "각 매장 직원의 정보를 수정합니다")
     @PutMapping("/{storeId}/update/staff/{staffId}")
     public ApiResponse<?> updateStaffInfo(@PathVariable Integer storeId, @PathVariable Integer staffId) {
         storeStaffService.updateStaffInfo(storeId, staffId);

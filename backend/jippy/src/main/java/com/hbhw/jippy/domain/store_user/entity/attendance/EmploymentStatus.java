@@ -1,7 +1,7 @@
 package com.hbhw.jippy.domain.store_user.entity.attendance;
 
 import com.hbhw.jippy.domain.store.entity.Store;
-import com.hbhw.jippy.domain.store_user.entity.StoreUserStaff;
+import com.hbhw.jippy.domain.store_user.entity.staff.StoreUserStaff;
 import jakarta.persistence.*;
 import lombok.*;
 

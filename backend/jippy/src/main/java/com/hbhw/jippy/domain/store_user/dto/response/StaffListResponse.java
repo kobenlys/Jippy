@@ -1,6 +1,6 @@
 package com.hbhw.jippy.domain.store_user.dto.response;
 
-import com.hbhw.jippy.domain.store_user.entity.StoreUserStaff;
+import com.hbhw.jippy.domain.store_user.entity.staff.StoreUserStaff;
 import com.hbhw.jippy.domain.user.enums.StaffType;
 import lombok.Getter;
 

@@ -1,7 +1,7 @@
 package com.hbhw.jippy.domain.user.service;
 
-import com.hbhw.jippy.domain.store_user.entity.StoreUserStaff;
-import com.hbhw.jippy.domain.store_user.repository.StoreStaffRepository;
+import com.hbhw.jippy.domain.store_user.entity.staff.StoreUserStaff;
+import com.hbhw.jippy.domain.store_user.repository.staff.StoreStaffRepository;
 import com.hbhw.jippy.domain.user.dto.request.*;
 import com.hbhw.jippy.domain.user.dto.response.LoginResponse;
 import com.hbhw.jippy.domain.user.dto.response.UpdateUserResponse;
