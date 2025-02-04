@@ -1,31 +1,20 @@
-"use client";
+import React from "react";
 
-import React, { useEffect, useState } from "react";
+async function fetchStockData(apiUrl) {
+  try {
+    const response = await fetch(apiUrl, { cache: "no-store" });
+    if (!response.ok) throw new Error("데이터를 불러오는데 실패했습니다.");
+    const data = await response.json();
+    return data?.data?.inventory || [];
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
 
-const StockTable = ({ apiUrl = process.env.NEXT_PUBLIC_API_URL + "/api/stock/1/select" }) => {
-  const [stockData, setStockData] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchStockData = async () => {
-      try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) throw new Error("데이터를 불러오는데 실패했습니다.");
-
-        const data = await response.json();
-        if (data?.data?.inventory) {
-          setStockData(data.data.inventory);
-        } else {
-          console.error("올바른 데이터 구조가 아닙니다.", data);
-          setStockData([]);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStockData();
-  }, [apiUrl]);
+export default async function StockTable() {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL + "/api/stock/1/select";
+  const stockData = await fetchStockData(apiUrl);
 
   return (
     <div className="p-4">
@@ -37,8 +26,8 @@ const StockTable = ({ apiUrl = process.env.NEXT_PUBLIC_API_URL + "/api/stock/1/s
 
       {/* Table Container */}
       <div className="bg-white rounded-lg">
-        {loading ? (
-          <div className="text-center py-8 text-gray-500">데이터를 불러오는 중...</div>
+        {stockData.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">재고 데이터가 없습니다.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -52,42 +41,34 @@ const StockTable = ({ apiUrl = process.env.NEXT_PUBLIC_API_URL + "/api/stock/1/s
                 </tr>
               </thead>
               <tbody>
-                {stockData.length > 0 ? (
-                  stockData.map((item, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="p-4 border-b align-top">{index + 1}</td>
-                      <td className="p-4 border-b align-top">{item.stock_name}</td>
-                      <td className="p-4 border-b">
-                        {item.stock.map((unit, idx) => (
-                          <div key={idx} className="py-1">{unit.stock_unit_size}</div>
-                        ))}
-                      </td>
-                      <td className="p-4 border-b">
-                        {item.stock.map((unit, idx) => (
-                          <div key={idx} className="py-1">{unit.stock_count}</div>
-                        ))}
-                      </td>
-                      <td className="p-4 border-b">
-                        {item.stock.map((unit, idx) => (
-                          <div key={idx} className="py-1">
-                            {unit.stock_count * parseFloat(unit.stock_unit_size)}
-                            {unit.stock_unit}
-                          </div>
-                        ))}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="text-center py-8 text-gray-500">
-                      재고 데이터가 없습니다.
+                {stockData.map((item, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="p-4 border-b align-top">{index + 1}</td>
+                    <td className="p-4 border-b align-top">{item.stock_name}</td>
+                    <td className="p-4 border-b">
+                      {item.stock.map((unit, idx) => (
+                        <div key={idx} className="py-1">{unit.stock_unit_size}</div>
+                      ))}
+                    </td>
+                    <td className="p-4 border-b">
+                      {item.stock.map((unit, idx) => (
+                        <div key={idx} className="py-1">{unit.stock_count}</div>
+                      ))}
+                    </td>
+                    <td className="p-4 border-b">
+                      {item.stock.map((unit, idx) => (
+                        <div key={idx} className="py-1">
+                          {unit.stock_count * parseFloat(unit.stock_unit_size)}
+                          {unit.stock_unit}
+                        </div>
+                      ))}
                     </td>
                   </tr>
-                )}
+                ))}
               </tbody>
               <tfoot>
                 <tr className="bg-orange-50 font-medium">
-                <td className="p-4">{stockData.length}</td>
+                  <td className="p-4">{stockData.length}</td>
                   <td colSpan={2} className="p-4 text-right">전체 수량</td>
                   <td className="p-4">
                     {stockData.reduce((sum, item) => 
@@ -103,6 +84,4 @@ const StockTable = ({ apiUrl = process.env.NEXT_PUBLIC_API_URL + "/api/stock/1/s
       </div>
     </div>
   );
-};
-
-export default StockTable;
+}
