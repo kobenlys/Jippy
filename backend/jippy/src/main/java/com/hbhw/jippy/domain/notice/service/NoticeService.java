@@ -1,6 +1,6 @@
 package com.hbhw.jippy.domain.notice.service;
 
-import com.hbhw.jippy.domain.notice.dto.request.NoticeRequest;
+import com.hbhw.jippy.domain.notice.dto.request.NoticeCreateRequest;
 import com.hbhw.jippy.domain.notice.dto.response.NoticeResponse;
 import com.hbhw.jippy.domain.notice.entity.Notice;
 import com.hbhw.jippy.domain.notice.repository.NoticeRepository;
@@ -21,7 +21,7 @@ public class NoticeService {
     private final NoticeRepository noticeRepository;
 
     @Transactional
-    public NoticeResponse createNotice(Integer storeId, NoticeRequest request) {
+    public NoticeResponse createNotice(Integer storeId, NoticeCreateRequest request) {
 
         Notice notice = Notice.builder()
                 .storeId(Store.builder().id(storeId).build())
@@ -34,6 +34,7 @@ public class NoticeService {
         Notice savedNotice = noticeRepository.save(notice);
         return convertToResponse(savedNotice);
     }
+
     @Transactional(readOnly = true)
     public NoticeResponse getNotice(Integer storeId, Long noticeId) {
         Notice notice = noticeRepository.findById(noticeId)
@@ -46,9 +47,28 @@ public class NoticeService {
         return convertToResponse(notice);
     }
 
+    @Transactional
+    public NoticeResponse updateNotice(Integer storeId, Long noticeId, NoticeCreateRequest request) {
+        Notice notice = noticeRepository.findById(noticeId)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재하지 않는 공지사항입니다"));
+
+        if (!notice.getStoreId().getId().equals(storeId)) {
+            throw new BusinessException(CommonErrorCode.BAD_REQUEST, "해당 매장의 공지사항이 아닙니다");
+        }
+
+        if (request.getTitle() != null) {
+            notice.setTitle(request.getTitle());
+        }
+        if (request.getContent() != null) {
+            notice.setContent(request.getContent());
+        }
+
+        return convertToResponse(notice);
+    }
+
     private NoticeResponse convertToResponse(Notice notice) {
         return NoticeResponse.builder()
-                .id(notice.getId())
+                .noticeId(notice.getId())
                 .storeId(notice.getStoreId().getId())
                 .title(notice.getTitle())
                 .content(notice.getContent())

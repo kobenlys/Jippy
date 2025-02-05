@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class NoticeResponse {
 
     @Schema(description = "공지사항 아이디", example = "1")
-    private Long id;
+    private Long noticeId;
 
     @Schema(description = "매장 아이디", example = "1")
     @JsonProperty("store_id")

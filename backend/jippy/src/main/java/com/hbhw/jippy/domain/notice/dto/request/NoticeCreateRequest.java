@@ -3,13 +3,13 @@ package com.hbhw.jippy.domain.notice.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
-@Schema(description = "공지사항 관련 요청 DTO")
+@Schema(description = "공지사항 생성 요청 DTO")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class NoticeRequest {
+public class NoticeCreateRequest {
 
     @Schema(description = "공지사항 제목", example = "딸기 시즌 신메뉴 출시 공지사항")
     private String title;
