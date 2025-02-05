@@ -1,5 +1,6 @@
 package com.hbhw.jippy.domain.qrcode.controller;
 
+import com.hbhw.jippy.domain.qrcode.dto.request.CreateQrRequest;
 import com.hbhw.jippy.domain.qrcode.dto.response.QrResponse;
 import com.hbhw.jippy.domain.qrcode.service.QrService;
 import com.hbhw.jippy.global.response.ApiResponse;
@@ -7,6 +8,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,9 +23,11 @@ public class QrController {
 
     @Operation(summary = "QR 생성", description = "QR을 생성합니다")
     @PostMapping("/{storeId}/create")
-    public ApiResponse<Void> createQr(@PathVariable Integer storeId) {
-        qrService.createQr(storeId);
-        return ApiResponse.success(HttpStatus.CREATED);
+    public ResponseEntity<byte[]> createQr(@PathVariable Integer storeId, @RequestBody CreateQrRequest request) {
+        byte[] qrImage = qrService.createQr(storeId, request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .contentType(MediaType.IMAGE_PNG)
+                .body(qrImage);
     }
 
     @Operation(summary = "전체 QR 목록 조회", description = "매장의 전체 QR 목록을 조회합니다")
