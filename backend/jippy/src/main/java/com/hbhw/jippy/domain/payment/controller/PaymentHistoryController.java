@@ -12,6 +12,7 @@ import com.hbhw.jippy.domain.payment.service.PaymentHistoryService;
 import com.hbhw.jippy.domain.product.dto.request.CreateProductRequest;
 import com.hbhw.jippy.global.response.ApiResponse;
 import com.hbhw.jippy.utils.DateTimeUtils;
+import com.hbhw.jippy.utils.UUIDProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +26,7 @@ import java.util.List;
 public class PaymentHistoryController {
 
     private final PaymentHistoryService paymentHistoryService;
+    private final UUIDProvider uuidProvider;
 
     /**
      * 결제 후 결제 내역 저장하는 테스트 API
@@ -53,7 +55,7 @@ public class PaymentHistoryController {
         buyProductHistories.add(buyProduct2);
 
         PaymentHistory paymentHistory = PaymentHistory.builder()
-                .UUID("payment-uuid-deleteTEST1")  // 예시 UUID
+                .UUID(uuidProvider.generateUUID())  // 예시 UUID
                 .storeId(storeId)  // 예시 storeId
                 .paymentStatus(PaymentStatus.PURCHASE.getDescription())
                 .paymentType(PaymentType.QRCODE.getDescription())
