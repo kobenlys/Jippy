@@ -1,4 +1,4 @@
-package com.hbhw.jippy.domain.store.entity;
+package com.hbhw.jippy.domain.payment.entity;
 
 import lombok.*;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -14,9 +14,6 @@ public class BuyProduct {
 
     @Field("product_category")
     private Integer productCategory;
-
-    @Field("product_name")
-    private String productName;
 
     @Field("product_quantity")
     private Integer productQuantity;
