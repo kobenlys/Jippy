@@ -66,6 +66,18 @@ public class NoticeService {
         return convertToResponse(notice);
     }
 
+    @Transactional
+    public void deleteNotice(Integer storeId, Long noticeId) {
+        Notice notice = noticeRepository.findById(noticeId)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재하지 않는 공지사항입니다"));
+
+        if (!notice.getStoreId().getId().equals(storeId)) {
+            throw new BusinessException(CommonErrorCode.BAD_REQUEST, "해당 매장의 공지사항이 아닙니다");
+        }
+
+        noticeRepository.delete(notice);
+    }
+
     private NoticeResponse convertToResponse(Notice notice) {
         return NoticeResponse.builder()
                 .noticeId(notice.getId())

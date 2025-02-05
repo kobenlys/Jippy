@@ -54,4 +54,14 @@ public class NoticeController {
         return ApiResponse.success(HttpStatus.OK, response);
     }
 
+    @Operation(summary = "공지사항 삭제", description = "매장의 공지사항을 삭제합니다")
+    @DeleteMapping("/delete/{noticeId}")
+    public ApiResponse<Void> deleteNotice(
+            @Parameter(description = "매장 ID")
+            @PathVariable Integer storeId,
+            @Parameter(description = "공지사항 ID")
+            @PathVariable Long noticeId) {
+        noticeService.deleteNotice(storeId, noticeId);
+        return ApiResponse.success(HttpStatus.OK);
+    }
 }
