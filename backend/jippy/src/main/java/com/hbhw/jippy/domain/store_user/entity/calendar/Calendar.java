@@ -1,6 +1,6 @@
 package com.hbhw.jippy.domain.store_user.entity.calendar;
 
-import com.hbhw.jippy.domain.store_user.entity.StoreUserStaff;
+import com.hbhw.jippy.domain.store_user.entity.staff.StoreUserStaff;
 import com.hbhw.jippy.domain.store_user.enums.DayOfWeek;
 import com.hbhw.jippy.utils.converter.DayOfWeekConverter;
 import jakarta.persistence.*;

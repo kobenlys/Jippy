@@ -6,10 +6,10 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Schema(description = "회원가입 요청")
+@Schema(description = "점주 회원가입 요청")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class SignUpRequest {
+public class OwnerSignUpRequest {
     @Schema(description = "사용자 이메일", example = "user@example.com")
     @NotBlank(message = "이메일은 필수입니다.")
     @Email(message = "올바른 이메일 형식이 아닙니다.")
