@@ -3,6 +3,8 @@ package com.hbhw.jippy.domain.notice.controller;
 import com.hbhw.jippy.domain.notice.dto.request.NoticeCreateRequest;
 import com.hbhw.jippy.domain.notice.dto.response.NoticeResponse;
 import com.hbhw.jippy.domain.notice.service.NoticeService;
+import com.hbhw.jippy.global.pagenation.dto.request.PagenationRequest;
+import com.hbhw.jippy.global.pagenation.dto.response.PagenationResponse;
 import com.hbhw.jippy.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,6 +30,30 @@ public class NoticeController {
             @RequestBody NoticeCreateRequest request) {
         NoticeResponse response = noticeService.createNotice(storeId, request);
         return ApiResponse.success(HttpStatus.CREATED, response);
+    }
+
+    @Operation(summary = "공지사항 목록 조회", description = "매장의 공지사항 목록을 조회합니다")
+    @GetMapping("/select")
+    public ApiResponse<PagenationResponse<NoticeResponse>> getNoticeList(
+            @Parameter(description = "매장 ID")
+            @PathVariable Integer storeId,
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+            @RequestParam(required = false, defaultValue = "0") Integer page,
+            @Parameter(description = "페이지 크기", example = "10")
+            @RequestParam(name = "page_size", required = false, defaultValue = "10") Integer pageSize,
+            @Parameter(description = "정렬 기준", example = "createdAt")
+            @RequestParam(name = "sort_by", required = false, defaultValue = "createdAt") String sortBy,
+            @Parameter(description = "정렬 방향 (ASC, DESC)", example = "DESC")
+            @RequestParam(required = false, defaultValue = "DESC") String direction) {
+        PagenationRequest pagenationRequest = PagenationRequest.builder()
+                .page(page)
+                .pageSize(pageSize)
+                .sortBy(sortBy)
+                .direction(direction)
+                .build();
+
+        PagenationResponse<NoticeResponse> response = noticeService.getNoticeList(storeId, pagenationRequest);
+        return ApiResponse.success(HttpStatus.OK, response);
     }
 
     @Operation(summary = "공지사항 단일 조회", description = "매장의 특정 공지사항을 조회합니다")

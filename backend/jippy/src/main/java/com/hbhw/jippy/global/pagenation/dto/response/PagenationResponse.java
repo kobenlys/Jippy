@@ -1,0 +1,57 @@
+package com.hbhw.jippy.global.pagenation.dto.response;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Page;
+
+import java.util.List;
+
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Schema(description = "페이지네이션 응답 DTO")
+public class PagenationResponse<T> {
+
+    @Schema(description = "데이터 리스트")
+    private List<T> content;
+
+    @Schema(description = "현재 페이지 번호", example = "0")
+    private Integer page;
+
+    @Schema(description = "페이지 크기", example = "10")
+    @JsonProperty("page_size")
+    private Integer pageSize;
+
+    @Schema(description = "총 페이지 수", example = "10")
+    @JsonProperty("total_pages")
+    private Integer totalPages;
+
+    @Schema(description = "총 데이터 수", example = "101")
+    @JsonProperty("total_elements")
+    private long totalElements;
+
+    @Schema(description = "첫 페이지 여부", example = "true")
+    @JsonProperty("is_first")
+    private Boolean isFirst;
+
+    @Schema(description = "마지막 페이지 여부", example = "false")
+    @JsonProperty("is_last")
+    private Boolean isLast;
+
+    public static <T> PagenationResponse<T> of(Page<T> page) {
+        return PagenationResponse.<T>builder()
+                .content(page.getContent())
+                .page(page.getNumber())
+                .pageSize(page.getSize())
+                .totalPages(page.getTotalPages())
+                .totalElements(page.getTotalElements())
+                .isFirst(page.isFirst())
+                .isLast(page.isLast())
+                .build();
+    }
+}

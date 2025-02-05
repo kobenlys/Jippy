@@ -7,9 +7,13 @@ import com.hbhw.jippy.domain.notice.repository.NoticeRepository;
 import com.hbhw.jippy.domain.store.entity.Store;
 import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
+import com.hbhw.jippy.global.pagenation.dto.request.PagenationRequest;
+import com.hbhw.jippy.global.pagenation.dto.response.PagenationResponse;
 import com.hbhw.jippy.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +37,34 @@ public class NoticeService {
 
         Notice savedNotice = noticeRepository.save(notice);
         return convertToResponse(savedNotice);
+    }
+
+    @Transactional(readOnly = true)
+    public PagenationResponse<NoticeResponse> getNoticeList(Integer storeId, PagenationRequest pagenationRequest) {
+        log.info("Service - Received request - Page: {}, Size: {}",
+                pagenationRequest.getPage(),
+                pagenationRequest.getPageSize());
+        Pageable pageable = pagenationRequest.toPageable();
+        Page<Notice> noticePage = noticeRepository.findAllByStoreId_Id(storeId, pagenationRequest.toPageable());
+        log.info("Service - Created Pageable - Page: {}, Size: {}",
+                pageable.getPageNumber(),
+                pageable.getPageSize());
+        log.info("Service - Retrieved Page - Number: {}, Size: {}, Total Elements: {}, Total Pages: {}",
+                noticePage.getNumber(),
+                noticePage.getSize(),
+                noticePage.getTotalElements(),
+                noticePage.getTotalPages());
+
+        Page<NoticeResponse> responsePage = noticePage.map(notice -> NoticeResponse.builder()
+                .noticeId(notice.getId())
+                .storeId(notice.getStoreId().getId())
+                .title(notice.getTitle())
+                .content(notice.getContent())
+                .createdAt(notice.getCreatedAt())
+                .author(notice.getAuthor())
+                .build());
+
+        return PagenationResponse.of(responsePage);
     }
 
     @Transactional(readOnly = true)
@@ -77,6 +109,7 @@ public class NoticeService {
 
         noticeRepository.delete(notice);
     }
+
 
     private NoticeResponse convertToResponse(Notice notice) {
         return NoticeResponse.builder()
