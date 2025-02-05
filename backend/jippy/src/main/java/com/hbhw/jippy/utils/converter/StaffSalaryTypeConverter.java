@@ -1,6 +1,6 @@
 package com.hbhw.jippy.utils.converter;
 
-import com.hbhw.jippy.domain.store_user.enums.StaffSalaryType;
+import com.hbhw.jippy.domain.storeuser.enums.StaffSalaryType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
