@@ -1,4 +1,4 @@
-package com.hbhw.jippy.domain.chat.dto.response;
+package com.hbhw.jippy.domain.chat.dto.request;
 
 import lombok.*;
 
@@ -7,10 +7,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MessageResponse {
-    private String receiverId;
+public class ChatMessageRequest {
+    private String senderId;
     private String messageContent;
-    private String timestamp;
     private String messageType;
 }
-

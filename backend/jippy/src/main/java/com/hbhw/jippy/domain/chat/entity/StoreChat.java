@@ -22,5 +22,6 @@ public class StoreChat {
     private Integer storeId;
 
     @Field("messages")
+    @Builder.Default
     private List<Message> messages = new ArrayList<>();
 }

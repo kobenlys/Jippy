@@ -7,5 +7,5 @@ import java.util.List;
 
 @Repository
 public interface ChatListRepository extends JpaRepository<StoreUserStaff, Integer> {
-    List<Integer> findByUserStaffId(Integer userId);
+    List<StoreUserStaff> findByUserStaffId(Integer userStaffId);
 }
