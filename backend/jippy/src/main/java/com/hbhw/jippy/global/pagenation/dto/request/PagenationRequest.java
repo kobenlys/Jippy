@@ -43,11 +43,11 @@ public class PagenationRequest {
     @Schema(description = "작성자", example = "카리나")
     private String author;
 
-    @Schema(description = "시작 날짜", example = "2025-02-06 00:00:00")
+    @Schema(description = "시작 날짜", example = "2025-02-05 00:00:00")
     @JsonProperty("start_date")
     private String startDate;
 
-    @Schema(description = "끝 날짜", example = "2025-02-07 00:00:00")
+    @Schema(description = "끝 날짜", example = "2025-02-06 00:00:00")
     @JsonProperty("end_date")
     private String endDate;
 

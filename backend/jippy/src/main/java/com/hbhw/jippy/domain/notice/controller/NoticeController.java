@@ -33,35 +33,13 @@ public class NoticeController {
     }
 
     @Operation(summary = "공지사항 목록 조회", description = "매장의 공지사항 목록을 조회합니다")
-    @GetMapping("/select")
+    @PostMapping("/select")
     public ApiResponse<PagenationResponse<NoticeResponse>> getNoticeList(
             @Parameter(description = "매장 ID")
             @PathVariable Integer storeId,
-            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
-            @RequestParam(required = false, defaultValue = "0") Integer page,
-            @Parameter(description = "페이지 크기", example = "10")
-            @RequestParam(name = "page_size", required = false, defaultValue = "10") Integer pageSize,
-            @Parameter(description = "정렬 기준", example = "createdAt")
-            @RequestParam(name = "sort_by", required = false, defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "정렬 방향 (ASC, DESC)", example = "DESC")
-            @RequestParam(required = false, defaultValue = "DESC") String direction,
-            @Parameter(description = "작성자", example = "카리나")
-            @RequestParam(required = false) String author,
-            @Parameter(description = "시작 날짜", example = "2025-02-06 00:00:00")
-            @RequestParam(required = false) String startDate,
-            @Parameter(description = "끝 날짜", example = "2025-02-07 00:00:00")
-            @RequestParam(required = false) String endDate) {
-        PagenationRequest pagenationRequest = PagenationRequest.builder()
-                .page(page)
-                .pageSize(pageSize)
-                .sortBy(sortBy)
-                .direction(direction)
-                .author(author)
-                .startDate(startDate)
-                .endDate(endDate)
-                .build();
+            @RequestBody PagenationRequest request) {
 
-        PagenationResponse<NoticeResponse> response = noticeService.getNoticeList(storeId, pagenationRequest);
+        PagenationResponse<NoticeResponse> response = noticeService.getNoticeList(storeId, request);
         return ApiResponse.success(HttpStatus.OK, response);
     }
 
