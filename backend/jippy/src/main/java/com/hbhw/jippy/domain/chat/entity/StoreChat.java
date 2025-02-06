@@ -17,6 +17,7 @@ import java.util.List;
 @Builder
 public class StoreChat {
     @Id
+    private String id;
     @Indexed(unique = true)
     @Field("store_id")
     private Integer storeId;

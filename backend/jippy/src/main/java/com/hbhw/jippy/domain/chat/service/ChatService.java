@@ -68,19 +68,25 @@ public class ChatService {
      * 채팅 메시지를 저장하고 반환
      */
     public ChatMessageResponse saveMessage(Integer storeId, ChatMessageRequest request) {
-        StoreChat storeChat = chatRepository.findById(storeId)
-                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
+        // 1) 기존 storeChat 문서 조회
+        StoreChat storeChat = chatRepository.findByStoreId(storeId)
+                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다. storeId=" + storeId));
 
+        // 2) 새 메시지 생성
         Message message = Message.builder()
-                .senderId(request.getSenderId())  // 수신자 ID
+                .senderId(request.getSenderId())
                 .messageContent(request.getMessageContent())
                 .messageType(request.getMessageType())
-                .timestamp(DateTimeUtils.nowString())
+                .timestamp(DateTimeUtils.nowString()) // yyyy-MM-dd HH:mm:ss 등 원하는 포맷
                 .build();
 
+        // 3) 기존 messages 리스트에 추가
         storeChat.getMessages().add(message);
+
+        // 4) DB에 업데이트 (storeChat 전체 문서가 업데이트됨)
         chatRepository.save(storeChat);
 
+        // 5) 응답 DTO 구성
         return ChatMessageResponse.builder()
                 .senderId(request.getSenderId())
                 .messageContent(request.getMessageContent())
