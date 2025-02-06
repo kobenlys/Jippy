@@ -1,6 +1,6 @@
 package com.hbhw.jippy.domain.user.factory;
 
-import com.hbhw.jippy.domain.user.dto.request.SignUpRequest;
+import com.hbhw.jippy.domain.user.dto.request.OwnerSignUpRequest;
 import com.hbhw.jippy.domain.user.entity.BaseUser;
 import com.hbhw.jippy.domain.user.entity.UserOwner;
 import com.hbhw.jippy.domain.user.entity.UserStaff;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 public class UserFactory {
     private final PasswordEncoder passwordEncoder;
 
-    public BaseUser createUser(SignUpRequest request, UserType userType) {
+    public BaseUser createUser(OwnerSignUpRequest request, UserType userType) {
         String encodedPassword = passwordEncoder.encode(request.getPassword());
 
         return switch (userType) {

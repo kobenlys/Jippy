@@ -22,15 +22,15 @@ public class UserController {
 
     @Operation(summary = "점주 회원가입", description = "점주 계정으로 회원가입을 진행합니다")
     @PostMapping("/signup/owner")
-    public ApiResponse<?> ownerSignUp(@RequestBody @Valid SignUpRequest request) {
-        userService.signUp(request, UserType.OWNER);
+    public ApiResponse<?> ownerSignUp(@RequestBody @Valid OwnerSignUpRequest request) {
+        userService.ownerSignUp(request);
         return ApiResponse.success(HttpStatus.CREATED);
     }
 
     @Operation(summary = "직원 회원가입", description = "직원 계정으로 회원가입을 진행합니다")
     @PostMapping("/signup/staff")
-    public ApiResponse<?> staffSignUp(@RequestBody @Valid SignUpRequest request) {
-        userService.signUp(request, UserType.STAFF);
+    public ApiResponse<?> staffSignUp(@RequestBody @Valid StaffSignUpRequest request) {
+        userService.staffSignUp(request);
         return ApiResponse.success(HttpStatus.CREATED);
     }
 

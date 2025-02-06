@@ -5,7 +5,7 @@ import jakarta.persistence.AttributeConverter;
 
 import java.util.Objects;
 
-public class ProductSizeConverter  implements AttributeConverter<ProductSize, Integer> {
+public class ProductSizeConverter implements AttributeConverter<ProductSize, Integer> {
 
     @Override
     public Integer convertToDatabaseColumn(ProductSize productSize) {

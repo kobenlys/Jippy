@@ -1,7 +1,7 @@
 package com.hbhw.jippy.global.auth.config;
 
-import com.hbhw.jippy.domain.store_user.entity.StoreUserStaff;
-import com.hbhw.jippy.domain.store_user.repository.StoreStaffRepository;
+import com.hbhw.jippy.domain.storeuser.entity.staff.StoreUserStaff;
+import com.hbhw.jippy.domain.storeuser.repository.staff.StoreStaffRepository;
 import com.hbhw.jippy.domain.user.entity.UserOwner;
 import com.hbhw.jippy.domain.user.entity.UserStaff;
 import com.hbhw.jippy.domain.user.enums.StaffType;
