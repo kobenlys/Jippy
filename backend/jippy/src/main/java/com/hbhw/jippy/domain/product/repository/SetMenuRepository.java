@@ -1,0 +1,9 @@
+package com.hbhw.jippy.domain.product.repository;
+
+import com.hbhw.jippy.domain.product.entity.SetMenu;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface SetMenuRepository extends JpaRepository<SetMenu, Integer> {
+}
