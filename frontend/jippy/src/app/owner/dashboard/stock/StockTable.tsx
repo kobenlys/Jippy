@@ -1,32 +1,14 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
+import { RootState } from "@/redux/store";
+import React from "react";
+import { useSelector } from "react-redux";
 
-const StockTable = ({ apiUrl = process.env.NEXT_PUBLIC_API_URL + "/api/stock/1/select" }) => {
-  const [stockData, setStockData] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchStockData = async () => {
-      try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) throw new Error("데이터를 불러오는데 실패했습니다.");
 
-        const data = await response.json();
-        if (data?.data?.inventory) {
-          setStockData(data.data.inventory);
-        } else {
-          console.error("올바른 데이터 구조가 아닙니다.", data);
-          setStockData([]);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStockData();
-  }, [apiUrl]);
-
+const StockTable = () => {
+  const stockData =  useSelector((state: RootState) => state.stock);
+  console.log(stockData);
   return (
     <div className="p-4">
       {/* Tabs */}
@@ -37,9 +19,6 @@ const StockTable = ({ apiUrl = process.env.NEXT_PUBLIC_API_URL + "/api/stock/1/s
 
       {/* Table Container */}
       <div className="bg-white rounded-lg">
-        {loading ? (
-          <div className="text-center py-8 text-gray-500">데이터를 불러오는 중...</div>
-        ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -99,7 +78,6 @@ const StockTable = ({ apiUrl = process.env.NEXT_PUBLIC_API_URL + "/api/stock/1/s
               </tfoot>
             </table>
           </div>
-        )}
       </div>
     </div>
   );
