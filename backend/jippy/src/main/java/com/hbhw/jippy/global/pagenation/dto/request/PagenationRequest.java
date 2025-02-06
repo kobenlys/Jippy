@@ -2,6 +2,8 @@ package com.hbhw.jippy.global.pagenation.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,12 +19,14 @@ import org.springframework.data.domain.Sort;
 @Schema(description = "페이지네이션 요청 DTO")
 public class PagenationRequest {
 
-    @Schema(description = "페이지 번호 (0부터 시작)", example = "0")
+    @Schema(description = "페이지 번호 (0부터 시작)", example = "0", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     @Builder.Default
     private Integer page = 0;
 
-    @Schema(description = "페이지 크기", example = "10")
+    @Schema(description = "페이지 크기", example = "10", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonProperty("page_size")
+    @NotNull
     @Builder.Default
     private Integer pageSize = 10;
 
@@ -32,8 +36,20 @@ public class PagenationRequest {
     private String sortBy = "createdAt";
 
     @Schema(description = "정렬 방향 (ASC, DESC", example = "DESC")
+    @Pattern(regexp = "^(ASC|DESC)$", message = "정렬 방향은 ASC 또는 DESC만 가능합니다")
     @Builder.Default
     private String direction = "DESC";
+
+    @Schema(description = "작성자", example = "카리나")
+    private String author;
+
+    @Schema(description = "시작 날짜", example = "2025-02-06 00:00:00")
+    @JsonProperty("start_date")
+    private String startDate;
+
+    @Schema(description = "끝 날짜", example = "2025-02-07 00:00:00")
+    @JsonProperty("end_date")
+    private String endDate;
 
     public Pageable toPageable() {
         Sort.Direction dir = Sort.Direction.fromString(direction.toUpperCase());

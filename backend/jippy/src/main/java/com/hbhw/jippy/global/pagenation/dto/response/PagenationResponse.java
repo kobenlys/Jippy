@@ -1,6 +1,7 @@
 package com.hbhw.jippy.global.pagenation.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hbhw.jippy.global.pagenation.dto.request.PagenationRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,6 +24,17 @@ public class PagenationResponse<T> {
     @Schema(description = "현재 페이지 번호", example = "0")
     private Integer page;
 
+    @Schema(description = "작성자", example = "카리나")
+    private String author;
+
+    @Schema(description = "시작 날짜", example = "2025-02-06 00:00:00")
+    @JsonProperty("start_date")
+    private String startDate;
+
+    @Schema(description = "끝 날짜", example = "2025-02-07 00:00:00")
+    @JsonProperty("end_date")
+    private String endDate;
+
     @Schema(description = "페이지 크기", example = "10")
     @JsonProperty("page_size")
     private Integer pageSize;
@@ -43,10 +55,13 @@ public class PagenationResponse<T> {
     @JsonProperty("is_last")
     private Boolean isLast;
 
-    public static <T> PagenationResponse<T> of(Page<T> page) {
+    public static <T> PagenationResponse<T> of(Page<T> page, PagenationRequest request) {
         return PagenationResponse.<T>builder()
                 .content(page.getContent())
                 .page(page.getNumber())
+                .author(request.getAuthor())
+                .startDate(request.getStartDate())
+                .endDate(request.getEndDate())
                 .pageSize(page.getSize())
                 .totalPages(page.getTotalPages())
                 .totalElements(page.getTotalElements())

@@ -41,19 +41,14 @@ public class NoticeService {
 
     @Transactional(readOnly = true)
     public PagenationResponse<NoticeResponse> getNoticeList(Integer storeId, PagenationRequest pagenationRequest) {
-        log.info("Service - Received request - Page: {}, Size: {}",
-                pagenationRequest.getPage(),
-                pagenationRequest.getPageSize());
-        Pageable pageable = pagenationRequest.toPageable();
-        Page<Notice> noticePage = noticeRepository.findAllByStoreId_Id(storeId, pagenationRequest.toPageable());
-        log.info("Service - Created Pageable - Page: {}, Size: {}",
-                pageable.getPageNumber(),
-                pageable.getPageSize());
-        log.info("Service - Retrieved Page - Number: {}, Size: {}, Total Elements: {}, Total Pages: {}",
-                noticePage.getNumber(),
-                noticePage.getSize(),
-                noticePage.getTotalElements(),
-                noticePage.getTotalPages());
+
+        Page<Notice> noticePage = noticeRepository.findByStoreIdAndSearchConditions(
+                storeId,
+                pagenationRequest.getAuthor(),
+                pagenationRequest.getStartDate(),
+                pagenationRequest.getEndDate(),
+                pagenationRequest.toPageable()
+        );
 
         Page<NoticeResponse> responsePage = noticePage.map(notice -> NoticeResponse.builder()
                 .noticeId(notice.getId())
@@ -64,7 +59,7 @@ public class NoticeService {
                 .author(notice.getAuthor())
                 .build());
 
-        return PagenationResponse.of(responsePage);
+        return PagenationResponse.of(responsePage, pagenationRequest);
     }
 
     @Transactional(readOnly = true)
