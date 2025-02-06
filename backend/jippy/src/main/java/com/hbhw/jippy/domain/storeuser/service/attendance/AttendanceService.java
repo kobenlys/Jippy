@@ -1,37 +1,42 @@
 package com.hbhw.jippy.domain.storeuser.service.attendance;
 
 import com.hbhw.jippy.domain.store.entity.Store;
-import com.hbhw.jippy.domain.storeuser.dto.request.attendance.CheckInRequest;
+import com.hbhw.jippy.domain.store.repository.StoreRepository;
 import com.hbhw.jippy.domain.storeuser.dto.response.attendance.CheckInResponse;
 import com.hbhw.jippy.domain.storeuser.dto.response.attendance.CheckOutResponse;
+import com.hbhw.jippy.domain.storeuser.entity.calendar.Calendar;
 import com.hbhw.jippy.domain.storeuser.entity.staff.StoreUserStaff;
 import com.hbhw.jippy.domain.storeuser.entity.attendance.AttendanceStatus;
 import com.hbhw.jippy.domain.storeuser.entity.attendance.EmploymentStatus;
+import com.hbhw.jippy.domain.storeuser.enums.DayOfWeek;
+import com.hbhw.jippy.domain.storeuser.repository.calendar.CalendarRepository;
 import com.hbhw.jippy.domain.storeuser.repository.staff.StoreStaffRepository;
 import com.hbhw.jippy.domain.storeuser.repository.attendance.AttendanceStatusRepository;
 import com.hbhw.jippy.domain.storeuser.repository.attendance.EmploymentStatusRepository;
 import com.hbhw.jippy.utils.DateTimeUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AttendanceService {
     private final StoreStaffRepository storeStaffRepository;
     private final EmploymentStatusRepository employmentStatusRepository;
     private final AttendanceStatusRepository attendanceStatusRepository;
+    private final StoreRepository storeRepository;
+    private final CalendarRepository calendarRepository;
 
     @Transactional
-    public CheckInResponse checkIn(CheckInRequest request, Integer userStaffId) {
-        /**
-         * Store store = storeRepository.findById(request.getStoreId())
-         *                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 매장입니다."));
-         */
+    public CheckInResponse checkIn(Integer storeId, Integer userStaffId) {
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 매장입니다."));
 
         StoreUserStaff staff = storeStaffRepository.findByUserStaffId(userStaffId)
                 .orElseThrow(() -> new NoSuchElementException("매장 직원 정보를 찾을 수 없습니다."));
@@ -41,7 +46,7 @@ public class AttendanceService {
         Boolean isLate = checkIfLate(staff, DateTimeUtils.parseDateTime(currentTime));
 
         EmploymentStatus status = EmploymentStatus.builder()
-                .store(Store.builder().id(request.getStoreId()).build())
+                .store(store)
                 .storeUserStaff(staff)
                 .startDate(currentTime)
                 .endDate("9999-12-31 23:59:59")  // 퇴근 전 임시값
@@ -61,7 +66,8 @@ public class AttendanceService {
                 .timestamp(currentTime)
                 .build();
 
-        attendanceStatusRepository.save(attendanceStatus);
+        AttendanceStatus savedStatus = attendanceStatusRepository.save(attendanceStatus);
+        log.info("출근 상태 저장 완료 => id: {}, staffName: {}, timestamp: {}", String.valueOf(savedStatus.getId()), savedStatus.getStaffName(), savedStatus.getTimestamp());
 
         return CheckInResponse.of(status);
     }
@@ -91,21 +97,40 @@ public class AttendanceService {
         String id = AttendanceStatus.generateId(staff.getId());
         attendanceStatusRepository.deleteById(id);
 
+        boolean exists = attendanceStatusRepository.existsById(id);
+        log.info("출근 상태 삭제 완료 => 삭제 확인: {}", exists ? "아직 존재함" : "삭제됨");
+
         return CheckOutResponse.of(status);
     }
 
+    /**
+     * 지각 확인 메서드
+     */
     private Boolean checkIfLate(StoreUserStaff staff, LocalDateTime currentTime) {
-        /**
-         * 실제 스케줄과 비교 로직
-         */
-        return false;
+        Integer dayValue = currentTime.getDayOfWeek().getValue();
+        DayOfWeek dayOfWeek = DayOfWeek.ofLegacyCode(dayValue);
+
+        Calendar schedule = calendarRepository.findByStoreUserStaffAndDayOfWeek(staff, dayOfWeek)
+                .orElseThrow(() -> new NoSuchElementException("해당 요일의 스케줄을 찾을 수 없습니다."));
+
+        String currentTimeStr = String.format("%02d:%02d", currentTime.getHour(), currentTime.getMinute());
+
+        return currentTimeStr.compareTo(schedule.getStartTime()) > 0;
     }
 
+    /**
+     * 조퇴 확인 메서드
+     */
     private Boolean checkIfEarlyLeave(StoreUserStaff staff, LocalDateTime currentTime) {
-        /**
-         * 실제 스케줄과 비교 로직
-         */
-        return false;
+        Integer dayValue = currentTime.getDayOfWeek().getValue();
+        DayOfWeek dayOfWeek = DayOfWeek.ofLegacyCode(dayValue);
+
+        Calendar schedule = calendarRepository.findByStoreUserStaffAndDayOfWeek(staff, dayOfWeek)
+                .orElseThrow(() -> new NoSuchElementException("해당 요일의 스케줄을 찾을 수 없습니다."));
+
+        String currentTimeStr = String.format("%02d:%02d", currentTime.getHour(), currentTime.getMinute());
+
+        return currentTimeStr.compareTo(schedule.getEndTime()) < 0;
     }
 
     private Integer calculateTotalWorkTime(LocalDateTime startTime, LocalDateTime endTime) {
