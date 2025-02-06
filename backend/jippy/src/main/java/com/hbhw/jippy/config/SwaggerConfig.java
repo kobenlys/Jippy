@@ -50,4 +50,12 @@ public class SwaggerConfig {
                 .pathsToMatch("/api/auth/**")
                 .build();
     }
+
+    @Bean
+    public GroupedOpenApi qrApi() {
+        return GroupedOpenApi.builder()
+                .group("QR 코드 - qr")
+                .pathsToMatch("/api/qr/**")
+                .build();
+    }
 }
