@@ -8,6 +8,7 @@ import com.hbhw.jippy.domain.chat.entity.Message;
 import com.hbhw.jippy.domain.chat.entity.StoreChat;
 import com.hbhw.jippy.domain.chat.repository.ChatListRepository;
 import com.hbhw.jippy.domain.chat.repository.ChatRepository;
+import com.hbhw.jippy.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -74,7 +75,7 @@ public class ChatService {
                 .senderId(request.getSenderId())  // 수신자 ID
                 .messageContent(request.getMessageContent())
                 .messageType(request.getMessageType())
-                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+                .timestamp(DateTimeUtils.nowString())
                 .build();
 
         storeChat.getMessages().add(message);
