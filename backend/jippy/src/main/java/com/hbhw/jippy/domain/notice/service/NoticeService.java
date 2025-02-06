@@ -1,6 +1,7 @@
 package com.hbhw.jippy.domain.notice.service;
 
 import com.hbhw.jippy.domain.notice.dto.request.NoticeCreateRequest;
+import com.hbhw.jippy.domain.notice.dto.request.NoticeUpdateRequest;
 import com.hbhw.jippy.domain.notice.dto.response.NoticeResponse;
 import com.hbhw.jippy.domain.notice.entity.Notice;
 import com.hbhw.jippy.domain.notice.repository.NoticeRepository;
@@ -74,7 +75,7 @@ public class NoticeService {
     }
 
     @Transactional
-    public NoticeResponse updateNotice(Integer storeId, Long noticeId, NoticeCreateRequest request) {
+    public NoticeResponse updateNotice(Integer storeId, Long noticeId, NoticeUpdateRequest request) {
         Notice notice = noticeRepository.findById(noticeId)
                 .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재하지 않는 공지사항입니다"));
 

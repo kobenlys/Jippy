@@ -1,6 +1,5 @@
 package com.hbhw.jippy.global.pagination.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hbhw.jippy.global.pagination.dto.request.PaginationRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -28,31 +27,24 @@ public class PaginationResponse<T> {
     private String author;
 
     @Schema(description = "시작 날짜", example = "2025-02-06 00:00:00")
-    @JsonProperty("start_date")
     private String startDate;
 
     @Schema(description = "끝 날짜", example = "2025-02-07 00:00:00")
-    @JsonProperty("end_date")
     private String endDate;
 
     @Schema(description = "페이지 크기", example = "10")
-    @JsonProperty("page_size")
     private Integer pageSize;
 
     @Schema(description = "총 페이지 수", example = "10")
-    @JsonProperty("total_pages")
     private Integer totalPages;
 
     @Schema(description = "총 데이터 수", example = "101")
-    @JsonProperty("total_elements")
     private long totalElements;
 
     @Schema(description = "첫 페이지 여부", example = "true")
-    @JsonProperty("is_first")
     private Boolean isFirst;
 
     @Schema(description = "마지막 페이지 여부", example = "false")
-    @JsonProperty("is_last")
     private Boolean isLast;
 
     public static <T> PaginationResponse<T> of(Page<T> page, PaginationRequest request) {

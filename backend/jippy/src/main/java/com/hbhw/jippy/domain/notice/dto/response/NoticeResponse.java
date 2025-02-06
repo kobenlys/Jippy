@@ -1,6 +1,5 @@
 package com.hbhw.jippy.domain.notice.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,7 +17,6 @@ public class NoticeResponse {
     private Long noticeId;
 
     @Schema(description = "매장 아이디", example = "1")
-    @JsonProperty("store_id")
     private Integer storeId;
 
     @Schema(description = "공지사항 제목", example = "딸기 시즌 신메뉴 출시 공지사항")
@@ -28,7 +26,6 @@ public class NoticeResponse {
     private String content;
 
     @Schema(description = "생성 날짜", example = "2025-02-05 15:20:30")
-    @JsonProperty("created_at")
     private String createdAt;
 
     @Schema(description = "작성자", example = "카리나")

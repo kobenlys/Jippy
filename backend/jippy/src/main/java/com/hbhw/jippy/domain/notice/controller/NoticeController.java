@@ -1,6 +1,7 @@
 package com.hbhw.jippy.domain.notice.controller;
 
 import com.hbhw.jippy.domain.notice.dto.request.NoticeCreateRequest;
+import com.hbhw.jippy.domain.notice.dto.request.NoticeUpdateRequest;
 import com.hbhw.jippy.domain.notice.dto.response.NoticeResponse;
 import com.hbhw.jippy.domain.notice.service.NoticeService;
 import com.hbhw.jippy.global.pagination.dto.request.PaginationRequest;
@@ -62,7 +63,7 @@ public class NoticeController {
             @PathVariable Integer storeId,
             @Parameter(description = "공지사항 ID")
             @PathVariable Long noticeId,
-            @RequestBody NoticeCreateRequest request) {
+            @RequestBody NoticeUpdateRequest request) {
         NoticeResponse response = noticeService.updateNotice(storeId, noticeId, request);
         return ApiResponse.success(HttpStatus.OK, response);
     }

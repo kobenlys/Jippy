@@ -1,6 +1,5 @@
 package com.hbhw.jippy.global.pagination.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -25,13 +24,11 @@ public class PaginationRequest {
     private Integer page = 0;
 
     @Schema(description = "페이지 크기", example = "10", requiredMode = Schema.RequiredMode.REQUIRED)
-    @JsonProperty("page_size")
     @NotNull
     @Builder.Default
     private Integer pageSize = 10;
 
     @Schema(description = "정렬 기준", example = "createdAt")
-    @JsonProperty("sort_by")
     @Builder.Default
     private String sortBy = "createdAt";
 
@@ -44,11 +41,9 @@ public class PaginationRequest {
     private String author;
 
     @Schema(description = "시작 날짜", example = "2025-02-05 00:00:00")
-    @JsonProperty("start_date")
     private String startDate;
 
     @Schema(description = "끝 날짜", example = "2025-02-06 00:00:00")
-    @JsonProperty("end_date")
     private String endDate;
 
     public Pageable toPageable() {
