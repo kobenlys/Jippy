@@ -35,7 +35,7 @@ public class PagenationRequest {
     @Builder.Default
     private String sortBy = "createdAt";
 
-    @Schema(description = "정렬 방향 (ASC, DESC", example = "DESC")
+    @Schema(description = "정렬 방향 (ASC, DESC)", example = "DESC")
     @Pattern(regexp = "^(ASC|DESC)$", message = "정렬 방향은 ASC 또는 DESC만 가능합니다")
     @Builder.Default
     private String direction = "DESC";

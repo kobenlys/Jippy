@@ -44,12 +44,21 @@ public class NoticeController {
             @Parameter(description = "정렬 기준", example = "createdAt")
             @RequestParam(name = "sort_by", required = false, defaultValue = "createdAt") String sortBy,
             @Parameter(description = "정렬 방향 (ASC, DESC)", example = "DESC")
-            @RequestParam(required = false, defaultValue = "DESC") String direction) {
+            @RequestParam(required = false, defaultValue = "DESC") String direction,
+            @Parameter(description = "작성자", example = "카리나")
+            @RequestParam(required = false) String author,
+            @Parameter(description = "시작 날짜", example = "2025-02-06 00:00:00")
+            @RequestParam(required = false) String startDate,
+            @Parameter(description = "끝 날짜", example = "2025-02-07 00:00:00")
+            @RequestParam(required = false) String endDate) {
         PagenationRequest pagenationRequest = PagenationRequest.builder()
                 .page(page)
                 .pageSize(pageSize)
                 .sortBy(sortBy)
                 .direction(direction)
+                .author(author)
+                .startDate(startDate)
+                .endDate(endDate)
                 .build();
 
         PagenationResponse<NoticeResponse> response = noticeService.getNoticeList(storeId, pagenationRequest);
