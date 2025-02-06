@@ -1,17 +1,12 @@
 package com.hbhw.jippy.domain.product.controller;
 
-import com.hbhw.jippy.domain.product.dto.request.CreateSetMenuRequest;
-import com.hbhw.jippy.domain.product.dto.request.RecipeRequest;
-import com.hbhw.jippy.domain.product.dto.request.SearchRecipeRequest;
-import com.hbhw.jippy.domain.product.entity.Ingredient;
+import com.hbhw.jippy.domain.product.dto.request.*;
 import com.hbhw.jippy.domain.product.service.SetMenuService;
 import com.hbhw.jippy.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,30 +15,31 @@ public class SetMenuController {
 
     private final SetMenuService setMenuService;
 
-    @Operation(summary = "", description = "")
+    @Operation(summary = "세트메뉴 생성", description = "세트메뉴를 생성합니다.")
     @PostMapping("/create")
-    public ApiResponse<?> createRecipe(@RequestBody CreateSetMenuRequest createSetMenuRequest) {
+    public ApiResponse<?> createSetMenu(@RequestBody CreateSetMenuRequest createSetMenuRequest) {
         setMenuService.createSetMenu(createSetMenuRequest);
         return ApiResponse.success(HttpStatus.CREATED);
     }
 
-    @Operation(summary = "", description = "")
+    @Operation(summary = "세트메뉴 삭제", description = "세트메뉴를 삭제합니다.")
     @DeleteMapping("/delete")
-    public ApiResponse<?> deleteRecipe(@RequestBody SearchRecipeRequest searchRecipeRequest) {
+    public ApiResponse<?> deleteSetMenu(@RequestParam("setMenuId") Integer setMenuId, @RequestParam("storeId") Integer storeId) {
+        setMenuService.deleteSetMenu(setMenuId, storeId);
         return ApiResponse.success(HttpStatus.OK);
     }
 
-    @Operation(summary = "", description = "")
-    @GetMapping("/update")
-    public ApiResponse<?> updateRecipe(@RequestBody RecipeRequest recipeRequest) {
+    @Operation(summary = "세트메뉴 수정", description = "세트메뉴를 수정합니다")
+    @PutMapping("/update/info")
+    public ApiResponse<?> updateSetMenu(@RequestBody UpdateSetMenuRequest updateSetMenuRequest) {
+        setMenuService.modifySetMenu(updateSetMenuRequest);
         return ApiResponse.success(HttpStatus.OK);
     }
 
-    @Operation(summary = "", description = "")
-    @GetMapping("/list/ingredient")
-    public ApiResponse<List<Ingredient>> getListIngredient(@RequestParam("storeId") Integer storeId, @RequestParam("productId") Long productId) {
-        return ApiResponse.success(HttpStatus.OK, ingredientList);
+    @Operation(summary = "세트메뉴 모든 정보 조회", description = "세트메뉴의 모든정보(세트메뉴 리스트 + 구성)를 조회합니다.")
+    @GetMapping("/detail")
+    public ApiResponse<SetMenuResponse> selectDetailListSetMenu(@RequestParam("setMenuId") Integer setMenuId, @RequestParam("storeId") Integer storeId) {
+        SetMenuResponse setMenuResponse = setMenuService.selectDetailSetMenu(setMenuId, storeId);
+        return ApiResponse.success(HttpStatus.OK, setMenuResponse);
     }
-
-
 }

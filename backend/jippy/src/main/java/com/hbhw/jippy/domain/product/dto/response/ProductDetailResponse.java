@@ -1,5 +1,6 @@
 package com.hbhw.jippy.domain.product.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.hbhw.jippy.domain.product.enums.ProductSize;
 import com.hbhw.jippy.domain.product.enums.ProductType;
 import lombok.AllArgsConstructor;
@@ -8,6 +9,7 @@ import lombok.Getter;
 
 @Builder
 @Getter
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @AllArgsConstructor
 public class ProductDetailResponse {
     private Long id;

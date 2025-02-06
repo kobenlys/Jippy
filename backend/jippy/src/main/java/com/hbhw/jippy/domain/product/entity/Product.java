@@ -8,6 +8,9 @@ import com.hbhw.jippy.utils.converter.ProductTypeConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Entity
 @Builder
@@ -50,4 +53,7 @@ public class Product {
     @Column(name = "size")
     @Convert(converter = ProductSizeConverter.class)
     private ProductSize productSize;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SetMenuConfig> setMenuConfigList = new ArrayList<>();
 }
