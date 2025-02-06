@@ -1,6 +1,5 @@
 package com.hbhw.jippy.domain.stock.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -16,7 +15,6 @@ import java.util.List;
 public class InventoryItemCreateUpdateRequest {
 
     @Schema(description = "재고 이름(Update 시 변경하지 않을 경우 생략)", example = "원두")
-    @JsonProperty("stock_name")
     private String stockName;
 
     @ArraySchema(
