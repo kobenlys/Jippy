@@ -6,6 +6,8 @@ import com.hbhw.jippy.domain.stock.dto.response.StockDetailResponse;
 import com.hbhw.jippy.domain.stock.dto.response.StockResponse;
 import com.hbhw.jippy.domain.stock.entity.*;
 import com.hbhw.jippy.domain.stock.repository.StockRepository;
+import com.hbhw.jippy.global.code.CommonErrorCode;
+import com.hbhw.jippy.global.error.BusinessException;
 import com.hbhw.jippy.utils.DateTimeUtils;
 import com.mongodb.client.MongoClient;
 import lombok.RequiredArgsConstructor;
@@ -101,7 +103,7 @@ public class StockService {
     @Transactional
     public StockResponse addInventory(Integer storeId, StockCreateUpdateRequest request) {
         if (request.getInventory() == null || request.getInventory().isEmpty()) {
-            throw new IllegalArgumentException("재고 정보가 필요합니다");
+            throw new BusinessException(CommonErrorCode.INVALID_INPUT_VALUE, "재고 정보가 필요합니다");
         }
 
         Stock stock = stockRepository.findByStoreId(storeId)
@@ -313,15 +315,15 @@ public class StockService {
     @Transactional
     public StockResponse updateInventory(Integer storeId, String stockName, StockCreateUpdateRequest request) {
         Stock stock = stockRepository.findByStoreId(storeId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 매장의 재고 정보를 찾을 수 없습니다"));
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장의 재고 정보를 찾을 수 없습니다"));
 
         InventoryItem sourceItem = stock.getInventory().stream()
                 .filter(item -> compareStockNames(item.getStockName(), stockName))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("해당 상품의 재고 정보를 찾을 수 없습니다"));
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 상품의 재고 정보를 찾을 수 없습니다"));
 
         if (request.getInventory() == null || request.getInventory().isEmpty()) {
-            throw new IllegalArgumentException("수정할 재고 정보가 필요합니다");
+            throw new BusinessException(CommonErrorCode.INVALID_INPUT_VALUE, "수정할 재고 정보가 필요합니다");
         }
 
         InventoryItemCreateUpdateRequest updateRequest = request.getInventory().get(0);
@@ -371,7 +373,8 @@ public class StockService {
                             .findFirst();
 
                     if (!sourceDetail.isPresent()) {
-                        throw new IllegalArgumentException(
+                        throw new BusinessException(
+                                CommonErrorCode.NOT_FOUND,
                                 String.format("해당 용량과 단위의 재고가 존재하지 않습니다 : %d%s",
                                         convertedMoveDetail.getStockUnitSize(),
                                         convertedMoveDetail.getStockUnit())
@@ -535,7 +538,8 @@ public class StockService {
                     eventPublisher.publishEvent(new StockLogService.StockLogEvent(logRequest));
                     existingStock.get().setStockCount(convertedNewStock.getStockCount());
                 } else {
-                    throw new IllegalArgumentException(
+                    throw new BusinessException(
+                            CommonErrorCode.NOT_FOUND,
                             String.format("해당 용량과 단위의 재고가 존재하지 않습니다 : %d%s",
                                     convertedNewStock.getStockUnitSize(),
                                     convertedNewStock.getStockUnit())
@@ -562,16 +566,16 @@ public class StockService {
     @Transactional
     public StockResponse deleteInventoryItem(Integer storeId, String stockName, StockDeleteRequest request) {
         if (request.getInventory() == null || request.getInventory().isEmpty()) {
-            throw new IllegalArgumentException("삭제할 재고 정보가 필요합니다");
+            throw new BusinessException(CommonErrorCode.INVALID_INPUT_VALUE, "삭제할 재고 정보가 필요합니다");
         }
 
         Stock stock = stockRepository.findByStoreId(storeId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 매장의 재고 정보를 찾을 수 없습니다"));
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장의 재고 정보를 찾을 수 없습니다"));
 
         InventoryItem targetItem = stock.getInventory().stream()
                 .filter(item -> compareStockNames(item.getStockName(), stockName))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("해당 상품의 재고 정보를 찾을 수 없습니다"));
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 상품의 재고 정보를 찾을 수 없습니다"));
 
         ObjectId stockId = getStockId(storeId);
 
@@ -615,7 +619,8 @@ public class StockService {
                     eventPublisher.publishEvent(new StockLogService.StockLogEvent(logRequest));
                     targetItem.getStock().remove(stockToDelete.get());
                 } else {
-                    throw new IllegalArgumentException(
+                    throw new BusinessException(
+                            CommonErrorCode.NOT_FOUND,
                             String.format("해당 용량의 재고를 찾을 수 없습니다: %d%s",
                                     standardizedDeleteRequest.getStockUnitSize(),
                                     standardizedDeleteRequest.getStockUnit())
