@@ -8,6 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class Ingredient {
-    private String ingredient;
-    private String amount;
+    private String name;
+    private Integer amount;
+    private String unit;
 }
