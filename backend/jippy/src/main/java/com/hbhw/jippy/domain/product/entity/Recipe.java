@@ -16,13 +16,15 @@ import java.util.List;
 @Builder
 public class Recipe {
     @Id
+    private String id;
+
     @Indexed(unique = true)
     @Field("product_id")
-    private Integer productId;
-
-    @Field("ingredients")
-    private List<Ingredient> ingredients;
+    private Long productId;
 
     @Field("updated_at")
     private String updatedAt;
+
+    @Field("ingredient")
+    private List<Ingredient> ingredient;
 }
