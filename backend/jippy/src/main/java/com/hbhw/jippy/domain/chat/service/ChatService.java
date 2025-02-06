@@ -4,6 +4,7 @@ import com.hbhw.jippy.domain.chat.dto.request.CreateChatRequest;
 import com.hbhw.jippy.domain.chat.dto.response.ChatListResponse;
 import com.hbhw.jippy.domain.chat.dto.response.MessageResponse;
 import com.hbhw.jippy.domain.chat.entity.StoreChat;
+import com.hbhw.jippy.domain.chat.repository.ChatListRepository;
 import com.hbhw.jippy.domain.chat.repository.ChatRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,11 +17,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ChatService {
     private final ChatRepository chatRepository;
+    private final ChatListRepository chatlistRepository;
 
     // 채팅방 목록 조회
     public List<ChatListResponse> getChatList(Integer userId) {
-        return chatRepository.findAll().stream()
-                .map(chat -> new ChatListResponse(chat.getStoreId()))
+        return chatlistRepository.findByUserStaffId(userId).stream()
+                .map(ChatListResponse::new)
                 .collect(Collectors.toList());
     }
 
