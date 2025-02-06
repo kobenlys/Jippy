@@ -1,4 +1,4 @@
-package com.hbhw.jippy.global.pagenation.dto.request;
+package com.hbhw.jippy.global.pagination.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,7 +17,7 @@ import org.springframework.data.domain.Sort;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "페이지네이션 요청 DTO")
-public class PagenationRequest {
+public class PaginationRequest {
 
     @Schema(description = "페이지 번호 (0부터 시작)", example = "0", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull

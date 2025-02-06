@@ -1,7 +1,7 @@
-package com.hbhw.jippy.global.pagenation.dto.response;
+package com.hbhw.jippy.global.pagination.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hbhw.jippy.global.pagenation.dto.request.PagenationRequest;
+import com.hbhw.jippy.global.pagination.dto.request.PaginationRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "페이지네이션 응답 DTO")
-public class PagenationResponse<T> {
+public class PaginationResponse<T> {
 
     @Schema(description = "데이터 리스트")
     private List<T> content;
@@ -55,8 +55,8 @@ public class PagenationResponse<T> {
     @JsonProperty("is_last")
     private Boolean isLast;
 
-    public static <T> PagenationResponse<T> of(Page<T> page, PagenationRequest request) {
-        return PagenationResponse.<T>builder()
+    public static <T> PaginationResponse<T> of(Page<T> page, PaginationRequest request) {
+        return PaginationResponse.<T>builder()
                 .content(page.getContent())
                 .page(page.getNumber())
                 .author(request.getAuthor())

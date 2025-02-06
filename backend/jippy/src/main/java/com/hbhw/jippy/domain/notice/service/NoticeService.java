@@ -7,13 +7,12 @@ import com.hbhw.jippy.domain.notice.repository.NoticeRepository;
 import com.hbhw.jippy.domain.store.entity.Store;
 import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
-import com.hbhw.jippy.global.pagenation.dto.request.PagenationRequest;
-import com.hbhw.jippy.global.pagenation.dto.response.PagenationResponse;
+import com.hbhw.jippy.global.pagination.dto.request.PaginationRequest;
+import com.hbhw.jippy.global.pagination.dto.response.PaginationResponse;
 import com.hbhw.jippy.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,14 +39,14 @@ public class NoticeService {
     }
 
     @Transactional(readOnly = true)
-    public PagenationResponse<NoticeResponse> getNoticeList(Integer storeId, PagenationRequest pagenationRequest) {
+    public PaginationResponse<NoticeResponse> getNoticeList(Integer storeId, PaginationRequest paginationRequest) {
 
         Page<Notice> noticePage = noticeRepository.findByStoreIdAndSearchConditions(
                 storeId,
-                pagenationRequest.getAuthor(),
-                pagenationRequest.getStartDate(),
-                pagenationRequest.getEndDate(),
-                pagenationRequest.toPageable()
+                paginationRequest.getAuthor(),
+                paginationRequest.getStartDate(),
+                paginationRequest.getEndDate(),
+                paginationRequest.toPageable()
         );
 
         Page<NoticeResponse> responsePage = noticePage.map(notice -> NoticeResponse.builder()
@@ -59,7 +58,7 @@ public class NoticeService {
                 .author(notice.getAuthor())
                 .build());
 
-        return PagenationResponse.of(responsePage, pagenationRequest);
+        return PaginationResponse.of(responsePage, paginationRequest);
     }
 
     @Transactional(readOnly = true)

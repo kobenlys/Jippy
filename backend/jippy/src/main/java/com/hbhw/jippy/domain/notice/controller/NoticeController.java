@@ -3,8 +3,8 @@ package com.hbhw.jippy.domain.notice.controller;
 import com.hbhw.jippy.domain.notice.dto.request.NoticeCreateRequest;
 import com.hbhw.jippy.domain.notice.dto.response.NoticeResponse;
 import com.hbhw.jippy.domain.notice.service.NoticeService;
-import com.hbhw.jippy.global.pagenation.dto.request.PagenationRequest;
-import com.hbhw.jippy.global.pagenation.dto.response.PagenationResponse;
+import com.hbhw.jippy.global.pagination.dto.request.PaginationRequest;
+import com.hbhw.jippy.global.pagination.dto.response.PaginationResponse;
 import com.hbhw.jippy.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -34,12 +34,12 @@ public class NoticeController {
 
     @Operation(summary = "공지사항 목록 조회", description = "매장의 공지사항 목록을 조회합니다")
     @PostMapping("/select")
-    public ApiResponse<PagenationResponse<NoticeResponse>> getNoticeList(
+    public ApiResponse<PaginationResponse<NoticeResponse>> getNoticeList(
             @Parameter(description = "매장 ID")
             @PathVariable Integer storeId,
-            @RequestBody PagenationRequest request) {
+            @RequestBody PaginationRequest request) {
 
-        PagenationResponse<NoticeResponse> response = noticeService.getNoticeList(storeId, request);
+        PaginationResponse<NoticeResponse> response = noticeService.getNoticeList(storeId, request);
         return ApiResponse.success(HttpStatus.OK, response);
     }
 
