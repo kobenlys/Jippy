@@ -42,9 +42,9 @@ public class RecipeService {
         recipeCustomRepository.updateRecipe(recipeRequest);
     }
 
-    public List<Ingredient> selectIngredient(SearchRecipeRequest searchRecipeRequest){
-        Product productEntity = productService.getProduct(searchRecipeRequest.getStoreId(), searchRecipeRequest.getProductId());
-        Recipe recipeEntity = getRecipe(searchRecipeRequest.getProductId());
+    public List<Ingredient> selectIngredient(Integer storeId, Long productId){
+        Product productEntity = productService.getProduct(storeId, productId);
+        Recipe recipeEntity = getRecipe(productId);
         return recipeEntity.getIngredient();
     }
 

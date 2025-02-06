@@ -13,9 +13,9 @@ public class SwaggerConfig {
     public OpenAPI configOpenApi(){
         return new OpenAPI()
                 .info(new Info()
-                    .title("JIPPY API Document")
-                    .description("JIPPY API 문서입니다.")
-                    .version("api/v1")
+                        .title("JIPPY API Document")
+                        .description("JIPPY API 문서입니다.")
+                        .version("api/v1")
                 );
     }
 
@@ -50,4 +50,13 @@ public class SwaggerConfig {
                 .pathsToMatch("/api/auth/**")
                 .build();
     }
+
+    @Bean
+    public GroupedOpenApi recipeApi() {
+        return GroupedOpenApi.builder()
+                .group("레시피 - recipe")
+                .pathsToMatch("/api/recipe/**")
+                .build();
+    }
+
 }

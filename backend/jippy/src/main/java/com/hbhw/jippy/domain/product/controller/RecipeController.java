@@ -45,8 +45,8 @@ public class RecipeController {
 
     @Operation(summary = "레시피 재료 조회하기", description = "상품의 레시피 재료를 조회합니다")
     @GetMapping("/list/ingredient")
-    public ApiResponse<List<Ingredient>> getListIngredient(@RequestBody SearchRecipeRequest searchRecipeRequest) {
-        List<Ingredient> ingredientList = recipeService.selectIngredient(searchRecipeRequest);
+    public ApiResponse<List<Ingredient>> getListIngredient(@RequestParam("storeId") Integer storeId, @RequestParam("productId") Long productId) {
+        List<Ingredient> ingredientList = recipeService.selectIngredient(storeId, productId);
         return ApiResponse.success(HttpStatus.OK, ingredientList);
     }
 }
