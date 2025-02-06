@@ -1,5 +1,6 @@
-package com.hbhw.jippy.domain.store.entity;
+package com.hbhw.jippy.domain.notice.entity;
 
+import com.hbhw.jippy.domain.store.entity.Store;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -7,27 +8,29 @@ import lombok.*;
 @Table(name = "notice")
 @Getter
 @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Notice {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", nullable = false)
-    private Store store;
+    private Store storeId;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "title", nullable = false)
     private String title;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(name = "content", nullable = false)
     private String content;
 
-    @Column(name = "created_at", nullable = false, length = 20)
+    @Column(name = "created_at", nullable = false)
     private String createdAt;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "author", nullable = false)
     private String author;
+
 }
