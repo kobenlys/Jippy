@@ -59,4 +59,10 @@ public class SwaggerConfig {
                 .build();
     }
 
+    public GroupedOpenApi qrApi() {
+        return GroupedOpenApi.builder()
+                .group("QR 코드 - qr")
+                .pathsToMatch("/api/qr/**")
+                .build();
+    }
 }
