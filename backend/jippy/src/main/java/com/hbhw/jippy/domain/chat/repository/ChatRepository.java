@@ -2,7 +2,6 @@ package com.hbhw.jippy.domain.chat.repository;
 
 import com.hbhw.jippy.domain.chat.entity.StoreChat;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
