@@ -1,6 +1,5 @@
 package com.hbhw.jippy.domain.user.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hbhw.jippy.domain.user.entity.BaseUser;
 import com.hbhw.jippy.domain.user.enums.StaffType;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,15 +26,12 @@ public class LoginResponse {
     private String age;
 
     @Schema(description = "사용자 유형(OWNER/MANAGER/STAFF)")
-    @JsonProperty("staff_type")
     private StaffType staffType;
 
     @Schema(description = "Access Token")
-    @JsonProperty("access_token")
     private String accessToken;
 
     @Schema(description = "Refresh Token")
-    @JsonProperty("refresh_token")
     private String refreshToken;
 
     public static LoginResponse of(BaseUser user, StaffType staffType, String accessToken, String refreshToken) {
