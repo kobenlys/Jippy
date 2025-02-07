@@ -1,14 +1,12 @@
 package com.hbhw.jippy.domain.product.dto.request;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.List;
 
+@ToString
 @Getter
 @AllArgsConstructor
 public class CreateSetMenuRequest {

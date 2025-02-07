@@ -11,7 +11,7 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
-
+@ToString
 @Entity
 @Builder
 @Getter

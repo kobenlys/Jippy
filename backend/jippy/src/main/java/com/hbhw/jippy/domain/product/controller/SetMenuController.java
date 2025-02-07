@@ -1,13 +1,19 @@
 package com.hbhw.jippy.domain.product.controller;
 
 import com.hbhw.jippy.domain.product.dto.request.*;
+import com.hbhw.jippy.domain.product.dto.response.SetMenuResponse;
 import com.hbhw.jippy.domain.product.service.SetMenuService;
 import com.hbhw.jippy.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/set-menu")
@@ -18,6 +24,7 @@ public class SetMenuController {
     @Operation(summary = "세트메뉴 생성", description = "세트메뉴를 생성합니다.")
     @PostMapping("/create")
     public ApiResponse<?> createSetMenu(@RequestBody CreateSetMenuRequest createSetMenuRequest) {
+        log.info(createSetMenuRequest.toString());
         setMenuService.createSetMenu(createSetMenuRequest);
         return ApiResponse.success(HttpStatus.CREATED);
     }
@@ -33,13 +40,14 @@ public class SetMenuController {
     @PutMapping("/update/info")
     public ApiResponse<?> updateSetMenu(@RequestBody UpdateSetMenuRequest updateSetMenuRequest) {
         setMenuService.modifySetMenu(updateSetMenuRequest);
+        System.out.println(111);
         return ApiResponse.success(HttpStatus.OK);
     }
 
     @Operation(summary = "세트메뉴 모든 정보 조회", description = "세트메뉴의 모든정보(세트메뉴 리스트 + 구성)를 조회합니다.")
-    @GetMapping("/detail")
-    public ApiResponse<SetMenuResponse> selectDetailListSetMenu(@RequestParam("setMenuId") Integer setMenuId, @RequestParam("storeId") Integer storeId) {
-        SetMenuResponse setMenuResponse = setMenuService.selectDetailSetMenu(setMenuId, storeId);
+    @GetMapping("/detail/info")
+    public ApiResponse<List<SetMenuResponse>> selectDetailListSetMenu(@RequestParam("storeId") Integer storeId) {
+        List<SetMenuResponse> setMenuResponse = setMenuService.selectDetailSetMenuList(storeId);
         return ApiResponse.success(HttpStatus.OK, setMenuResponse);
     }
 }

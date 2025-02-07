@@ -11,9 +11,9 @@ import com.hbhw.jippy.domain.product.repository.ProductRepository;
 import com.hbhw.jippy.domain.store.entity.Store;
 import com.hbhw.jippy.domain.user.entity.UserOwner;
 import com.hbhw.jippy.domain.user.enums.StaffType;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -72,7 +72,7 @@ public class ProductService {
         Product productEntity = getProduct(storeId, productId);
 
         return ProductDetailResponse.builder()
-                .id(productEntity.getId())
+                .productId(productEntity.getId())
                 .storeId(storeId)
                 .name(productEntity.getName())
                 .status(productEntity.isStatus())
@@ -111,6 +111,7 @@ public class ProductService {
     /**
      * 매장번호, 상품번호로 상품 조회하기
      */
+    @Transactional(readOnly = true)
     public Product getProduct(Integer storeId, Long productId) {
         Optional<Product> product = productRepository.findByIdAndStoreId(productId, storeId);
         return product.orElseThrow(() -> new NoSuchElementException("존재하지 않는 상품입니다."));

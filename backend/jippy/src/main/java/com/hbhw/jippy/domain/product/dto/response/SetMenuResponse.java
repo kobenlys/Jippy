@@ -1,12 +1,15 @@
-package com.hbhw.jippy.domain.product.dto.request;
+package com.hbhw.jippy.domain.product.dto.response;
 
-import com.hbhw.jippy.domain.product.dto.response.ProductDetailResponse;
-import lombok.Builder;
+import lombok.*;
 
 import java.util.List;
 
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class SetMenuResponse {
+    private Integer setMenuId;
     private String name;
     private Integer price;
     private String image;

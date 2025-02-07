@@ -79,6 +79,11 @@ public class StoreService {
         return toResponse(store);
     }
 
+    public Store getStoreEntity(Integer storeId){
+        return storeRepository.findById(storeId)
+                .orElseThrow(() -> new NoSuchElementException("해당 매장은 존재하지 않습니다."));
+    }
+
 
     @Transactional
     public void deleteStore(Integer storeId) {

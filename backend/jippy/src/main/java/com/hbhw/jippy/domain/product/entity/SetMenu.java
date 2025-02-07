@@ -7,6 +7,7 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@ToString
 @Entity
 @Table(name = "set_menu")
 @Getter
