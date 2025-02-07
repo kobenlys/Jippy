@@ -52,13 +52,6 @@ public class ChatController {
         return ApiResponse.success(chatService.createChat(request));
     }
 
-    @Operation(summary = "채팅방 나가기", description = "사용자가 특정 채팅방에서 나갑니다.")
-    @PatchMapping("/{storeId}/delete/{receiverId}")
-    public ApiResponse<Void> leaveChat(@PathVariable Integer storeId, @PathVariable String receiverId) {
-        chatService.leaveChat(storeId, receiverId);
-        return ApiResponse.success(HttpStatus.OK);
-    }
-
     /**
      * WebSocket을 통해 메시지를 주고받음.
      */
