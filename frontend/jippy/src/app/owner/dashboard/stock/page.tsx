@@ -3,6 +3,7 @@ import StockTable from "./StockTable";
 import StockChart from "./StockChart";
 import { StoreProvider } from "@/redux/StoreProvider";
 import PieChart from "./PieCharts";
+import StockBarChart from "./StockBarChart";
 
 
 async function getStockData(storeId: string) {
@@ -34,6 +35,7 @@ export default async function StockPage() {
         </div>
         <div className="bg-white p-4 rounded-lg shadow-md">
           <StockChart />
+          <StockBarChart />
           {/* <PieChart /> */}
         </div>
       </div>
