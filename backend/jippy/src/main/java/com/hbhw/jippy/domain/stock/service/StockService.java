@@ -303,10 +303,12 @@ public class StockService {
         String displayUnit = detail.getStockUnit();
         int displaySize = detail.getStockUnitSize();
 
-        if (detail.getStockUnit().equals("g") && detail.getStockUnitSize() >= 1000) {
+        if (detail.getStockUnit().equals("g") && detail.getStockUnitSize() >= 1000 &&
+            detail.getStockUnitSize() % 1000 == 0) {
             displayUnit = "kg";
             displaySize = detail.getStockUnitSize() / 1000;
-        } else if (detail.getStockUnit().equals("ml") && detail.getStockUnitSize() >= 1000) {
+        } else if (detail.getStockUnit().equals("ml") && detail.getStockUnitSize() >= 1000 &&
+            detail.getStockUnitSize() % 1000 == 0) {
             displayUnit = "l";
             displaySize = detail.getStockUnitSize() / 1000;
         }
