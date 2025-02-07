@@ -36,8 +36,14 @@ public class ChatController {
 
     @Operation(summary = "채팅 메시지 조회", description = "특정 채팅방의 메시지 목록을 가져옵니다.")
     @GetMapping("/{userId}/select/{storeId}")
-    public ApiResponse<List<ChatMessageResponse>> getMessages(@PathVariable Integer storeId) {
-        return ApiResponse.success(chatService.getMessages(storeId));
+    public ApiResponse<List<ChatMessageResponse>> getMessages(
+            @PathVariable Integer userId,
+            @PathVariable Integer storeId,
+            @RequestParam(required = false, defaultValue = "20") int limit,
+            @RequestParam(required = false) String before
+    ) {
+        List<ChatMessageResponse> messages = chatService.getMessages(storeId, limit, before);
+        return ApiResponse.success(messages);
     }
 
     @Operation(summary = "채팅방 생성", description = "새로운 채팅방을 생성합니다.")

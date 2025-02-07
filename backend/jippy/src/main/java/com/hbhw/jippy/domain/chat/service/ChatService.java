@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,11 +33,27 @@ public class ChatService {
     }
 
     // 메시지 조회
-    public List<ChatMessageResponse> getMessages(Integer storeId) {
-        StoreChat storeChat = chatRepository.findByStoreId(storeId)
-                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
+    public List<ChatMessageResponse> getMessages(Integer storeId, int limit, String before) {
+        Optional<StoreChat> storeChatOpt;
 
-        return storeChat.getMessages().stream()
+        // before 값이 존재하면 과거 메시지를 조회
+        if (before != null && !before.isEmpty()) {
+            storeChatOpt = chatRepository.findOldMessages(storeId, before);
+        } else {
+            storeChatOpt = chatRepository.findRecentMessages(storeId);
+        }
+
+        StoreChat storeChat = storeChatOpt.orElseThrow(() ->
+                new RuntimeException("채팅방을 찾을 수 없습니다. storeId=" + storeId));
+
+        // messages 리스트 가져오고, limit 개수만큼 제한
+        List<Message> messages = storeChat.getMessages();
+
+        if (messages.size() > limit) {
+            messages = messages.subList(0, limit); // 최신 limit 개만 남김
+        }
+
+        return messages.stream()
                 .map(msg -> new ChatMessageResponse(
                         msg.getSenderId(),
                         msg.getMessageContent(),
@@ -73,6 +90,8 @@ public class ChatService {
                 .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다. storeId=" + storeId));
 
         // 2) 새 메시지 생성
+        // request.getSenderId()
+        // 나중에 회원 정보 조회 생기면 senderId에 회원정보 이름 담기
         Message message = Message.builder()
                 .senderId(request.getSenderId())
                 .messageContent(request.getMessageContent())
