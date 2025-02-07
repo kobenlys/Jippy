@@ -274,9 +274,24 @@ public class StockService {
     }
 
     private InventoryItemResponse mapToInventoryItemResponse(InventoryItem item) {
+        String totalUnit = item.getStock().stream()
+                .map(StockDetail::getStockUnit)
+                .findFirst()
+                .orElse("g");
+
+        boolean hasML = item.getStock().stream().anyMatch(detail -> detail.getStockUnit().equals("ml"));
+        boolean hasG = item.getStock().stream().anyMatch(detail -> detail.getStockUnit().equals("g"));
+
+        if (hasML) {
+            totalUnit = "ml";
+        } else if (hasG) {
+            totalUnit = "g";
+        }
+
         return InventoryItemResponse.builder()
                 .stockName(item.getStockName())
                 .stockTotalValue(item.getStockTotalValue())
+                .totalUnit(totalUnit)
                 .updatedAt(item.getUpdatedAt())
                 .stock(item.getStock().stream()
                         .map(this::mapToStockDetailResponse)

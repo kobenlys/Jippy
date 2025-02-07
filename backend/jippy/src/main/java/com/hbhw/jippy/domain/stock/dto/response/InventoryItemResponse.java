@@ -22,6 +22,9 @@ public class InventoryItemResponse {
     @Schema(description = "재고 총량", example = "300")
     private Integer stockTotalValue;
 
+    @Schema(description = "총량 단위", example = "g")
+    private String totalUnit;
+
     @Schema(description = "업데이트 시간", example = "2025-01-31 15:40:00")
     private String updatedAt;
 
