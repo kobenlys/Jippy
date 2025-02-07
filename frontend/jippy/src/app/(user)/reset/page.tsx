@@ -46,7 +46,7 @@ const ResetPassword = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:8080/api/user/reset/password", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/reset/password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -62,6 +62,7 @@ const ResetPassword = () => {
         throw new Error("비밀번호 재발급 실패");
       }
     } catch (error) {
+      console.error("비밀번호 재발급 에러:", error); // error 로깅 추가
       setMessage("비밀번호 재발급에 실패했습니다. 다시 시도해주세요.");
     }
   };
@@ -70,7 +71,7 @@ const ResetPassword = () => {
     <div className="flex flex-col items-center justify-center min-h-screen gap-4">
       <h2 className="text-xl font-bold mb-4">비밀번호 재발급</h2>
       {message && (
-        <p className={`mb-4 text-sm ${message.includes('실패') ? 'text-red-500' : 'text-green-500'}`}>
+        <p className={`mb-4 text-sm ${message.includes("실패") ? "text-red-500" : "text-green-500"}`}>
           {message}
         </p>
       )}

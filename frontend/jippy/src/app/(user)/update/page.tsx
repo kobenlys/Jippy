@@ -1,7 +1,7 @@
 // src/app/update/page.ts
-import React from 'react';
-import '@/app/globals.css';
-import UpdateUserForm from '@/component/UpdateUserForm';
+import React from "react";
+import "@/app/globals.css";
+import UpdateUserForm from "@/components/UpdateUserForm";
 
 const UpdatePage = () => {
   return (

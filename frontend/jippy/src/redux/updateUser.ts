@@ -1,9 +1,14 @@
-import axios from 'axios';
-import { UserState } from './userSlice';
-import { setUserInfo } from './userSlice';
-import { AppDispatch } from '../store'; // Redux store의 dispatch 타입
+import axios from "axios";
 
-const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/user/update/userInfo`; // 실제 API 엔드포인트로 수정
+// User 인터페이스 추가
+interface User {
+  email: string;
+  name: string;
+  age: string;
+  // 필요한 다른 필드들 추가
+}
+
+const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/user/update/userInfo`;
 
 export const updateUserAPI = async (updatedUser: User, token: string) => {
   try {
@@ -13,8 +18,8 @@ export const updateUserAPI = async (updatedUser: User, token: string) => {
       },
     });
     return response.data;
-  } catch (error) {
-    throw new Error('User update failed');
+  } catch (error: unknown) {
+    console.error("사용자 정보 업데이트 실패:", error);
+    throw new Error("User update failed");
   }
 };
-

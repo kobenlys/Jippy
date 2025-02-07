@@ -2,17 +2,17 @@
 
 import { Provider } from "react-redux";
 import { store } from "@/redux/store";
-import { Archivo_Black } from 'next/font/google'
-import '@/app/globals.css';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Archivo_Black } from "next/font/google"
+import "@/app/globals.css";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Archivo Black 설정
 const archivoBlack = Archivo_Black({
-  weight: ['400'],
-  subsets: ['latin'],
-  variable: '--font-archivo-black',
-  display: 'swap',
+  weight: ["400"],
+  subsets: ["latin"],
+  variable: "--font-archivo-black",
+  display: "swap",
 })
 
 export default function RootLayout({
