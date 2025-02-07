@@ -9,7 +9,6 @@ import com.hbhw.jippy.domain.payment.entity.PaymentHistory;
 import com.hbhw.jippy.domain.payment.enums.PaymentStatus;
 import com.hbhw.jippy.domain.payment.enums.PaymentType;
 import com.hbhw.jippy.domain.payment.service.PaymentHistoryService;
-import com.hbhw.jippy.domain.product.dto.request.CreateProductRequest;
 import com.hbhw.jippy.global.response.ApiResponse;
 import com.hbhw.jippy.utils.DateTimeUtils;
 import com.hbhw.jippy.utils.UUIDProvider;

@@ -1,8 +1,5 @@
 package com.hbhw.jippy.domain.payment.entity;
 
-import com.hbhw.jippy.domain.payment.enums.PaymentStatus;
-import com.hbhw.jippy.domain.payment.enums.PaymentType;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Id;
 import lombok.*;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -17,7 +14,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString
 public class PaymentHistory {
 
     @Id
@@ -42,5 +38,4 @@ public class PaymentHistory {
 
     @Field("buyProduct")
     private List<BuyProduct> buyProductHistories;
-
 }

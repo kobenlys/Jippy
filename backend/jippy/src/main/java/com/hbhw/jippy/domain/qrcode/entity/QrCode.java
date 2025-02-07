@@ -20,11 +20,11 @@ public class QrCode {
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(name = "`explain`", nullable = false, columnDefinition = "TEXT")
     private String explain;
 
     @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "LONGBLOB")
     private byte[] qrcode;
 
     @Column(name = "created_at", nullable = false, length = 20)
