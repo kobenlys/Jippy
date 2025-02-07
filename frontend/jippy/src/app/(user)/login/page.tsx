@@ -94,14 +94,15 @@ export default function LoginPage() {
     try {
       setError(null);
       setIsLoading(true);
-
-      // Prepare login data
+  
       const loginData: LoginData = {
         email,
         password,
         userType
       };
-
+  
+      // console.log("Login attempt with:", loginData);
+  
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/login`, {
         method: "POST",
         headers: {
@@ -110,19 +111,20 @@ export default function LoginPage() {
         credentials: "include",
         body: JSON.stringify(loginData),
       });
-
+  
       const responseData = await response.json();
-
+      // console.log("Login response:", responseData);
+  
       if (!response.ok) {
         throw new Error(responseData.message || "Login failed");
       }
-
+  
       const userData: UserData = responseData.data;
-
+  
       if (!userData) {
         throw new Error("Invalid login response data");
       }
-
+  
       // Dispatch user information
       dispatch(setUserInfo({
         id: String(userData.id),
@@ -131,15 +133,16 @@ export default function LoginPage() {
         age: userData.age,
         userType: userData.staffType,
       }));
-
+  
       // Dispatch tokens
       dispatch(setUserToken({
         accessToken: userData.accessToken,
         refreshToken: userData.refreshToken
       }));
-
+  
       router.replace("/");
     } catch (error) {
+      // console.error("Login error:", error);
       setError(error instanceof Error ? error.message : "An unknown error occurred");
     } finally {
       setIsLoading(false);

@@ -18,11 +18,17 @@ const UpdateUserForm = () => {
   const [newPassword, setNewPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [initialUserInfo, setInitialUserInfo] = useState({ name: "", age: "" });
 
   useEffect(() => {
-    // Redux 상태에서 로그인 체크
     if (!user.accessToken) {
       router.push("/login");
+    } else {
+      // console.log("Setting initial user info from user:", user);
+      setInitialUserInfo({
+        name: user.name || "",
+        age: user.age || ""
+      });
     }
   }, [user.accessToken, router]);
 
@@ -44,7 +50,6 @@ const UpdateUserForm = () => {
   };
 
   const handleLogout = (): void => {
-    // Redux 상태 초기화
     dispatch(setUserInfo({
       id: null,
       email: null,
@@ -55,6 +60,10 @@ const UpdateUserForm = () => {
       refreshToken: null
     }));
     router.push("/login");
+  };
+
+  const isUserInfoChanged = (): boolean => {
+    return user.name !== initialUserInfo.name || user.age !== initialUserInfo.age;
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
@@ -73,10 +82,55 @@ const UpdateUserForm = () => {
       return;
     }
   
+    if (isPasswordChanged && !validatePassword(newPassword)) {
+      alert("비밀번호는 8자 이상, 영문, 숫자, 특수문자를 포함해야 합니다");
+      return;
+    }
+  
     try {
+      let userInfoUpdated = false;
+      
+      // 유저 정보 업데이트 처리
+      if (isUserInfoChanged()) {
+        const userInfoResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/update/userInfo`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${user.accessToken}`
+          },
+          body: JSON.stringify({
+            name: user.name,
+            age: user.age,
+          }),
+        });
+  
+        if (!userInfoResponse.ok) {
+          throw new Error("유저 정보 업데이트에 실패했습니다");
+        }
+  
+        const userInfoResult = await userInfoResponse.json();
+        // console.log("User info update response:", userInfoResult);
+  
+        if (userInfoResult.success && userInfoResult.data) {
+          // console.log("Updating Redux state with:", userInfoResult.data);
+          const updatedUserInfo = {
+            ...user,
+            name: userInfoResult.data.name,
+            age: userInfoResult.data.age
+          };
+          
+          await dispatch(setUserInfo(updatedUserInfo));
+          setInitialUserInfo({
+            name: userInfoResult.data.name,
+            age: userInfoResult.data.age
+          });
+          userInfoUpdated = true;
+        }
+      }
+  
+      // 비밀번호 변경 처리
       if (isPasswordChanged) {
-        // 비밀번호 변경 API 호출
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/update/password`, {
+        const passwordResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/update/password`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -87,43 +141,32 @@ const UpdateUserForm = () => {
             newPassword,
           }),
         });
-     
-        if (!response.ok) {
+  
+        if (!passwordResponse.ok) {
           throw new Error("비밀번호 변경에 실패했습니다");
         }
-     
-        toast.success("비밀번호가 변경되었습니다. 다시 로그인해주세요.");
-        handleLogout();
-        return;
+  
+        const passwordResult = await passwordResponse.json();
+        // console.log("Password update response:", passwordResult);
+        
+        if (passwordResult.success) {
+          // 비밀번호 변경 성공 시 처리
+          if (userInfoUpdated) {
+            toast.success("모든 정보가 성공적으로 수정되었습니다. 비밀번호가 변경되어 다시 로그인해주세요.");
+          } else {
+            toast.success("비밀번호가 성공적으로 변경되었습니다. 다시 로그인해주세요.");
+          }
+          setTimeout(() => {
+            handleLogout();
+          }, 1500);
+        }
+      } else if (userInfoUpdated) {
+        toast.success("회원 정보가 성공적으로 수정되었습니다");
       }
-      
-      // 유저 정보 업데이트 API 호출
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/update/userInfo`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${user.accessToken}`
-        },
-        body: JSON.stringify({
-          name: user.name,
-          age: user.age,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("정보 수정에 실패했습니다");
-      }
-
-      const responseData = await response.json();
-      
-      toast.success("정보가 성공적으로 수정되었습니다");
-      dispatch(setUserInfo({
-        ...user,  // 기존 정보 유지
-        ...responseData.data,  // 업데이트된 정보 반영
-      }));
+  
     } catch (error) {
-      toast.error("정보 수정에 실패했습니다");
-      console.error("Update failed:", error);
+      // console.error("Update failed:", error);
+      toast.error(error instanceof Error ? error.message : "정보 수정에 실패했습니다");
     }
   };
 
