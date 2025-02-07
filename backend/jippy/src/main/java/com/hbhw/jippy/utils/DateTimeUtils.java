@@ -1,6 +1,7 @@
 package com.hbhw.jippy.utils;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.regex.Matcher;
@@ -35,6 +36,13 @@ public class DateTimeUtils {
      */
     public static LocalDateTime parseDateTime(String dateTimestr) {
         return LocalDateTime.parse(dateTimestr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    }
+
+    /**
+     * 문자열을 LocalTime으로 변환
+     */
+    public static LocalTime parseTime(String timeStr) {
+        return LocalTime.parse(timeStr, DateTimeFormatter.ofPattern("HH:mm"));
     }
 
     /**

@@ -18,12 +18,7 @@ public interface CalendarRepository extends JpaRepository<Calendar, Integer> {
             "WHERE sus.store.id = :storeId")
     List<Calendar> findAllByStoreId(Integer storeId);
 
-    @Query("SELECT c FROM Calendar c " +
-            "JOIN FETCH c.storeUserStaff sus " +
-            "JOIN FETCH sus.userStaff " +
-            "WHERE sus.store.id = :storeId " +
-            "AND sus.userStaff.id = :staffId")
-    List<Calendar> findAllByStoreIdAndStaffId(Integer storeId, Integer staffId);
+    List<Calendar> findByStoreUserStaff(StoreUserStaff storeUserStaff);
 
     Optional<Calendar> findByStoreUserStaffAndDayOfWeek(StoreUserStaff staff, DayOfWeek dayOfWeek);
 }

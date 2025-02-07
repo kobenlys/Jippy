@@ -1,6 +1,5 @@
 package com.hbhw.jippy.domain.storeuser.entity.attendance;
 
-import com.hbhw.jippy.utils.DateTimeUtils;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,12 +15,6 @@ import org.springframework.data.redis.core.RedisHash;
 @RedisHash("attendance")
 public class AttendanceStatus {
     @Id
-    private String id;
-    private Integer storeUserStaffId;
+    private Integer id;
     private String staffName;
-    private String timestamp;
-
-    public static String generateId(Integer storeUserStaffId) {
-        return String.format("%d:%d:%s", storeUserStaffId, DateTimeUtils.todayString());
-    }
 }

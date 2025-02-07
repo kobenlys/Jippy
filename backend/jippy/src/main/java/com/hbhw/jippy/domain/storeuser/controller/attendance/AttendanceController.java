@@ -1,14 +1,16 @@
 package com.hbhw.jippy.domain.storeuser.controller.attendance;
 
-import com.hbhw.jippy.domain.storeuser.dto.request.attendance.CheckInRequest;
+import com.hbhw.jippy.domain.storeuser.dto.request.attendance.TempChangeRequest;
 import com.hbhw.jippy.domain.storeuser.dto.response.attendance.CheckInResponse;
 import com.hbhw.jippy.domain.storeuser.dto.response.attendance.CheckOutResponse;
+import com.hbhw.jippy.domain.storeuser.dto.response.attendance.TempChangeResponse;
 import com.hbhw.jippy.domain.storeuser.service.attendance.AttendanceService;
 import com.hbhw.jippy.global.auth.config.UserPrincipal;
 import com.hbhw.jippy.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +32,13 @@ public class AttendanceController {
     @PutMapping("/checkOut")
     public ApiResponse<CheckOutResponse> checkOut(@AuthenticationPrincipal UserPrincipal userPrincipal) {
         CheckOutResponse response = attendanceService.checkOut(userPrincipal.getId());
+        return ApiResponse.success(response);
+    }
+
+    @Operation(summary = "임시 스케줄 변경", description = "직원의 스케줄을 일시적으로 변경합니다")
+    @PostMapping("/{storeId}/tempChange/{staffId}")
+    public ApiResponse<TempChangeResponse> changeTempSchedule(@PathVariable Integer storeId, @PathVariable Integer staffId, @RequestBody TempChangeRequest request) {
+        TempChangeResponse response = attendanceService.changeTempSchedule(storeId, staffId, request);
         return ApiResponse.success(response);
     }
 }
