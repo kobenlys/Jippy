@@ -6,6 +6,8 @@ import com.hbhw.jippy.domain.stock.dto.response.StockDetailResponse;
 import com.hbhw.jippy.domain.stock.dto.response.StockResponse;
 import com.hbhw.jippy.domain.stock.entity.*;
 import com.hbhw.jippy.domain.stock.repository.StockRepository;
+import com.hbhw.jippy.global.code.CommonErrorCode;
+import com.hbhw.jippy.global.error.BusinessException;
 import com.hbhw.jippy.utils.DateTimeUtils;
 import com.mongodb.client.MongoClient;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,14 @@ public class StockService {
             "l", 1000,
             "ml", 1
     );
+
+    // 재고 입력 시, 띄어쓰기 무시하고 비교하는 공통 메소드
+    private boolean compareStockNames(String name1, String name2) {
+        if (name1 == null || name2 == null) {
+            return false;
+        }
+        return name1.replaceAll("\\s+", "").equals(name2.replaceAll("\\s+", ""));
+    }
 
     private final StockRepository stockRepository;
     private final MongoTemplate mongoTemplate;
@@ -93,7 +103,7 @@ public class StockService {
     @Transactional
     public StockResponse addInventory(Integer storeId, StockCreateUpdateRequest request) {
         if (request.getInventory() == null || request.getInventory().isEmpty()) {
-            throw new IllegalArgumentException("재고 정보가 필요합니다");
+            throw new BusinessException(CommonErrorCode.INVALID_INPUT_VALUE, "재고 정보가 필요합니다");
         }
 
         Stock stock = stockRepository.findByStoreId(storeId)
@@ -111,9 +121,14 @@ public class StockService {
         ObjectId stockId = getStockId(storeId);
 
         request.getInventory().forEach(newItem -> {
-            Optional<InventoryItem> existingItem = stock.getInventory().stream()
+            Optional<InventoryItem> exactMatch = stock.getInventory().stream()
                     .filter(item -> item.getStockName().equals(newItem.getStockName()))
                     .findFirst();
+
+            Optional<InventoryItem> existingItem = exactMatch.isPresent() ? exactMatch :
+                    stock.getInventory().stream()
+                        .filter(item -> compareStockNames(item.getStockName(), newItem.getStockName()))
+                        .findFirst();
 
             if (existingItem.isPresent()) {
                 Map<String, StockDetail> existingStocks = existingItem.get().getStock().stream()
@@ -130,7 +145,7 @@ public class StockService {
                     StockLogCreateRequest logRequest = StockLogCreateRequest.builder()
                             .storeId(storeId)
                             .stockId(stockId)
-                            .stockName(newItem.getStockName())
+                            .stockName(existingItem.get().getStockName())
                             .stockUnitSize(convertedDetail.getStockUnitSize())
                             .changeType(ChangeType.INCREASE)
                             .changeReason(ChangeReason.PURCHASE)
@@ -259,9 +274,24 @@ public class StockService {
     }
 
     private InventoryItemResponse mapToInventoryItemResponse(InventoryItem item) {
+        String totalUnit = item.getStock().stream()
+                .map(StockDetail::getStockUnit)
+                .findFirst()
+                .orElse("g");
+
+        boolean hasML = item.getStock().stream().anyMatch(detail -> detail.getStockUnit().equals("ml"));
+        boolean hasG = item.getStock().stream().anyMatch(detail -> detail.getStockUnit().equals("g"));
+
+        if (hasML) {
+            totalUnit = "ml";
+        } else if (hasG) {
+            totalUnit = "g";
+        }
+
         return InventoryItemResponse.builder()
                 .stockName(item.getStockName())
                 .stockTotalValue(item.getStockTotalValue())
+                .totalUnit(totalUnit)
                 .updatedAt(item.getUpdatedAt())
                 .stock(item.getStock().stream()
                         .map(this::mapToStockDetailResponse)
@@ -273,10 +303,12 @@ public class StockService {
         String displayUnit = detail.getStockUnit();
         int displaySize = detail.getStockUnitSize();
 
-        if (detail.getStockUnit().equals("g") && detail.getStockUnitSize() >= 1000) {
+        if (detail.getStockUnit().equals("g") && detail.getStockUnitSize() >= 1000 &&
+            detail.getStockUnitSize() % 1000 == 0) {
             displayUnit = "kg";
             displaySize = detail.getStockUnitSize() / 1000;
-        } else if (detail.getStockUnit().equals("ml") && detail.getStockUnitSize() >= 1000) {
+        } else if (detail.getStockUnit().equals("ml") && detail.getStockUnitSize() >= 1000 &&
+            detail.getStockUnitSize() % 1000 == 0) {
             displayUnit = "l";
             displaySize = detail.getStockUnitSize() / 1000;
         }
@@ -300,15 +332,15 @@ public class StockService {
     @Transactional
     public StockResponse updateInventory(Integer storeId, String stockName, StockCreateUpdateRequest request) {
         Stock stock = stockRepository.findByStoreId(storeId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 매장의 재고 정보를 찾을 수 없습니다"));
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장의 재고 정보를 찾을 수 없습니다"));
 
         InventoryItem sourceItem = stock.getInventory().stream()
-                .filter(item -> item.getStockName().equals(stockName))
+                .filter(item -> compareStockNames(item.getStockName(), stockName))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("해당 상품의 재고 정보를 찾을 수 없습니다"));
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 상품의 재고 정보를 찾을 수 없습니다"));
 
         if (request.getInventory() == null || request.getInventory().isEmpty()) {
-            throw new IllegalArgumentException("수정할 재고 정보가 필요합니다");
+            throw new BusinessException(CommonErrorCode.INVALID_INPUT_VALUE, "수정할 재고 정보가 필요합니다");
         }
 
         InventoryItemCreateUpdateRequest updateRequest = request.getInventory().get(0);
@@ -316,19 +348,24 @@ public class StockService {
 
         if (updateRequest.getStockName() != null && !updateRequest.getStockName().equals(stockName)) {
 
-            InventoryItem targetItem = stock.getInventory().stream()
+            Optional<InventoryItem> exactMatch = stock.getInventory().stream()
                     .filter(item -> item.getStockName().equals(updateRequest.getStockName()))
-                    .findFirst()
-                    .orElseGet(() -> {
-                        InventoryItem newItem = InventoryItem.builder()
-                                .stockName(updateRequest.getStockName())
-                                .stockTotalValue(0)
-                                .stock(new ArrayList<>())
-                                .updatedAt(DateTimeUtils.nowString())
-                                .build();
-                        stock.getInventory().add(newItem);
-                        return newItem;
-                    });
+                    .findFirst();
+
+            InventoryItem targetItem = (exactMatch.isPresent() ? exactMatch :
+                    stock.getInventory().stream()
+                        .filter(item -> compareStockNames(item.getStockName(), updateRequest.getStockName()))
+                        .findFirst())
+                        .orElseGet(() -> {
+                            InventoryItem newItem = InventoryItem.builder()
+                                    .stockName(updateRequest.getStockName())
+                                    .stockTotalValue(0)
+                                    .stock(new ArrayList<>())
+                                    .updatedAt(DateTimeUtils.nowString())
+                                    .build();
+                            stock.getInventory().add(newItem);
+                            return newItem;
+                        });
 
             if (!updateRequest.getStock().isEmpty()) {
 
@@ -353,7 +390,8 @@ public class StockService {
                             .findFirst();
 
                     if (!sourceDetail.isPresent()) {
-                        throw new IllegalArgumentException(
+                        throw new BusinessException(
+                                CommonErrorCode.NOT_FOUND,
                                 String.format("해당 용량과 단위의 재고가 존재하지 않습니다 : %d%s",
                                         convertedMoveDetail.getStockUnitSize(),
                                         convertedMoveDetail.getStockUnit())
@@ -382,7 +420,7 @@ public class StockService {
                     StockLogCreateRequest outLogRequest = StockLogCreateRequest.builder()
                             .storeId(storeId)
                             .stockId(stockId)
-                            .stockName(stockName)
+                            .stockName(sourceItem.getStockName())
                             .stockUnitSize(convertedMoveDetail.getStockUnitSize())
                             .changeType(ChangeType.DECREASE)
                             .changeReason(ChangeReason.MODIFICATION)
@@ -394,7 +432,7 @@ public class StockService {
                     StockLogCreateRequest inLogRequest = StockLogCreateRequest.builder()
                             .storeId(storeId)
                             .stockId(stockId)
-                            .stockName(updateRequest.getStockName())
+                            .stockName(targetItem.getStockName())
                             .stockUnitSize(convertedMoveDetail.getStockUnitSize())
                             .changeType(ChangeType.INCREASE)
                             .changeReason(ChangeReason.MODIFICATION)
@@ -506,7 +544,7 @@ public class StockService {
                     StockLogCreateRequest logRequest = StockLogCreateRequest.builder()
                             .storeId(storeId)
                             .stockId(stockId)
-                            .stockName(stockName)
+                            .stockName(sourceItem.getStockName())
                             .stockUnitSize(convertedNewStock.getStockUnitSize())
                             .changeType(changeType)
                             .changeReason(changeReason)
@@ -517,7 +555,8 @@ public class StockService {
                     eventPublisher.publishEvent(new StockLogService.StockLogEvent(logRequest));
                     existingStock.get().setStockCount(convertedNewStock.getStockCount());
                 } else {
-                    throw new IllegalArgumentException(
+                    throw new BusinessException(
+                            CommonErrorCode.NOT_FOUND,
                             String.format("해당 용량과 단위의 재고가 존재하지 않습니다 : %d%s",
                                     convertedNewStock.getStockUnitSize(),
                                     convertedNewStock.getStockUnit())
@@ -544,16 +583,16 @@ public class StockService {
     @Transactional
     public StockResponse deleteInventoryItem(Integer storeId, String stockName, StockDeleteRequest request) {
         if (request.getInventory() == null || request.getInventory().isEmpty()) {
-            throw new IllegalArgumentException("삭제할 재고 정보가 필요합니다");
+            throw new BusinessException(CommonErrorCode.INVALID_INPUT_VALUE, "삭제할 재고 정보가 필요합니다");
         }
 
         Stock stock = stockRepository.findByStoreId(storeId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 매장의 재고 정보를 찾을 수 없습니다"));
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장의 재고 정보를 찾을 수 없습니다"));
 
         InventoryItem targetItem = stock.getInventory().stream()
-                .filter(item -> item.getStockName().equals(stockName))
+                .filter(item -> compareStockNames(item.getStockName(), stockName))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("해당 상품의 재고 정보를 찾을 수 없습니다"));
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 상품의 재고 정보를 찾을 수 없습니다"));
 
         ObjectId stockId = getStockId(storeId);
 
@@ -586,7 +625,7 @@ public class StockService {
                     StockLogCreateRequest logRequest = StockLogCreateRequest.builder()
                             .storeId(storeId)
                             .stockId(stockId)
-                            .stockName(stockName)
+                            .stockName(targetItem.getStockName())
                             .stockUnitSize(standardizedDeleteRequest.getStockUnitSize())
                             .changeType(changeType)
                             .changeReason(changeReason)
@@ -597,7 +636,8 @@ public class StockService {
                     eventPublisher.publishEvent(new StockLogService.StockLogEvent(logRequest));
                     targetItem.getStock().remove(stockToDelete.get());
                 } else {
-                    throw new IllegalArgumentException(
+                    throw new BusinessException(
+                            CommonErrorCode.NOT_FOUND,
                             String.format("해당 용량의 재고를 찾을 수 없습니다: %d%s",
                                     standardizedDeleteRequest.getStockUnitSize(),
                                     standardizedDeleteRequest.getStockUnit())
