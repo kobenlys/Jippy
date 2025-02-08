@@ -25,7 +25,7 @@ const SignupOwner = () => {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:8080/api/user/signup/owner', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/signup/owner`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -36,13 +36,16 @@ const SignupOwner = () => {
         }),
       });
 
-      if (response.ok) {
+      const responseData = await response.json();
+
+      if (response.ok && responseData.success) {
+        // 회원가입 성공 시 바로 로그인 페이지로 이동
         router.push('/login');
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || '회원가입에 실패했습니다.');
+        setError(responseData.message || '회원가입에 실패했습니다.');
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error("회원가입 에러:", error);
       setError('서버와의 연결에 실패했습니다.');
     } finally {
       setIsLoading(false);
@@ -123,7 +126,6 @@ const SignupOwner = () => {
               로그인
             </Link>
           </div>
-
         </form>
       </div>
     </div>

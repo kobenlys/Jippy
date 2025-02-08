@@ -4,10 +4,20 @@
 
 /* 전체 페이지에 적용할 css */
 
+:root {
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+}
+
+.dark {
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+}
+
 /* globals.css */
 @font-face {
-  font-family: 'Pretendard';
-  src: url('/fonts/PretendardVariable.woff2') format('woff2');
+  font-family: "Pretendard";
+  src: url("/fonts/PretendardVariable.woff2") format("woff2");
   font-weight: 400 900;
   font-style: normal;
   font-display: swap;
@@ -19,7 +29,7 @@ html, body {
   padding: 0;
   width: 100%;
   height: 100%;
-  font-family: 'Pretendard', sans-serif; /* Pretendard 폰트를 기본 폰트로 설정 */
+  font-family: "Pretendard", sans-serif; /* Pretendard 폰트를 기본 폰트로 설정 */
   background: #F8F8F8;
   color: #21272A;
   overflow-x: hidden; /* 가로 스크롤 방지 */
