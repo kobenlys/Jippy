@@ -32,15 +32,18 @@ public class StockService {
 
     private static final Map<String, String> UNIT_STANDARDIZATION = Map.of(
             "kg", "g",
-            "l", "ml"
+            "l", "ml",
+            "개", "개"
     );
 
     private static final Map<String, Integer> UNIT_CONVERSION = Map.of(
             "kg", 1000,
             "g", 1,
             "l", 1000,
-            "ml", 1
+            "ml", 1,
+            "개", 1
     );
+    private final StockStatusService stockStatusService;
 
     // 재고 입력 시, 띄어쓰기 무시하고 비교하는 공통 메소드
     private boolean compareStockNames(String name1, String name2) {
@@ -53,7 +56,6 @@ public class StockService {
     private final StockRepository stockRepository;
     private final MongoTemplate mongoTemplate;
     private final ApplicationEventPublisher eventPublisher;
-    private final MongoClient mongo;
 
     private ObjectId getStockId(Integer storeId) {
         Document document = mongoTemplate.findOne(
@@ -65,6 +67,15 @@ public class StockService {
     }
 
     private StockDetail convertToStandardUnit(StockDetailCreateUpdateRequest request) {
+
+        if (Boolean.TRUE.equals(request.getIsDessert())) {
+            return StockDetail.builder()
+                    .stockCount(request.getStockCount())
+                    .stockUnitSize(0)
+                    .stockUnit("개")
+                    .build();
+        }
+
         String standardUnit = UNIT_STANDARDIZATION.getOrDefault(request.getStockUnit(), request.getStockUnit());
 
         if (request.getStockUnit().equals(standardUnit)) {
@@ -226,12 +237,36 @@ public class StockService {
     }
 
     private void recalculateTotalValues(Stock stock) {
+        List<StockStatusService.StockUpdateInfo> dessertUpdates = new ArrayList<>();
+
         stock.getInventory().forEach(item -> {
-            int totalValue = item.getStock().stream()
-                    .mapToInt(detail -> detail.getStockUnitSize() * detail.getStockCount())
-                    .sum();
+            int totalValue;
+
+            boolean isDessert = !item.getStock().isEmpty() &&
+                    item.getStock().get(0).getStockUnit().equals("개") &&
+                    item.getStock().get(0).getStockUnitSize() == 0;
+
+            if (isDessert) {
+                totalValue = item.getStock().stream()
+                        .mapToInt(StockDetail::getStockCount)
+                        .sum();
+
+                dessertUpdates.add(StockStatusService.StockUpdateInfo.builder()
+                        .item(item)
+                        .decreaseAmount(0)
+                        .build());
+            } else {
+                totalValue = item.getStock().stream()
+                            .mapToInt(detail -> detail.getStockUnitSize() * detail.getStockCount())
+                            .sum();
+            }
             item.setStockTotalValue(totalValue);
         });
+
+        if (!dessertUpdates.isEmpty()) {
+            stockStatusService.updateBatchStockStatus(stock.getStoreId(), dessertUpdates);
+        }
+
     }
 
     private InventoryItem mapToInventoryItem(InventoryItemCreateUpdateRequest request) {
