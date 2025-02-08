@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -44,7 +45,7 @@ public class ChatService {
         }
 
         StoreChat storeChat = storeChatOpt.orElseThrow(() ->
-                new RuntimeException("채팅방을 찾을 수 없습니다. storeId=" + storeId));
+                new NoSuchElementException("채팅방을 찾을 수 없습니다. storeId=" + storeId));
 
         // messages 리스트 가져오고, limit 개수만큼 제한
         List<Message> messages = storeChat.getMessages();
@@ -87,7 +88,7 @@ public class ChatService {
     public ChatMessageResponse saveMessage(Integer storeId, ChatMessageRequest request) {
         // 1) 기존 storeChat 문서 조회
         StoreChat storeChat = chatRepository.findByStoreId(storeId)
-                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다. storeId=" + storeId));
+                .orElseThrow(() -> new NoSuchElementException("채팅방을 찾을 수 없습니다. storeId=" + storeId));
 
         // 2) 새 메시지 생성
         // request.getSenderId()
