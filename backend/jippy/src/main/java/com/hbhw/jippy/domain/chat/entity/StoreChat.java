@@ -15,12 +15,14 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Chat {
+public class StoreChat {
     @Id
+    private String id;
     @Indexed(unique = true)
     @Field("store_id")
     private Integer storeId;
 
     @Field("messages")
+    @Builder.Default
     private List<Message> messages = new ArrayList<>();
 }
