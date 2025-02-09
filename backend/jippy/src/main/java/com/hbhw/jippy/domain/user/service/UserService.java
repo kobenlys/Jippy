@@ -8,6 +8,7 @@ import com.hbhw.jippy.domain.storeuser.repository.staff.StoreStaffRepository;
 import com.hbhw.jippy.domain.user.dto.request.*;
 import com.hbhw.jippy.domain.user.dto.response.LoginResponse;
 import com.hbhw.jippy.domain.user.dto.response.UpdateUserResponse;
+import com.hbhw.jippy.domain.user.dto.response.UserInfoResponse;
 import com.hbhw.jippy.domain.user.entity.BaseUser;
 import com.hbhw.jippy.domain.user.entity.UserOwner;
 import com.hbhw.jippy.domain.user.entity.UserStaff;
@@ -20,6 +21,8 @@ import com.hbhw.jippy.global.auth.config.JwtProvider;
 import com.hbhw.jippy.global.auth.entity.RefreshToken;
 import com.hbhw.jippy.global.auth.repository.RefreshTokenRepository;
 import com.hbhw.jippy.global.auth.config.UserPrincipal;
+import com.hbhw.jippy.global.code.CommonErrorCode;
+import com.hbhw.jippy.global.error.BusinessException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -169,6 +172,23 @@ public class UserService {
         } catch (Exception e) {
             throw new RuntimeException("이메일 발송 실패");
         }
+    }
+
+    @Transactional(readOnly = true)
+    public UserInfoResponse getUserInfo() {
+        BaseUser user = getCurrentUser();
+
+        StaffType staffType;
+        if (user instanceof UserOwner) {
+            staffType = StaffType.OWNER;
+        } else {
+            UserStaff staff = (UserStaff) user;
+            StoreUserStaff storeUserStaff = storeStaffRepository.findByUserStaff(staff)
+                    .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "매장 정보를 찾을 수 없습니다."));
+            staffType = storeUserStaff.getStaffType();
+        }
+
+        return UserInfoResponse.of(user, staffType);
     }
 
     /**
