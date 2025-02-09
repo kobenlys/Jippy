@@ -10,8 +10,8 @@ import java.util.Optional;
 @Repository
 public interface SetMenuRepository extends JpaRepository<SetMenu, Integer> {
 
-    Optional<SetMenu> findByIdAndStoreId(Integer id, Integer store_id);
+    Optional<SetMenu> findByIdAndStoreId(Integer id, Integer storeId);
 
-    List<SetMenu> findByStoreId(Integer store_id);
+    List<SetMenu> findByStoreId(Integer storeId);
 
 }
