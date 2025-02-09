@@ -60,9 +60,15 @@ public class StoreStaffService {
     /**
      * 매장 직원 찾는 메서드
      */
-    private StoreUserStaff findStoreStaff(Integer storeId, Integer staffId) {
-        return storeStaffRepository.findByStoreIdAndUserStaffId(storeId, staffId)
+    private StoreUserStaff findStoreStaff(Integer storeId, Integer storeUserStaffId) {
+        StoreUserStaff staff = storeStaffRepository.findById(storeUserStaffId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 직원을 찾을 수 없습니다."));
+
+        if (!staff.getStore().getId().equals(storeId)) {
+            throw new IllegalArgumentException("해당 직원은 이 매장에 소속되어 있지 않습니다.");
+        }
+
+        return staff;
     }
 
     /**

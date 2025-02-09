@@ -7,14 +7,14 @@ import lombok.Getter;
 
 @Getter
 public class StaffResponse {
-    private Integer staffId;
+    private Integer storeUserStaffId;
     private String staffName;
     private StaffType staffType;
     private Integer staffSalary;
     private StaffSalaryType staffSalaryType;
 
     public StaffResponse(StoreUserStaff storeUserStaff) {
-        this.staffId = storeUserStaff.getUserStaff().getId();
+        this.storeUserStaffId = storeUserStaff.getId();
         this.staffName = storeUserStaff.getUserStaff().getName();
         this.staffType = storeUserStaff.getStaffType();
         this.staffSalary = storeUserStaff.getStaffSalary();
