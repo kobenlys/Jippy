@@ -36,9 +36,79 @@ public class StockStatusService {
     }
 
     private boolean checkIsDessert(InventoryItem item) {
-        return !item.getStock().isEmpty() &&
-                item.getStock().get(0).getStockUnit().equals("개") &&
-                item.getStock().get(0).getStockUnitSize() == 0;
+        return item.getStock().stream()
+                .findFirst()
+                .map(stock -> "개".equals(stock.getStockUnit()) && stock.getStockUnitSize() == 0)
+                .orElse(false);
+    }
+
+    @Transactional
+    public void resetStockStatus(Integer storeId, InventoryItem item) {
+        String currentTime = DateTimeUtils.nowString();
+
+        StockStatusRedis oldStatus = stockStatusRedisRepository.getStatus(storeId, item.getStockName());
+        int soldStock = oldStatus != null ? oldStatus.getSoldStock() : 0;
+
+        StockStatusRedis newStatus = StockStatusRedis.builder()
+                .initialStock(item.getStockTotalValue())
+                .soldStock(soldStock)
+                .currentStock(item.getStockTotalValue() - soldStock)
+                .soldPercentage(calculatePercentage(soldStock, item.getStockTotalValue()))
+                .lastUpdated(currentTime)
+                .isDessert(checkIsDessert(item))
+                .isLowStock(false)
+                .build();
+
+        checkLowStock(newStatus);
+        stockStatusRedisRepository.saveStatus(storeId, item.getStockName(), newStatus);
+    }
+
+    @Transactional
+    public void handleStockNameChange(Integer storeId, String oldName, String newName, InventoryItem sourceItem, InventoryItem targetItem) {
+
+        // 기존 재고의 상태 조회
+        StockStatusRedis oldStatus = stockStatusRedisRepository.getStatus(storeId, oldName);
+
+        if (oldStatus == null) {
+            resetStockStatus(storeId, targetItem);
+            return;
+        }
+
+        String currentTime = DateTimeUtils.nowString();
+
+        // 새 이름으로 변경되는 경우
+        StockStatusRedis newStatus = StockStatusRedis.builder()
+                .initialStock(targetItem.getStockTotalValue())
+                .soldStock(0)
+                .currentStock(targetItem.getStockTotalValue())
+                .soldPercentage(0)
+                .lastUpdated(currentTime)
+                .isDessert(checkIsDessert(targetItem))
+                .isLowStock(false)
+                .build();
+
+        checkLowStock(newStatus);
+
+        // 변경 전 이름의 재고가 남아있는 경우 상태 업데이트
+        if (!sourceItem.getStock().isEmpty()) {
+            StockStatusRedis updatedOldStatus = StockStatusRedis.builder()
+                    .initialStock(sourceItem.getStockTotalValue())
+                    .soldStock(oldStatus.getSoldStock())
+                    .currentStock(sourceItem.getStockTotalValue() - oldStatus.getSoldStock())
+                    .soldPercentage(calculatePercentage(oldStatus.getSoldStock(), sourceItem.getStockTotalValue()))
+                    .lastUpdated(currentTime)
+                    .isDessert(oldStatus.getIsDessert())
+                    .isLowStock(false)
+                    .build();
+
+            checkLowStock(updatedOldStatus);
+            stockStatusRedisRepository.saveStatus(storeId, oldName, updatedOldStatus);
+        } else {
+            // 원래 이름의 재고가 모두 이동 되었을 경우 상태 삭제
+            stockStatusRedisRepository.deleteStatus(storeId, oldName);
+        }
+
+        stockStatusRedisRepository.saveStatus(storeId, newName, newStatus);
     }
 
     // 단일 재고 감소 처리
@@ -121,10 +191,35 @@ public class StockStatusService {
     private void checkLowStock(StockStatusRedis status) {
         if (Boolean.TRUE.equals(status.getIsDessert())) {
             // 디저트 개수 체크
-            status.setIsLowStock(status.getCurrentStock() < 3);
+            status.setIsLowStock(status.getCurrentStock() <= 3);
         } else {
             // 판매율 체크
-            status.setIsLowStock(status.getSoldPercentage() >= 70);
+            status.setIsLowStock(status.getSoldPercentage() >= 0);
+        }
+    }
+
+    @Transactional
+    public void handleStockDelete(Integer storeId, String stockName, InventoryItem remainingItem) {
+        StockStatusRedis oldStatus = stockStatusRedisRepository.getStatus(storeId, stockName);
+
+        if (oldStatus == null) return;
+
+        if (remainingItem == null || remainingItem.getStock().isEmpty()) {
+            stockStatusRedisRepository.deleteStatus(storeId, stockName);
+        } else {
+            String currentTime = DateTimeUtils.nowString();
+            StockStatusRedis newStatus = StockStatusRedis.builder()
+                    .initialStock(remainingItem.getStockTotalValue())
+                    .soldStock(oldStatus.getSoldStock())
+                    .currentStock(remainingItem.getStockTotalValue() - oldStatus.getSoldStock())
+                    .soldPercentage(calculatePercentage(oldStatus.getSoldStock(), remainingItem.getStockTotalValue()))
+                    .lastUpdated(currentTime)
+                    .isDessert(oldStatus.getIsDessert())
+                    .isLowStock(false)
+                    .build();
+
+            checkLowStock(newStatus);
+            stockStatusRedisRepository.saveStatus(storeId, stockName, newStatus);
         }
     }
 
@@ -157,4 +252,5 @@ public class StockStatusService {
                 .lowStockList(lowStockList)
                 .build();
     }
+
 }

@@ -4,12 +4,12 @@ import com.hbhw.jippy.domain.stock.dto.request.StockStatusRedis;
 import com.hbhw.jippy.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class StockStatusRedisRepository {
     private final RedisTemplate<String, Object> redisTemplate;
@@ -114,11 +114,48 @@ public class StockStatusRedisRepository {
         return statusMap;
     }
 
-    public void resetAllStatus() {
+    public void deleteStatus(Integer storeId, String stockName) {
+        String key = generateKey(storeId, stockName);
+        redisTemplate.delete(key);
+    }
+
+    public void deleteBatchStatus(Integer storeId, List<String> stockNames) {
+        List<String> keys = stockNames.stream()
+                .map(name -> generateKey(storeId, name))
+                .collect(Collectors.toList());
+
+        redisTemplate.delete(keys);
+    }
+
+    public void resetAllSoldStock() {
         Set<String> keys = redisTemplate.keys(KEY_PREFIX + "*");
 
-        if (keys != null && !keys.isEmpty()) {
-            redisTemplate.delete(keys);
+        if (keys == null || keys.isEmpty()) {
+            return;
+        }
+
+        List<Object> values = redisTemplate.opsForValue().multiGet(keys);
+        Map<String, StockStatusRedis> updates = new HashMap<>();
+
+        if (values != null) {
+            for (int i = 0; i < keys.size(); i++) {
+                String key = new ArrayList<>(keys).get(i);
+                Object value = values.get(i);
+
+                if (value instanceof StockStatusRedis) {
+                    StockStatusRedis status = (StockStatusRedis) value;
+                    StockStatusRedis resetStatus = StockStatusRedis.builder()
+                            .initialStock(status.getInitialStock())
+                            .soldStock(0)
+                            .currentStock(status.getInitialStock())
+                            .soldPercentage(0)
+                            .lastUpdated(DateTimeUtils.nowString())
+                            .isDessert(status.getIsDessert())
+                            .isLowStock(false)
+                            .build();
+                    updates.put(key, resetStatus);
+                }
+            }
         }
     }
 }

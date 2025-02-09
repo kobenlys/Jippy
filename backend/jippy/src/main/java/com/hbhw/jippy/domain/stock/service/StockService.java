@@ -9,7 +9,6 @@ import com.hbhw.jippy.domain.stock.repository.StockRepository;
 import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
 import com.hbhw.jippy.utils.DateTimeUtils;
-import com.mongodb.client.MongoClient;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -21,7 +20,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.swing.text.html.Option;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -167,6 +165,7 @@ public class StockService {
                 });
 
                 updateInventoryItem(existingItem.get(), newItem);
+                stockStatusService.resetStockStatus(storeId, existingItem.get());
             } else {
                 newItem.getStock().forEach(stockDetail -> {
                     StockDetail convertedDetail = convertToStandardUnit(stockDetail);
@@ -184,6 +183,12 @@ public class StockService {
                     eventPublisher.publishEvent(new StockLogService.StockLogEvent(logRequest));
                 });
                 addNewInventoryItem(stock, newItem);
+
+                Optional<InventoryItem> addedItem = stock.getInventory().stream()
+                        .filter(item -> compareStockNames(item.getStockName(), newItem.getStockName()))
+                        .findFirst();
+
+                addedItem.ifPresent(item -> stockStatusService.resetStockStatus(storeId, item));
             }
         });
 
@@ -237,7 +242,6 @@ public class StockService {
     }
 
     private void recalculateTotalValues(Stock stock) {
-        List<StockStatusService.StockUpdateInfo> dessertUpdates = new ArrayList<>();
 
         stock.getInventory().forEach(item -> {
             int totalValue;
@@ -250,11 +254,6 @@ public class StockService {
                 totalValue = item.getStock().stream()
                         .mapToInt(StockDetail::getStockCount)
                         .sum();
-
-                dessertUpdates.add(StockStatusService.StockUpdateInfo.builder()
-                        .item(item)
-                        .decreaseAmount(0)
-                        .build());
             } else {
                 totalValue = item.getStock().stream()
                             .mapToInt(detail -> detail.getStockUnitSize() * detail.getStockCount())
@@ -262,11 +261,6 @@ public class StockService {
             }
             item.setStockTotalValue(totalValue);
         });
-
-        if (!dessertUpdates.isEmpty()) {
-            stockStatusService.updateBatchStockStatus(stock.getStoreId(), dessertUpdates);
-        }
-
     }
 
     private InventoryItem mapToInventoryItem(InventoryItemCreateUpdateRequest request) {
@@ -387,20 +381,21 @@ public class StockService {
                     .filter(item -> item.getStockName().equals(updateRequest.getStockName()))
                     .findFirst();
 
-            InventoryItem targetItem = (exactMatch.isPresent() ? exactMatch :
+            Optional<InventoryItem> targetItemOpt = (exactMatch.isPresent() ? exactMatch :
                     stock.getInventory().stream()
-                        .filter(item -> compareStockNames(item.getStockName(), updateRequest.getStockName()))
-                        .findFirst())
-                        .orElseGet(() -> {
-                            InventoryItem newItem = InventoryItem.builder()
-                                    .stockName(updateRequest.getStockName())
-                                    .stockTotalValue(0)
-                                    .stock(new ArrayList<>())
-                                    .updatedAt(DateTimeUtils.nowString())
-                                    .build();
-                            stock.getInventory().add(newItem);
-                            return newItem;
-                        });
+                            .filter(item -> compareStockNames(item.getStockName(), updateRequest.getStockName()))
+                            .findFirst());
+
+            InventoryItem targetItem = targetItemOpt.orElseGet(() -> {
+                InventoryItem newItem = InventoryItem.builder()
+                        .stockName(updateRequest.getStockName())
+                        .stockTotalValue(0)
+                        .stock(new ArrayList<>())
+                        .updatedAt(DateTimeUtils.nowString())
+                        .build();
+                stock.getInventory().add(newItem);
+                return newItem;
+            });
 
             if (!updateRequest.getStock().isEmpty()) {
 
@@ -489,6 +484,10 @@ public class StockService {
                         targetItem.getStock().add(convertedMoveDetail);
                     }
                 });
+
+                sourceItem.setUpdatedAt(DateTimeUtils.nowString());
+                // redis 상태 업데이트 (이름 변경, 재고 이동 후)
+                stockStatusService.handleStockNameChange(storeId, stockName, updateRequest.getStockName(), sourceItem, targetItem);
             } else {
                 // 단순 이름 변경인 경우
                 sourceItem.getStock().forEach(stockDetail -> {
@@ -533,6 +532,10 @@ public class StockService {
                         .build();
                 stock.getInventory().add(newItem);
                 stock.getInventory().remove(sourceItem);
+
+                recalculateTotalValues(stock);
+
+                stockStatusService.handleStockNameChange(storeId, stockName, updateRequest.getStockName(), sourceItem, newItem);
             }
 
             sourceItem.setUpdatedAt(DateTimeUtils.nowString());
@@ -607,6 +610,7 @@ public class StockService {
         }
 
         recalculateTotalValues(stock);
+        stockStatusService.resetStockStatus(storeId, sourceItem);
 
         Query query = new Query(Criteria.where("store_id").is(storeId));
         Update update = new Update().set("inventory", stock.getInventory());
@@ -684,6 +688,10 @@ public class StockService {
 
         if (targetItem.getStock().isEmpty()) {
             stock.getInventory().remove(targetItem);
+
+            stockStatusService.handleStockDelete(storeId, stockName, null);
+        } else {
+            stockStatusService.handleStockDelete(storeId, stockName, targetItem);
         }
 
         recalculateTotalValues(stock);
