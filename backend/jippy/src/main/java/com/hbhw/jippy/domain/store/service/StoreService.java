@@ -7,6 +7,8 @@ import com.hbhw.jippy.domain.store.entity.Store;
 import com.hbhw.jippy.domain.store.repository.StoreRepository;
 import com.hbhw.jippy.domain.user.entity.UserOwner;
 import com.hbhw.jippy.domain.user.repository.UserOwnerRepository; // 예시
+import com.hbhw.jippy.global.code.CommonErrorCode;
+import com.hbhw.jippy.global.error.BusinessException;
 import lombok.Builder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,7 +54,7 @@ public class StoreService {
     @Transactional
     public StoreResponse updateStore(Integer storeId, StoreUpdateRequest request) {
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new NoSuchElementException("해당 매장은 존재하지 않습니다."));
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장은 존재하지 않습니다."));
 
         store.setName(request.getName());
         store.setAddress(request.getAddress());
@@ -75,20 +77,20 @@ public class StoreService {
     @Transactional(readOnly = true)
     public StoreResponse getStore(Integer storeId) {
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new NoSuchElementException("해당 매장은 존재하지 않습니다."));
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장은 존재하지 않습니다."));
         return toResponse(store);
     }
 
-    public Store getStoreEntity(Integer storeId){
+    public Store getStoreEntity(Integer storeId) {
         return storeRepository.findById(storeId)
-                .orElseThrow(() -> new NoSuchElementException("해당 매장은 존재하지 않습니다."));
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장은 존재하지 않습니다."));
     }
 
 
     @Transactional
     public void deleteStore(Integer storeId) {
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new NoSuchElementException("해당 매장은 존재하지 않습니다."));
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장은 존재하지 않습니다."));
         storeRepository.delete(store);
     }
 
