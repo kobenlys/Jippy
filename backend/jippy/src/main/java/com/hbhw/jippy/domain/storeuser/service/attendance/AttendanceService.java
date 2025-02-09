@@ -15,6 +15,8 @@ import com.hbhw.jippy.domain.storeuser.repository.calendar.CalendarRepository;
 import com.hbhw.jippy.domain.storeuser.repository.staff.StoreStaffRepository;
 import com.hbhw.jippy.domain.storeuser.repository.attendance.AttendanceStatusRepository;
 import com.hbhw.jippy.domain.storeuser.repository.attendance.EmploymentStatusRepository;
+import com.hbhw.jippy.global.code.CommonErrorCode;
+import com.hbhw.jippy.global.error.BusinessException;
 import com.hbhw.jippy.utils.DateTimeUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -200,7 +202,7 @@ public class AttendanceService {
         LocalTime availableTime = startTime.minusMinutes(10);
 
         if (currentTimeOfDay.isBefore(availableTime) || currentTimeOfDay.isAfter(endTime)) {
-            throw new IllegalArgumentException("출근 가능 시간이 아닙니다.");
+            throw new BusinessException(CommonErrorCode.INVALID_INPUT_VALUE, "출근 가능 시간이 아닙니다.");
         }
     }
 
@@ -217,7 +219,7 @@ public class AttendanceService {
         LocalTime availableTime = endTime.plusMinutes(10);
 
         if (currentTimeOfDay.isBefore(startTime) || currentTimeOfDay.isAfter(availableTime)) {
-            throw new IllegalArgumentException("퇴근 가능 시간이 아닙니다.");
+            throw new BusinessException(CommonErrorCode.INVALID_INPUT_VALUE, "퇴근 가능 시간이 아닙니다.");
         }
     }
 }

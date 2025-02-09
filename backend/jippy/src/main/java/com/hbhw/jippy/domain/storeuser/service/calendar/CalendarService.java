@@ -8,6 +8,8 @@ import com.hbhw.jippy.domain.storeuser.entity.staff.StoreUserStaff;
 import com.hbhw.jippy.domain.storeuser.entity.calendar.Calendar;
 import com.hbhw.jippy.domain.storeuser.repository.staff.StoreStaffRepository;
 import com.hbhw.jippy.domain.storeuser.repository.calendar.CalendarRepository;
+import com.hbhw.jippy.global.code.CommonErrorCode;
+import com.hbhw.jippy.global.error.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +34,13 @@ public class CalendarService {
             throw new NoSuchElementException("매장을 찾을 수 없습니다.");
         }
 
+        for (DayScheduleRequest schedule : request.getSchedules()) {
+            if (calendarRepository.findByStoreUserStaffAndDayOfWeek(staff, schedule.getDayOfWeek()).isPresent()) {
+                throw new BusinessException(CommonErrorCode.INVALID_INPUT_VALUE,
+                        schedule.getDayOfWeek() + "요일에 이미 스케줄이 존재합니다.");
+            }
+        }
+
         List<Calendar> calendars = request.getSchedules().stream()
                         .map(schedule -> {
                             return Calendar.builder()
@@ -50,6 +59,10 @@ public class CalendarService {
     public List<StaffScheduleResponse> getScheduleList(Integer storeId) {
         List<Calendar> calendars = calendarRepository.findAllByStoreId(storeId);
 
+        if (calendars.isEmpty()) {
+            throw new BusinessException(CommonErrorCode.NOT_FOUND, "등록된 스케줄이 없습니다.");
+        }
+
         Map<Integer, List<Calendar>> groupedSchedules = calendars.stream()
                 .collect(Collectors.groupingBy(
                         calendar -> calendar.getStoreUserStaff().getId()
@@ -59,7 +72,7 @@ public class CalendarService {
                 .map(entry -> {
                     Integer storeUserStaffId = entry.getKey();
                     List<Calendar> staffCalendars = entry.getValue();
-                    String staffName = staffCalendars.get(0).getStoreUserStaff().getUserStaff().getName();
+                    String staffName = staffCalendars.getFirst().getStoreUserStaff().getUserStaff().getName();
 
                     List<ScheduleResponse> schedules = staffCalendars.stream()
                             .map(ScheduleResponse::new)
@@ -81,7 +94,11 @@ public class CalendarService {
 
         List<Calendar> calendars = calendarRepository.findByStoreUserStaff(staff);
 
-        String staffName = calendars.get(0).getStoreUserStaff().getUserStaff().getName();
+        if (calendars.isEmpty()) {
+            throw new BusinessException(CommonErrorCode.NOT_FOUND, "해당 직원의 스케줄 정보를 찾을 수 없습니다.");
+        }
+
+        String staffName = calendars.getFirst().getStoreUserStaff().getUserStaff().getName();
 
         List<ScheduleResponse> schedules = calendars.stream()
                 .map(ScheduleResponse::new)
@@ -97,6 +114,13 @@ public class CalendarService {
 
         if (!calendar.getStoreUserStaff().getStore().getId().equals(storeId)) {
             throw new NoSuchElementException("매장을 찾을 수 없습니다.");
+        }
+
+        if (!calendar.getDayOfWeek().equals(request.getDayOfWeek())) {
+            if (calendarRepository.findByStoreUserStaffAndDayOfWeek(calendar.getStoreUserStaff(), request.getDayOfWeek()).isPresent()) {
+                throw new BusinessException(CommonErrorCode.INVALID_INPUT_VALUE,
+                        request.getDayOfWeek() + "요일에 이미 스케줄이 존재합니다.");
+            }
         }
 
         calendar.setDayOfWeek(request.getDayOfWeek());
