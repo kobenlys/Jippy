@@ -8,18 +8,29 @@ interface FormData {
   userType: "OWNER" | "STAFF";
 }
 
+interface ResetState {
+  loading: boolean;
+  message: string | null;
+  error: string | null;
+}
+
 const ResetPassword = () => {
   const [formData, setFormData] = useState<FormData>({
     email: "",
     userType: "OWNER",
   });
-  const [message, setMessage] = useState<string | null>(null);
+  
+  const [resetState, setResetState] = useState<ResetState>({
+    loading: false,
+    message: null,
+    error: null,
+  });
+  
   const [errors, setErrors] = useState<Partial<FormData>>({});
 
   const validateForm = () => {
     const newErrors: Partial<FormData> = {};
     
-    // 이메일 검증
     if (!formData.email) {
       newErrors.email = "이메일을 입력해주세요.";
     } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)) {
@@ -36,6 +47,10 @@ const ResetPassword = () => {
       ...prev,
       [name]: value
     }));
+    // 입력 시 에러 메시지 초기화
+    if (errors[name as keyof FormData]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));
+    }
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -44,6 +59,8 @@ const ResetPassword = () => {
     if (!validateForm()) {
       return;
     }
+
+    setResetState({ loading: true, message: null, error: null });
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/reset/password`, {
@@ -54,27 +71,45 @@ const ResetPassword = () => {
         body: JSON.stringify(formData),
       });
 
-      if (response.ok) {
-        setMessage("임시 비밀번호가 발급되었습니다. 이메일을 확인해주세요.");
-        // 폼 초기화
-        setFormData({ email: "", userType: "OWNER" });
-      } else {
-        throw new Error("비밀번호 재발급 실패");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "비밀번호 재발급 실패");
       }
+
+      setResetState({
+        loading: false,
+        message: "임시 비밀번호가 발급되었습니다. 이메일을 확인해주세요.",
+        error: null
+      });
+      
+      // 폼 초기화
+      setFormData({ email: "", userType: "OWNER" });
+      
     } catch (error) {
-      console.error("비밀번호 재발급 에러:", error); // error 로깅 추가
-      setMessage("비밀번호 재발급에 실패했습니다. 다시 시도해주세요.");
+      setResetState({
+        loading: false,
+        message: null,
+        error: error instanceof Error ? error.message : "비밀번호 재발급에 실패했습니다. 다시 시도해주세요."
+      });
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-4">
       <h2 className="text-xl font-bold mb-4">비밀번호 재발급</h2>
-      {message && (
-        <p className={`mb-4 text-sm ${message.includes("실패") ? "text-red-500" : "text-green-500"}`}>
-          {message}
+      
+      {resetState.message && (
+        <p className="mb-4 text-sm text-green-500">
+          {resetState.message}
         </p>
       )}
+      
+      {resetState.error && (
+        <p className="mb-4 text-sm text-red-500">
+          {resetState.error}
+        </p>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">이메일</label>
@@ -123,11 +158,13 @@ const ResetPassword = () => {
 
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 
+          disabled={resetState.loading}
+          className={`w-full bg-blue-500 text-white p-2 rounded-md 
+                   ${resetState.loading ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-600"} 
                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 
-                   transition-colors duration-200"
+                   transition-colors duration-200`}
         >
-          비밀번호 재발급
+          {resetState.loading ? "처리 중..." : "비밀번호 재발급"}
         </button>
 
         <div className="w-64 h-px bg-gray-300 my-6"></div>

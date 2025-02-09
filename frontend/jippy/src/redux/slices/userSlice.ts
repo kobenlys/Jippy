@@ -1,52 +1,79 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface UserState {
-  id: string | null;
-  email: string | null;
-  name: string | null;
-  age: string | null;
-  userType: string | null;
-  accessToken: string | null;
-  refreshToken: string | null;
+  user: {
+    id: string | null;
+    email: string | null;
+    name: string | null;
+    age: string | null;
+    userType: string | null;
+  } | null;
+  auth: {
+    accessToken: string | null;
+    refreshToken: string | null;
+  };
+  isAuthenticated: boolean;
+  loading: boolean;
+  error: string | null;
 }
 
 const initialState: UserState = {
-  id: null,
-  email: null,
-  name: null,
-  age: null,
-  userType: null,
-  accessToken: null,
-  refreshToken: null,
+  user: null,
+  auth: {
+    accessToken: null,
+    refreshToken: null,
+  },
+  isAuthenticated: false,
+  loading: false,
+  error: null,
 };
 
 const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    setUserToken: (
-      state,
-      action: PayloadAction<{
-        accessToken: string | null;
-        refreshToken: string | null;
-      }>
-    ) => {
-      // state의 형태를 명시적으로 지정하고 깊은 복사를 사용
-      return {
-        ...state,
+    loginStart: (state) => {
+      state.loading = true;
+      state.error = null;
+    },
+    loginSuccess: (state, action: PayloadAction<{
+      user: UserState["user"];
+      accessToken: string;
+      refreshToken: string;
+    }>) => {
+      state.loading = false;
+      state.isAuthenticated = true;
+      state.user = action.payload.user;
+      state.auth = {
         accessToken: action.payload.accessToken,
         refreshToken: action.payload.refreshToken,
       };
     },
-    setUserInfo: (state, action: PayloadAction<Partial<UserState>>) => {
-      // setUserInfo는 전체 상태를 업데이트하므로 기존 상태 유지
-      return { ...state, ...action.payload };
+    loginFailure: (state, action: PayloadAction<string>) => {
+      state.loading = false;
+      state.error = action.payload;
     },
-    logout: (state) => {
+    logout: () => {
       return initialState;
+    },
+    updateUserInfo: (state, action: PayloadAction<Partial<UserState["user"]>>) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
+    },
+    refreshToken: (state, action: PayloadAction<{ accessToken: string }>) => {
+      state.auth.accessToken = action.payload.accessToken;
     },
   },
 });
 
-export const { setUserInfo, setUserToken, logout } = userSlice.actions;
+export const { 
+  loginStart, 
+  loginSuccess, 
+  loginFailure, 
+  logout, 
+  updateUserInfo, 
+  refreshToken 
+} = userSlice.actions;
+
 export default userSlice.reducer;

@@ -1,163 +1,82 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useDispatch, useSelector } from "react-redux";
-import { setUserInfo, setUserToken } from "@/redux/slices/userSlice";
-import { AppDispatch, RootState } from "@/redux/store";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useDispatch } from "react-redux";
+import { loginStart, loginSuccess, loginFailure } from "@/redux/slices/userSlice";
+import { AppDispatch } from "@/redux/store";
+import "@/app/globals.css";
+import styles from "@/app/page.module.css";
+import Button from "@/components/ui/button/Button";
 
-interface LoginData {
-  email: string;
-  password: string;
-  userType: "OWNER" | "STAFF";
+interface LoginResponse {
+  data: {
+    accessToken: string;
+    refreshToken: string;
+    id: string;
+    email: string;
+    name: string;
+    age: number;
+    staff_type: string;
+  };
 }
 
-interface UserData {
-  id: number;
-  email: string;
-  name: string;
-  age: number;
-  staffType: "OWNER" | "STAFF";
-  accessToken: string;
-  refreshToken: string;
-}
-
-export default function LoginPage() {
+const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [userType, setUserType] = useState<"OWNER" | "STAFF">("OWNER");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [userType, setUserType] = useState("OWNER");
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const { accessToken, refreshToken } = useSelector((state: RootState) => state.user);
-
-  // Token expiry check function
-  const isTokenExpired = (token: string) => {
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      // Attempt to renew 10 minutes before expiration
-      return payload.exp * 1000 < Date.now() + 10 * 60 * 1000;
-    } catch {
-      return true;
-    }
-  };
-
-  // Refresh access token
-  const refreshAccessToken = async (currentRefreshToken: string) => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/refresh`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refreshToken: currentRefreshToken }),
-      });
-
-      if (!response.ok) throw new Error("Token renewal failed");
-
-      const responseData = await response.json();
-      const newTokens = responseData.data;
-
-      // Save new access and refresh tokens
-      dispatch(setUserToken({ 
-        accessToken: newTokens.accessToken,
-        refreshToken: newTokens.refreshToken 
-      }));
-
-      return newTokens.accessToken;
-    } catch (error) {
-      throw new Error("Failed to obtain new access token");
-    }
-  };
-
-  // Automatic token renewal setup
-  useEffect(() => {
-    if (!accessToken || !refreshToken) return;
-
-    const tokenExpiryCheck = setInterval(async () => {
-      if (accessToken && isTokenExpired(accessToken)) {
-        try {
-          await refreshAccessToken(refreshToken);
-        } catch {
-          router.replace("/login");
-        }
-      }
-    }, 5 * 60 * 1000); // Check every 5 minutes
-
-    return () => clearInterval(tokenExpiryCheck);
-  }, [accessToken, refreshToken, dispatch, router]);
 
   const handleLogin = async () => {
+    dispatch(loginStart());
     try {
-      setError(null);
-      setIsLoading(true);
-  
-      const loginData: LoginData = {
-        email,
-        password,
-        userType
-      };
-  
-      // console.log("Login attempt with:", loginData);
-  
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({ email, password, userType }),
         credentials: "include",
-        body: JSON.stringify(loginData),
       });
-  
-      const responseData = await response.json();
-      // console.log("Login response:", responseData);
-  
+
       if (!response.ok) {
-        throw new Error(responseData.message || "Login failed");
+        const errorData = await response.text();
+        throw new Error(`로그인 실패: ${response.status} - ${errorData}`);
       }
-  
-      const userData: UserData = responseData.data;
-  
-      if (!userData) {
-        throw new Error("Invalid login response data");
+
+      const responseData: LoginResponse = await response.json();
+      const { data } = responseData;
+
+      if (data.accessToken) {
+        localStorage.setItem("token", data.accessToken);
+
+        dispatch(loginSuccess({
+          user: {
+            id: data.id,
+            email: data.email,
+            name: data.name,
+            age: data.age.toString(),
+            userType: data.staff_type,
+          },
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+        }));
+
+        router.replace("/confirm");
+      } else {
+        throw new Error("토큰이 응답에 없습니다");
       }
-  
-      // Dispatch user information
-      dispatch(setUserInfo({
-        id: String(userData.id),
-        email: userData.email,
-        name: userData.name,
-        age: userData.age,
-        userType: userData.staffType,
-      }));
-  
-      // Dispatch tokens
-      dispatch(setUserToken({
-        accessToken: userData.accessToken,
-        refreshToken: userData.refreshToken
-      }));
-  
-      router.replace("/");
     } catch (error) {
-      // console.error("Login error:", error);
-      setError(error instanceof Error ? error.message : "An unknown error occurred");
-    } finally {
-      setIsLoading(false);
+      dispatch(loginFailure(error instanceof Error ? error.message : "로그인 중 오류가 발생했습니다"));
+      console.error("로그인 에러:", error);
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-2xl mb-6">로그인</h1>
-
-      {error && (
-        <Alert variant="destructive" className="mb-4 w-64">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+      <h1 className={styles.subtitle}>로그인</h1>
 
       <div className="flex gap-4 m-2">
         <label className="flex items-center space-x-2 cursor-pointer">
@@ -165,8 +84,11 @@ export default function LoginPage() {
             type="radio"
             value="OWNER"
             checked={userType === "OWNER"}
-            onChange={(e) => setUserType(e.target.value as "OWNER" | "STAFF")}
-            className="form-radio text-blue-500"
+            onChange={(e) => setUserType(e.target.value)}
+            className="form-radio appearance-none relative h-5 w-5 border border-gray-300 rounded-full 
+             before:absolute before:inset-0 before:w-full before:h-full before:rounded-full before:border before:border-gray-300 
+             checked:before:border-[#F27B39] checked:after:absolute checked:after:inset-[4px] checked:after:bg-[#F27B39] 
+             checked:after:rounded-full"
           />
           <span>점주</span>
         </label>
@@ -175,8 +97,11 @@ export default function LoginPage() {
             type="radio"
             value="STAFF"
             checked={userType === "STAFF"}
-            onChange={(e) => setUserType(e.target.value as "OWNER" | "STAFF")}
-            className="form-radio text-blue-500"
+            onChange={(e) => setUserType(e.target.value)}
+            className="form-radio appearance-none relative h-5 w-5 border border-gray-300 rounded-full 
+             before:absolute before:inset-0 before:w-full before:h-full before:rounded-full before:border before:border-gray-300 
+             checked:before:border-[#F27B39] checked:after:absolute checked:after:inset-[4px] checked:after:bg-[#F27B39] 
+             checked:after:rounded-full"
           />
           <span>직원</span>
         </label>
@@ -188,7 +113,6 @@ export default function LoginPage() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         className="border p-2 m-2 w-64 rounded"
-        disabled={isLoading}
       />
       <input
         type="password"
@@ -196,25 +120,22 @@ export default function LoginPage() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         className="border p-2 m-2 w-64 rounded"
-        disabled={isLoading}
       />
 
-      <button
-        onClick={handleLogin}
-        disabled={isLoading}
-        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors mt-4 disabled:bg-gray-400"
-      >
+      <Button type="orange" onClick={handleLogin}>
         로그인
-      </button>
+      </Button>
 
       <div className="w-64 h-px bg-gray-300 my-6"></div>
 
       <div className="text-sm">
         <span className="text-gray-600">비밀번호가 기억 안 나요! </span>
-        <Link href="/reset" className="text-blue-500 hover:text-blue-600">
+        <Link href="/reset" className="text-orange-500 hover:text-orange-600">
           비밀번호 재발급
         </Link>
       </div>
     </div>
   );
-}
+};
+
+export default LoginPage;
