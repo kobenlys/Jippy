@@ -23,7 +23,6 @@ import com.hbhw.jippy.global.auth.repository.RefreshTokenRepository;
 import com.hbhw.jippy.global.auth.config.UserPrincipal;
 import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,7 +55,7 @@ public class UserService {
     @Transactional
     public void ownerSignUp(OwnerSignUpRequest request) {
         if (userOwnerRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("이미 사용 중인 이메일입니다.");
+            throw new BusinessException(CommonErrorCode.INVALID_INPUT_VALUE, "이미 사용 중인 이메일입니다.");
         }
 
         BaseUser newUser = userFactory.createUser(request, UserType.OWNER);
@@ -66,11 +65,11 @@ public class UserService {
     @Transactional
     public void staffSignUp(StaffSignUpRequest request) {
         if (userStaffRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("이미 사용 중인 이메일입니다.");
+            throw new BusinessException(CommonErrorCode.INVALID_INPUT_VALUE, "이미 사용 중인 이메일입니다.");
         }
 
         Store store = storeRepository.findById(request.getStoreId())
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 매장입니다."));
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재하지 않는 매장입니다."));
 
         BaseUser newUser = userFactory.createUser(request, UserType.STAFF);
         UserStaff savedUser = userStaffRepository.save((UserStaff) newUser);
@@ -94,18 +93,10 @@ public class UserService {
         BaseUser user = findUser(request.getEmail(), request.getUserType());
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
+            throw new BusinessException(CommonErrorCode.INVALID_INPUT_VALUE, "비밀번호가 일치하지 않습니다.");
         }
 
-        StaffType staffType;
-        if (user instanceof UserOwner) {
-            staffType = StaffType.OWNER;
-        } else {
-            UserStaff staff = (UserStaff) user;
-            StoreUserStaff storeStaff = storeStaffRepository.findByUserStaff(staff)
-                    .orElseThrow(() -> new RuntimeException("매장 정보를 찾을 수 없습니다."));
-            staffType = storeStaff.getStaffType();
-        }
+        StaffType staffType = getStaffType(user);
 
         UserPrincipal principal = new UserPrincipal(user, staffType);
         Authentication authentication = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
@@ -170,24 +161,14 @@ public class UserService {
             emailService.sendTempPassword(user.getName(), user.getEmail(), tempPassword);
             user.updatePassword(passwordEncoder.encode(tempPassword));
         } catch (Exception e) {
-            throw new RuntimeException("이메일 발송 실패");
+            throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "이메일 발송 실패");
         }
     }
 
     @Transactional(readOnly = true)
     public UserInfoResponse getUserInfo() {
         BaseUser user = getCurrentUser();
-
-        StaffType staffType;
-        if (user instanceof UserOwner) {
-            staffType = StaffType.OWNER;
-        } else {
-            UserStaff staff = (UserStaff) user;
-            StoreUserStaff storeUserStaff = storeStaffRepository.findByUserStaff(staff)
-                    .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "매장 정보를 찾을 수 없습니다."));
-            staffType = storeUserStaff.getStaffType();
-        }
-
+        StaffType staffType = getStaffType(user);
         return UserInfoResponse.of(user, staffType);
     }
 
@@ -197,13 +178,13 @@ public class UserService {
     private BaseUser findUser(String email, UserType userType) {
         BaseUser user = switch (userType) {
             case OWNER -> userOwnerRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 점주입니다."));
+                    .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재하지 않는 점주입니다."));
             case STAFF -> userStaffRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 직원입니다."));
+                    .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재하지 않는 직원입니다."));
         };
 
         if (user.getName().contains("(탈퇴)")) {
-            throw new RuntimeException("탈퇴한 회원입니다.");
+            throw new BusinessException(CommonErrorCode.INVALID_INPUT_VALUE, "탈퇴한 회원입니다.");
         }
 
         return user;
@@ -216,10 +197,24 @@ public class UserService {
         UserPrincipal principal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return switch (principal.getStaffType()) {
             case OWNER -> userOwnerRepository.findByEmail(principal.getEmail())
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 점주입니다."));
+                    .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재하지 않는 점주입니다."));
             case STAFF, MANAGER -> userStaffRepository.findByEmail(principal.getEmail())
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 직원입니다."));
+                    .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재하지 않는 직원입니다."));
         };
+    }
+
+    /**
+     * 사용자 유형 조회 메서드
+     */
+    private StaffType getStaffType(BaseUser user) {
+        if (user instanceof UserOwner owner) {
+            return owner.getStaffType();
+        }
+
+        UserStaff staff = (UserStaff) user;
+        StoreUserStaff storeStaff = storeStaffRepository.findByUserStaff(staff)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "매장 정보를 찾을 수 없습니다."));
+        return storeStaff.getStaffType();
     }
 
     private String generateTempPassword() {
