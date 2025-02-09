@@ -22,4 +22,7 @@ public class StockDetailCreateUpdateRequest {
 
     @Schema(description = "삭제 이유 확인용(폐기할 경우만 이외에는 삭제 가능, true일 때만 폐기)", example = "true")
     private Boolean isDisposal;
+
+    @Schema(description = "디저트 여부(디저트가 아닌 경우에는 삭제 가능, true일 때만 디저트", example = "true")
+    private Boolean isDessert;
 }

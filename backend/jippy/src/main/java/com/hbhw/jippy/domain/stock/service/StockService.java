@@ -9,7 +9,6 @@ import com.hbhw.jippy.domain.stock.repository.StockRepository;
 import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
 import com.hbhw.jippy.utils.DateTimeUtils;
-import com.mongodb.client.MongoClient;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -21,7 +20,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.swing.text.html.Option;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -32,15 +30,18 @@ public class StockService {
 
     private static final Map<String, String> UNIT_STANDARDIZATION = Map.of(
             "kg", "g",
-            "l", "ml"
+            "l", "ml",
+            "개", "개"
     );
 
     private static final Map<String, Integer> UNIT_CONVERSION = Map.of(
             "kg", 1000,
             "g", 1,
             "l", 1000,
-            "ml", 1
+            "ml", 1,
+            "개", 1
     );
+    private final StockStatusService stockStatusService;
 
     // 재고 입력 시, 띄어쓰기 무시하고 비교하는 공통 메소드
     private boolean compareStockNames(String name1, String name2) {
@@ -53,7 +54,6 @@ public class StockService {
     private final StockRepository stockRepository;
     private final MongoTemplate mongoTemplate;
     private final ApplicationEventPublisher eventPublisher;
-    private final MongoClient mongo;
 
     private ObjectId getStockId(Integer storeId) {
         Document document = mongoTemplate.findOne(
@@ -65,6 +65,15 @@ public class StockService {
     }
 
     private StockDetail convertToStandardUnit(StockDetailCreateUpdateRequest request) {
+
+        if (Boolean.TRUE.equals(request.getIsDessert())) {
+            return StockDetail.builder()
+                    .stockCount(request.getStockCount())
+                    .stockUnitSize(0)
+                    .stockUnit("개")
+                    .build();
+        }
+
         String standardUnit = UNIT_STANDARDIZATION.getOrDefault(request.getStockUnit(), request.getStockUnit());
 
         if (request.getStockUnit().equals(standardUnit)) {
@@ -156,6 +165,7 @@ public class StockService {
                 });
 
                 updateInventoryItem(existingItem.get(), newItem);
+                stockStatusService.resetStockStatus(storeId, existingItem.get());
             } else {
                 newItem.getStock().forEach(stockDetail -> {
                     StockDetail convertedDetail = convertToStandardUnit(stockDetail);
@@ -173,6 +183,12 @@ public class StockService {
                     eventPublisher.publishEvent(new StockLogService.StockLogEvent(logRequest));
                 });
                 addNewInventoryItem(stock, newItem);
+
+                Optional<InventoryItem> addedItem = stock.getInventory().stream()
+                        .filter(item -> compareStockNames(item.getStockName(), newItem.getStockName()))
+                        .findFirst();
+
+                addedItem.ifPresent(item -> stockStatusService.resetStockStatus(storeId, item));
             }
         });
 
@@ -226,10 +242,23 @@ public class StockService {
     }
 
     private void recalculateTotalValues(Stock stock) {
+
         stock.getInventory().forEach(item -> {
-            int totalValue = item.getStock().stream()
-                    .mapToInt(detail -> detail.getStockUnitSize() * detail.getStockCount())
-                    .sum();
+            int totalValue;
+
+            boolean isDessert = !item.getStock().isEmpty() &&
+                    item.getStock().get(0).getStockUnit().equals("개") &&
+                    item.getStock().get(0).getStockUnitSize() == 0;
+
+            if (isDessert) {
+                totalValue = item.getStock().stream()
+                        .mapToInt(StockDetail::getStockCount)
+                        .sum();
+            } else {
+                totalValue = item.getStock().stream()
+                            .mapToInt(detail -> detail.getStockUnitSize() * detail.getStockCount())
+                            .sum();
+            }
             item.setStockTotalValue(totalValue);
         });
     }
@@ -352,20 +381,21 @@ public class StockService {
                     .filter(item -> item.getStockName().equals(updateRequest.getStockName()))
                     .findFirst();
 
-            InventoryItem targetItem = (exactMatch.isPresent() ? exactMatch :
+            Optional<InventoryItem> targetItemOpt = (exactMatch.isPresent() ? exactMatch :
                     stock.getInventory().stream()
-                        .filter(item -> compareStockNames(item.getStockName(), updateRequest.getStockName()))
-                        .findFirst())
-                        .orElseGet(() -> {
-                            InventoryItem newItem = InventoryItem.builder()
-                                    .stockName(updateRequest.getStockName())
-                                    .stockTotalValue(0)
-                                    .stock(new ArrayList<>())
-                                    .updatedAt(DateTimeUtils.nowString())
-                                    .build();
-                            stock.getInventory().add(newItem);
-                            return newItem;
-                        });
+                            .filter(item -> compareStockNames(item.getStockName(), updateRequest.getStockName()))
+                            .findFirst());
+
+            InventoryItem targetItem = targetItemOpt.orElseGet(() -> {
+                InventoryItem newItem = InventoryItem.builder()
+                        .stockName(updateRequest.getStockName())
+                        .stockTotalValue(0)
+                        .stock(new ArrayList<>())
+                        .updatedAt(DateTimeUtils.nowString())
+                        .build();
+                stock.getInventory().add(newItem);
+                return newItem;
+            });
 
             if (!updateRequest.getStock().isEmpty()) {
 
@@ -454,6 +484,10 @@ public class StockService {
                         targetItem.getStock().add(convertedMoveDetail);
                     }
                 });
+
+                sourceItem.setUpdatedAt(DateTimeUtils.nowString());
+                // redis 상태 업데이트 (이름 변경, 재고 이동 후)
+                stockStatusService.handleStockNameChange(storeId, stockName, updateRequest.getStockName(), sourceItem, targetItem);
             } else {
                 // 단순 이름 변경인 경우
                 sourceItem.getStock().forEach(stockDetail -> {
@@ -498,6 +532,10 @@ public class StockService {
                         .build();
                 stock.getInventory().add(newItem);
                 stock.getInventory().remove(sourceItem);
+
+                recalculateTotalValues(stock);
+
+                stockStatusService.handleStockNameChange(storeId, stockName, updateRequest.getStockName(), sourceItem, newItem);
             }
 
             sourceItem.setUpdatedAt(DateTimeUtils.nowString());
@@ -572,6 +610,7 @@ public class StockService {
         }
 
         recalculateTotalValues(stock);
+        stockStatusService.resetStockStatus(storeId, sourceItem);
 
         Query query = new Query(Criteria.where("store_id").is(storeId));
         Update update = new Update().set("inventory", stock.getInventory());
@@ -649,6 +688,10 @@ public class StockService {
 
         if (targetItem.getStock().isEmpty()) {
             stock.getInventory().remove(targetItem);
+
+            stockStatusService.handleStockDelete(storeId, stockName, null);
+        } else {
+            stockStatusService.handleStockDelete(storeId, stockName, targetItem);
         }
 
         recalculateTotalValues(stock);
