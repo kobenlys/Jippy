@@ -48,7 +48,7 @@ public class RecipeService {
         return recipeEntity.getIngredient();
     }
 
-    private Recipe getRecipe(Long productId) {
+    public Recipe getRecipe(Long productId) {
         return recipeRepository.findByProductId(productId)
                 .orElseThrow(() -> new NoSuchElementException("레시피가 존재하지 않습니다."));
     }

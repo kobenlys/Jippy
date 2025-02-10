@@ -2,6 +2,7 @@ package com.hbhw.jippy.domain.stock.dto.request;
 
 import lombok.*;
 
+@ToString
 @Getter
 @Setter
 @NoArgsConstructor

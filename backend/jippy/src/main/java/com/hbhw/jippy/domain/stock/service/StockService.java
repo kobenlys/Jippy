@@ -706,4 +706,9 @@ public class StockService {
 
         return mapEntityToResponse(stock);
     }
+
+    public List<InventoryItem> getInventoryItemList(Integer storeId){
+        return stockRepository.findByStoreId(storeId)
+                .map(Stock::getInventory).orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "재고 인벤토리가 존재하지 않습니다."));
+    }
 }

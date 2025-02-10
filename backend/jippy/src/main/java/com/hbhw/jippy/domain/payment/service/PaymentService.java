@@ -7,9 +7,14 @@ import com.hbhw.jippy.domain.payment.entity.BuyProduct;
 import com.hbhw.jippy.domain.payment.entity.PaymentHistory;
 import com.hbhw.jippy.domain.payment.enums.PaymentStatus;
 import com.hbhw.jippy.domain.payment.enums.PaymentType;
+import com.hbhw.jippy.domain.product.entity.Ingredient;
 import com.hbhw.jippy.domain.product.entity.Product;
+import com.hbhw.jippy.domain.product.entity.Recipe;
 import com.hbhw.jippy.domain.product.service.ProductService;
+import com.hbhw.jippy.domain.product.service.RecipeService;
+import com.hbhw.jippy.domain.stock.entity.InventoryItem;
 import com.hbhw.jippy.domain.stock.service.StockService;
+import com.hbhw.jippy.domain.stock.service.StockStatusService;
 import com.hbhw.jippy.utils.DateTimeUtils;
 import com.hbhw.jippy.utils.UUIDProvider;
 import lombok.RequiredArgsConstructor;
@@ -27,14 +32,15 @@ public class PaymentService {
 
     private final CashService cashService;
     private final ProductService productService;
-    private final StockService stockService;
     private final PaymentHistoryService paymentHistoryService;
     private final UUIDProvider uuidProvider;
+    private final StockStatusService stockStatusService;
+    private final StockService stockService;
+    private final RecipeService recipeService;
 
 
     @Transactional
     public void CashPaymentConfirm(ConfirmCashPaymentRequest confirmCashPaymentRequest) {
-
         Integer storeId = confirmCashPaymentRequest.getStoreId();
         cashService.updatePaymentCash(storeId, confirmCashPaymentRequest.getCashRequest());
 
@@ -62,10 +68,49 @@ public class PaymentService {
                 .buyProductHistories(buyProductList)
                 .build();
 
+        List<InventoryItem> inventoryItemList = stockService.getInventoryItemList(storeId);
+        List<StockStatusService.StockUpdateInfo> stockUpdateInfoList = new ArrayList<>();
 
+        for (PaymentProductInfoRequest product : confirmCashPaymentRequest.getProductList()) {
+            Recipe recipeEntity = recipeService.getRecipe(product.getProductId());
 
+            for (Ingredient ingredient : recipeEntity.getIngredient()) {
+
+                InventoryItem beforeInventory = new InventoryItem();
+
+                for (InventoryItem item : inventoryItemList) {
+                    if (ingredient.getName().equals(item.getStockName())) {
+                        beforeInventory = item;
+                        break;
+                    }
+                }
+
+                InventoryItem newInventoryItem = InventoryItem.builder()
+                        .stock(beforeInventory.getStock())
+                        .stockName(beforeInventory.getStockName())
+                        .stockTotalValue(beforeInventory.getStockTotalValue())
+                        .updatedAt(beforeInventory.getUpdatedAt())
+                        .build();
+
+                StockStatusService.StockUpdateInfo stockUpdateInfo = StockStatusService.StockUpdateInfo.builder()
+                        .item(newInventoryItem)
+                        .decreaseAmount(ingredient.getAmount() * product.getQuantity())
+                        .build();
+
+                stockUpdateInfoList.add(stockUpdateInfo);
+            }
+        }
+
+        // log
+        for(StockStatusService.StockUpdateInfo nd : stockUpdateInfoList){
+            System.out.println(nd);
+        }
+
+        stockStatusService.updateBatchStockStatus(storeId, stockUpdateInfoList);
         paymentHistoryService.savePaymentHistory(paymentHistoryEntity);
     }
+
+
 
 
 }

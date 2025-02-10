@@ -16,10 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -151,7 +148,8 @@ public class StockStatusService {
 
         for (StockUpdateInfo update : updates) {
             StockStatusRedis currentStatus = currentStatuses.get(update.getItem().getStockName());
-
+            System.out.println(Objects.isNull(currentStatus));
+            System.out.println(currentStatus);
             if (currentStatus == null) {
                 StockStatusRedis newStatus = StockStatusRedis.builder()
                         .initialStock(update.getItem().getStockTotalValue())
@@ -194,7 +192,7 @@ public class StockStatusService {
             status.setIsLowStock(status.getCurrentStock() <= 3);
         } else {
             // 판매율 체크
-            status.setIsLowStock(status.getSoldPercentage() >= 70);
+            status.setIsLowStock(status.getSoldPercentage() >= 0);
         }
     }
 
