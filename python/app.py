@@ -90,7 +90,7 @@ def get_predictions(store_id: int):
     긍정, 부정 리뷰의 개수, 상위 5개 샘플, 그리고 키워드를 추출하여 반환합니다.
     """
     # 매장별 피드백 데이터 조회 (파라미터 바인딩)
-    query = text("SELECT category, content, created_at FROM customer_feedback WHERE store_id = :store_id")
+    query = text("SELECT category, content, created_at FROM store_feedback WHERE store_id = :store_id")
     
     positive_reviews = []
     negative_reviews = []
