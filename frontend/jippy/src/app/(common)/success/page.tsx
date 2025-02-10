@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from "next/link";
 
 export const dynamic = "force-static"; // 정적 페이지 강제 설정
 

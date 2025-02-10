@@ -4,14 +4,16 @@ import Link from "next/link";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import { setUserToken, setUserInfo } from "@/redux/slices/userSlice";
+import { logout } from "@/redux/slices/userSlice"; // import 수정
 import "@/app/globals.css";
 import styles from "./page.module.css";
 import Button from "@/components/ui/button/Button";
+import Image from "next/image";
 
 const JippyPage = () => {
   const dispatch = useDispatch();
-  const { accessToken } = useSelector((state: RootState) => state.user);
+  const { auth } = useSelector((state: RootState) => state.user); // state 구조 변경
+  const accessToken = auth.accessToken;
 
   // 로그아웃 처리
   const handleLogout = async () => {
@@ -32,51 +34,48 @@ const JippyPage = () => {
         throw new Error("로그아웃 실패");
       }
 
-      // Redux 상태 초기화
-      dispatch(setUserToken({ 
-        accessToken: null, 
-        refreshToken: null 
-      }));
-      dispatch(setUserInfo({
-        id: null,
-        email: null,
-        name: null,
-        age: null,
-        userType: null,
-      }));
+      // Redux 상태 초기화 - 단일 액션으로 변경
+      dispatch(logout());
       
-      // console.log("로그아웃 성공");
     } catch (error) {
       console.error("로그아웃 중 오류 발생:", error);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+    <div className="relative z-10 flex flex-col items-center justify-center min-h-screen text-center gap-8">
+      {/* 배경 요소 */}
+      <Image
+        src="/images/MainDeco.svg"
+        alt="Background decoration"
+        fill
+        className={styles.backgroundImage}
+        priority
+      />
+
       <h1 className={styles.title}>Jippy</h1>
+
+      <h3 className={styles.subtitle}>소상공인을 위한<br/>카페 매장 관리 서비스</h3>
       
-      <div className="flex flex-col gap-4 w-64">
+      <div className="flex flex-col items-center gap-4 z-10 w-[200px]">
         <Button type="orange">
           <Link href="/signup/owner" className="w-full block">
             계정 생성
           </Link>
         </Button>
 
+        <p> 또는 </p>
+        
         {accessToken ? (
           <Button type="orange" onClick={handleLogout}>로그아웃</Button>
         ) : (
-          <Button type="orange-border">
+          <Button type="orangeBorder">
             <Link href="/login" className="w-full block">
               로그인
             </Link>
           </Button>
         )}
 
-        <Button type="primary">
-          <Link href="/update" className="w-full block">
-            회원 정보 수정
-          </Link>
-        </Button>
       </div>
     </div>
   );

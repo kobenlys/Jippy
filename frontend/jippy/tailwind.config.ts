@@ -13,8 +13,8 @@ const config: Config = {
         foreground: "var(--foreground)",
       },
       fontFamily: {
-        archivo: ['var(--font-archivo-black)'],
-        pretendard: ['var(--font-pretendard)'],
+        archivo: ["var(--font-archivo-black)"],
+        pretendard: ["var(--font-pretendard)"],
       },
     },
   },

@@ -1,15 +1,16 @@
-import { configureStore } from '@reduxjs/toolkit';
-import userReducer from './slices/userSlice';
+import { configureStore } from "@reduxjs/toolkit";
+import userReducer from "./slices/userSlice";
+import shopReducer from "./slices/shopSlice";
 
 export const store = configureStore({
   reducer: {
     user: userReducer,
+    shop: shopReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        // JWT 토큰이 너무 길 경우를 대비해 직렬화 체크 무시
-        ignoredActions: ['user/setUserToken'],
+        ignoredActions: ["user/setUserToken"],
       },
     }),
 });
