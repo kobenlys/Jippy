@@ -7,40 +7,60 @@ WORKDIR /app
 # Python 패키지 설치를 위해 requirements.txt 복사
 COPY requirements.txt .
 
+# 시스템 업데이트 및 필요한 패키지 설치
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends openjdk-17-jdk-headless && \
-    apt-get install -y git && \
-    apt-get install -y curl && \
-    apt-get install -y bash && \
-    apt-get install -y python3-dev
+    apt-get install -y git curl bash python3-dev wget build-essential automake autoconf libtool pkg-config && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN git clone https://bitbucket.org/eunjeon/mecab-python-0.996.git
-WORKDIR /app/mecab-python-0.996
-RUN python setup.py build
-RUN python setup.py install
+#########################
+# 1. MeCab 설치
+#########################
+WORKDIR /www
 
-RUN wget https://bitbucket.org/eunjeon/mecab-ko/downloads/mecab-0.996-ko-0.9.2.tar.gz
-RUN tar -zxvf mecab-0.996-ko-0.9.2.tar.gz
-WORKDIR /app/mecab-0.996-ko-0.9.2
-RUN ./configure
-RUN make
-RUN make check
-RUN make install
+# MeCab 설치 (mecab 0.996-ko-0.9.2)
+RUN wget https://bitbucket.org/eunjeon/mecab-ko/downloads/mecab-0.996-ko-0.9.2.tar.gz && \
+    tar -zxvf mecab-0.996-ko-0.9.2.tar.gz && \
+    rm mecab-0.996-ko-0.9.2.tar.gz
 
-RUN wget https://bitbucket.org/eunjeon/mecab-ko-dic/downloads/mecab-ko-dic-2.0.1-20150920.tar.gz
-RUN tar -zxvf mecab-ko-dic-2.0.1-20150920.tar.gz
-WORKDIR /app/mecab-ko-dic-2.0.1-20150920/
-RUN ./autogen.sh
-RUN ./configure
-RUN make
-RUN make install
+WORKDIR /www/mecab-0.996-ko-0.9.2
+RUN ./configure && \
+    make && \
+    make check && \
+    make install && \
+    ldconfig
 
-RUN pip install --no-cache-dir --disable-pip-version-check -r requirements.txt
+#########################
+# 2. mecab-ko-dic 설치
+#########################
+WORKDIR /www
+RUN wget https://bitbucket.org/eunjeon/mecab-ko-dic/downloads/mecab-ko-dic-2.0.1-20150920.tar.gz && \
+    tar -zxvf mecab-ko-dic-2.0.1-20150920.tar.gz && \
+    rm mecab-ko-dic-2.0.1-20150920.tar.gz
 
+WORKDIR /www/mecab-ko-dic-2.0.1-20150920
+RUN ./autogen.sh && \
+    ./configure && \
+    make && \
+    make install && \
+    ldconfig
 
-# 애플리케이션 소스 코드 복사
+#########################
+# 3. mecab-python 설치 (Python binding)
+#########################
+WORKDIR /www
+RUN git clone https://bitbucket.org/eunjeon/mecab-python-0.996.git mecab-python-0.996
+WORKDIR /www/mecab-python-0.996
+RUN python setup.py build && \
+    python setup.py install
+
+#########################
+# 4. Python 패키지 설치 (requirements.txt)
+#########################
+WORKDIR /app
 COPY . .
+RUN pip install --no-cache-dir --disable-pip-version-check -r requirements.txt
 
 # 컨테이너 외부에 노출할 포트 설정 (FastAPI 기본 포트: 8000)
 EXPOSE 8000
