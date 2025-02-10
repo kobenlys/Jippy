@@ -194,7 +194,7 @@ public class StockStatusService {
             status.setIsLowStock(status.getCurrentStock() <= 3);
         } else {
             // 판매율 체크
-            status.setIsLowStock(status.getSoldPercentage() >= 0);
+            status.setIsLowStock(status.getSoldPercentage() >= 70);
         }
     }
 
