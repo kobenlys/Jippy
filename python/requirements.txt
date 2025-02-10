@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+mysql-connector-python
+transformers
+torch
+accelerate
+konlpy
+jpype1
