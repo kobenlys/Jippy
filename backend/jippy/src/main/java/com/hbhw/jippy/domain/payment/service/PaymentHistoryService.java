@@ -27,6 +27,9 @@ public class PaymentHistoryService {
      * 결재내역 저장
      */
     public void savePaymentHistory(PaymentHistory paymentHistory) {
+
+
+
         paymentHistoryRepository.save(paymentHistory);
     }
 

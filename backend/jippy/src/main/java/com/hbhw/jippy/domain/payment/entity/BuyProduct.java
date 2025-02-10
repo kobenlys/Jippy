@@ -10,10 +10,13 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Builder
 public class BuyProduct {
     @Field("product_id")
-    private Integer productId;
+    private Long productId;
 
-    @Field("product_category")
-    private Integer productCategory;
+    @Field("product_name")
+    private String productName;
+
+    @Field("product_category_id")
+    private Integer productCategoryId;
 
     @Field("product_quantity")
     private Integer productQuantity;

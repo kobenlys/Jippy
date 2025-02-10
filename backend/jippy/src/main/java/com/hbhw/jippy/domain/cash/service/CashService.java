@@ -39,8 +39,7 @@ public class CashService {
     @Transactional
     public CashResponse updateCash(Integer storeId, CashRequest request) {
 
-        Cash cash = cashRepository.findByStoreId(storeId)
-                .orElseThrow(() -> new IllegalStateException("해당 매장의 시재 정보가 존재하지 않습니다"));
+        Cash cash = getCashEntity(storeId);
 
         cash.setFiftyThousandWon(request.getFiftyThousandWon());
         cash.setTenThousandWon(request.getTenThousandWon());
@@ -55,10 +54,30 @@ public class CashService {
         return convertToResponse(updatedCash);
     }
 
+    @Transactional
+    public void updatePaymentCash(Integer storeId, CashRequest cashRequest) {
+
+        Cash cash = getCashEntity(storeId);
+
+        cash.setFiftyThousandWon(cash.getFiftyThousandWon() + cashRequest.getFiftyThousandWon());
+        cash.setTenThousandWon(cash.getTenThousandWon() + cashRequest.getTenThousandWon());
+        cash.setFiveThousandWon(cash.getFiveThousandWon() + cashRequest.getFiveThousandWon());
+        cash.setOneThousandWon(cash.getOneThousandWon() + cashRequest.getOneThousandWon());
+        cash.setFiveHundredWon(cash.getFiveHundredWon() + cashRequest.getFiveHundredWon());
+        cash.setOneHundredWon(cash.getOneHundredWon() + cashRequest.getOneHundredWon());
+        cash.setFiftyWon(cash.getFiftyWon() + cashRequest.getFiftyWon());
+        cash.setTenWon(cash.getTenWon() + cashRequest.getTenWon());
+    }
+
     public CashResponse getCash(Integer storeId) {
         Cash cash = cashRepository.findByStoreId(storeId)
                 .orElseThrow(() -> new IllegalStateException("해당 매장의 시재 정보가 존재하지 않습니다"));
         return convertToResponse(cash);
+    }
+
+    private Cash getCashEntity(Integer storeId) {
+        return cashRepository.findByStoreId(storeId)
+                .orElseThrow(() -> new IllegalStateException("해당 매장의 시재 정보가 존재하지 않습니다"));
     }
 
     private CashResponse convertToResponse(Cash cash) {
