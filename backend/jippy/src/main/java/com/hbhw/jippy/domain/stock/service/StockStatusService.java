@@ -138,18 +138,30 @@ public class StockStatusService {
     // 여러 상품 처리
     @Transactional
     public void updateBatchStockStatus(Integer storeId, List<StockUpdateInfo> updates) {
-        List<String> stockNames = updates.stream()
-                .map(update -> update.getItem().getStockName())
-                .collect(Collectors.toList());
+        Map<String, StockUpdateInfo> mergedUpdates = new HashMap<>();
+
+        for (StockUpdateInfo update : updates) {
+            String stockName = update.getItem().getStockName();
+
+            if (mergedUpdates.containsKey(stockName)) {
+                mergedUpdates.computeIfPresent(stockName, (k, existing) -> StockUpdateInfo.builder()
+                        .item(update.getItem())
+                        .decreaseAmount(existing.getDecreaseAmount() + update.getDecreaseAmount())
+                        .build());
+            } else {
+                mergedUpdates.put(stockName, update);
+            }
+        }
+
+        List<String> stockNames = new ArrayList<>(mergedUpdates.keySet());
 
         Map<String, StockStatusRedis> currentStatuses = stockStatusRedisRepository.getBatchStatus(storeId, stockNames);
         Map<String, StockStatusRedis> batchUpdates = new HashMap<>();
         String currentTime = DateTimeUtils.nowString();
 
-        for (StockUpdateInfo update : updates) {
+        for (StockUpdateInfo update : mergedUpdates.values()) {
             StockStatusRedis currentStatus = currentStatuses.get(update.getItem().getStockName());
-            System.out.println(Objects.isNull(currentStatus));
-            System.out.println(currentStatus);
+
             if (currentStatus == null) {
                 StockStatusRedis newStatus = StockStatusRedis.builder()
                         .initialStock(update.getItem().getStockTotalValue())
@@ -173,12 +185,14 @@ public class StockStatusService {
                         .isDessert(currentStatus.getIsDessert())
                         .isLowStock(currentStatus.getIsLowStock())
                         .build();
+
                 checkLowStock(updatedStatus);
                 batchUpdates.put(update.getItem().getStockName(), updatedStatus);
             }
         }
         if (!batchUpdates.isEmpty()) {
             stockStatusRedisRepository.saveBatchStatus(storeId, batchUpdates);
+            Map<String, StockStatusRedis> verifiedStatus = stockStatusRedisRepository.getBatchStatus(storeId, stockNames);
         }
     }
 

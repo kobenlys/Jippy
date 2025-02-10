@@ -1,6 +1,8 @@
 package com.hbhw.jippy.domain.payment.controller;
 
 import com.hbhw.jippy.domain.payment.dto.request.ConfirmCashPaymentRequest;
+import com.hbhw.jippy.domain.payment.dto.request.ConfirmPaymentRequest;
+import com.hbhw.jippy.domain.payment.dto.request.ConfirmQrCodePaymentRequest;
 import com.hbhw.jippy.domain.payment.service.PaymentService;
 import com.hbhw.jippy.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +24,14 @@ public class PaymentController {
     @PostMapping("/cash/confirm")
     public ApiResponse<?> confirmCashPayment(@RequestBody ConfirmCashPaymentRequest confirmCashPaymentRequest) {
         log.info("confirmCashPayment : {}", confirmCashPaymentRequest);
-        paymentService.CashPaymentConfirm(confirmCashPaymentRequest);
+        paymentService.cashPaymentConfirm(confirmCashPaymentRequest);
+        return ApiResponse.success(HttpStatus.CREATED);
+    }
+
+    @PostMapping("/qrcode/confirm")
+    public ApiResponse<?> confirmQrCodePayment(@RequestBody ConfirmQrCodePaymentRequest confirmQrCodePaymentRequest) {
+        log.info("confirmQrcodePayment : {}", confirmQrCodePaymentRequest);
+        paymentService.qrCodePaymentConfirm(confirmQrCodePaymentRequest);
         return ApiResponse.success(HttpStatus.CREATED);
     }
 
