@@ -34,7 +34,7 @@ model.eval()
 
 import pandas as pd
 
-df = pd.read_excel('data/한국어_단발성_대화_데이터셋.xlsx')
+df = pd.read_excel('한국어_단발성_대화_데이터셋.xlsx')
 print(df.head())
 
 print(df['Emotion'].value_counts())
