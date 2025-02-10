@@ -60,6 +60,8 @@ COPY --from=builder /usr/local /usr/local
 # PATH 업데이트: /usr/local/bin 에 설치된 MeCab 바이너리를 찾을 수 있도록 함
 #########################
 ENV PATH="/usr/local/bin:${PATH}"
+ENV MECAB_CONFIG="/usr/local/bin/mecab-config"
+ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
 
 # 애플리케이션 코드 및 requirements.txt 복사
 COPY requirements.txt .
