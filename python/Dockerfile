@@ -4,31 +4,51 @@ FROM python:3.9-slim
 # 작업 디렉토리 설정
 WORKDIR /app
 
-# 시스템 패키지 업데이트 및 설치
-# - openjdk-11-jdk: Konlpy 사용을 위한 JDK 설치
-# - mecab, libmecab-dev: Mecab 및 개발 파일 설치
-# - mecab-ko-dic: 한국어 사전 (패키지명은 시스템에 따라 다를 수 있음)
-# - gcc, make 등: mecab-ko-dic 빌드에 필요한 경우 설치 (필요시 추가)
-RUN apt-get update && apt-get install -y \
-    openjdk-11-jdk \
-    mecab \
-    libmecab-dev \
-    mecab-ko-dic \
-    gcc \
-    make \
-    && rm -rf /var/lib/apt/lists/*
-
-# 필요 시, 만약 apt-get에서 mecab-ko-dic이 원하는 버전이 없거나 제대로 동작하지 않으면,
-# 아래와 같이 GitHub에서 mecab-ko-dic 소스를 클론하여 빌드하는 방법도 고려할 수 있습니다.
-# RUN apt-get update && apt-get install -y git curl xz-utils file
-# RUN git clone --depth 1 https://bitbucket.org/eunjeon/mecab-ko-dic.git
-# RUN cd mecab-ko-dic && ./autogen.sh && ./configure && make && make install && ldconfig
+# Mecab version
+ENV MECAB_VERSION mecab-0.996-ko-0.9.2
+ENV MECAB_DICT_VERSION mecab-ko-dic-2.1.1-20180720
+ENV MECAB_PYTHON_VERSION mecab-python-1.0.10
 
 # Python 패키지 설치를 위해 requirements.txt 복사
 COPY requirements.txt .
 
-# pip 업데이트 후, requirements.txt에 명시된 Python 패키지 설치
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+RUN set -ex \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        openjdk-8-jdk-headless \
+        python-dev \
+        python3-dev \
+    && pip install --no-cache-dir --disable-pip-version-check -r requirements.txt
+
+# Install Mecab
+RUN set -ex \
+    && curl -LO https://bitbucket.org/eunjeon/mecab-ko/downloads/${MECAB_VERSION}.tar.gz \
+    && tar zxvf ${MECAB_VERSION}.tar.gz \
+    && cd ${MECAB_VERSION} \
+    && ./configure \
+    && make \
+    && make check \
+    && make install \
+    && ldconfig
+
+# Install Mecab Dictionay
+RUN set -ex \
+    && curl -LO https://bitbucket.org/eunjeon/mecab-ko-dic/downloads/${MECAB_DICT_VERSION}.tar.gz \
+    && tar zxvf ${MECAB_DICT_VERSION}.tar.gz \
+    && cd ${MECAB_DICT_VERSION} \
+    && ./autogen.sh \
+    && ./configure \
+    && make \
+    && make install \
+    && ldconfig
+
+# Install mecab-python
+RUN set -ex \
+    && git clone https://bitbucket.org/eunjeon/${MECAB_PYTHON_VERSION}.git \
+    && cd ${MECAB_PYTHON_VERSION} \
+    && python setup.py build \
+    && python setup.py install
+
 
 # 애플리케이션 소스 코드 복사
 COPY . .
