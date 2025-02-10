@@ -94,9 +94,8 @@ def get_predictions(store_id: int):
     
     positive_reviews = []
     negative_reviews = []
-    
     with engine.connect() as connection:
-        results = connection.execute(query, store_id=store_id)
+        results = connection.execute(query, {"store_id": store_id})
         for row in results:
             category, content, created_at = row
             sentiment = predict_sentiment(content)
