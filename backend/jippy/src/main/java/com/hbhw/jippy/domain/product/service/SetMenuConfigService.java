@@ -17,7 +17,7 @@ public class SetMenuConfigService {
         setMenuConfigRepository.delete(setMenuConfig);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public SetMenuConfig getOrCreateSetMenuConfig(SetMenu setMenu, Integer storeId, Long productId) {
         return setMenuConfigRepository.findBySetMenuIdAndProductId(setMenu.getId(), productId)
                 .orElseGet(() -> SetMenuConfig.builder()
