@@ -16,7 +16,6 @@ RUN set -ex \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         openjdk-8-jdk-headless \
-        python-dev \
         python3-dev \
     && pip install --no-cache-dir --disable-pip-version-check -r requirements.txt
 
