@@ -165,6 +165,7 @@ public class StockService {
                 });
 
                 updateInventoryItem(existingItem.get(), newItem);
+                recalculateTotalValues(stock);
                 stockStatusService.resetStockStatus(storeId, existingItem.get());
             } else {
                 newItem.getStock().forEach(stockDetail -> {
@@ -188,7 +189,10 @@ public class StockService {
                         .filter(item -> compareStockNames(item.getStockName(), newItem.getStockName()))
                         .findFirst();
 
-                addedItem.ifPresent(item -> stockStatusService.resetStockStatus(storeId, item));
+                addedItem.ifPresent(item -> {
+                    recalculateTotalValues(stock);
+                    stockStatusService.resetStockStatus(storeId, item);
+                });
             }
         });
 
@@ -486,6 +490,7 @@ public class StockService {
                 });
 
                 sourceItem.setUpdatedAt(DateTimeUtils.nowString());
+                recalculateTotalValues(stock);
                 // redis 상태 업데이트 (이름 변경, 재고 이동 후)
                 stockStatusService.handleStockNameChange(storeId, stockName, updateRequest.getStockName(), sourceItem, targetItem);
             } else {
@@ -688,13 +693,12 @@ public class StockService {
 
         if (targetItem.getStock().isEmpty()) {
             stock.getInventory().remove(targetItem);
-
+            recalculateTotalValues(stock);
             stockStatusService.handleStockDelete(storeId, stockName, null);
         } else {
+            recalculateTotalValues(stock);
             stockStatusService.handleStockDelete(storeId, stockName, targetItem);
         }
-
-        recalculateTotalValues(stock);
 
         Query query = new Query(Criteria.where("store_id").is(storeId));
         Update update = new Update().set("inventory", stock.getInventory());
