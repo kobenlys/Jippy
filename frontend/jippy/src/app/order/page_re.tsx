@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface MenuItem {
   id: number;
@@ -15,20 +15,54 @@ interface OrderItem {
   quantity: number;
 }
 
+interface Category {
+  id: number;
+  categoryName: string;
+}
+
+interface ApiResponse<T> {
+  code: number;
+  success: boolean;
+  data: T;
+}
+
 export default function POSOrderPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("전체");
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  const categories = [
-    "전체",
-    "시즌/신메뉴",
-    "커피",
-    "라떼",
-    "스무디",
-    "차",
-    "주스/에이드",
-    "기타",
-  ];
+  // Replace this with your actual store ID
+  const storeId = 1; 
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/category/${storeId}/select`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch categories');
+        }
+        
+        const result: ApiResponse<Category[]> = await response.json();
+        
+        if (result.success) {
+          setCategories([
+            { id: -1, categoryName: "전체" }, // Add "전체" category
+            ...result.data
+          ]);
+        } else {
+          throw new Error('Failed to fetch categories');
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, [storeId]);
 
   const menuItems: MenuItem[] = [
     {
@@ -85,6 +119,24 @@ export default function POSOrderPage() {
     0
   );
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-red-500">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen">
       {/* 메뉴 영역 */}
@@ -93,15 +145,15 @@ export default function POSOrderPage() {
         <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
           {categories.map(category => (
             <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
+              key={category.id}
+              onClick={() => setSelectedCategory(category.categoryName)}
               className={`px-4 py-2 rounded-full whitespace-nowrap ${
-                selectedCategory === category
+                selectedCategory === category.categoryName
                   ? "bg-pink-500 text-white"
                   : "bg-gray-100"
               }`}
             >
-              {category}
+              {category.categoryName}
             </button>
           ))}
         </div>

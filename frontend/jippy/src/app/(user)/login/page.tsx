@@ -18,9 +18,9 @@ interface LoginResponse {
     email: string;
     name: string;
     age: string;
-    staff_type: string;
-    access_token: string;
-    refresh_token: string;
+    staffType: string;
+    accessToken: string;
+    refreshToken: string;
   };
 }
 
@@ -39,6 +39,7 @@ const LoginPage = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   const handleLogin = async () => {
+    console.log('API URL:', process.env.NEXT_PUBLIC_API_URL);
     dispatch(loginStart());
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/login`, {
@@ -50,34 +51,36 @@ const LoginPage = () => {
         credentials: "include",
       });
   
-      if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(`로그인 실패: ${response.status} - ${errorData}`);
-      }
-  
-      const responseData: LoginResponse = await response.json();
+      // 응답 데이터 확인을 위한 로그 추가
+      const responseData = await response.json();
+      console.log('응답 데이터:', responseData);
+
+      // 응답 구조 확인
+      console.log('success 존재 여부:', 'success' in responseData);
+      console.log('data 존재 여부:', 'data' in responseData);
       
-      if (responseData.success && responseData.data.access_token) {
-        localStorage.setItem("token", responseData.data.access_token);
+      if (responseData.success && responseData.data.accessToken) {
+        // ... 나머지 코드
+        localStorage.setItem("token", responseData.data.accessToken);
   
         // 로그인 성공 처리
         dispatch(loginSuccess({
           profile: {
-            id: responseData.data.id.toString(),
+            id: responseData.data.id,
             email: responseData.data.email,
             name: responseData.data.name,
             age: responseData.data.age,
-            userType: responseData.data.staff_type,
+            userType: responseData.data.staffType,
           },
-          accessToken: responseData.data.access_token,
-          refreshToken: responseData.data.refresh_token,
+          accessToken: responseData.data.accessToken,
+          refreshToken: responseData.data.refreshToken,
         }));
   
         // 매장 정보 조회 및 리덕스 업데이트
         try {
           const shopsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/store/select`, {
             headers: {
-              "Authorization": `Bearer ${responseData.data.access_token}`,
+              "Authorization": `Bearer ${responseData.data.accessToken}`,
               "Content-Type": "application/json"
             }
           });
@@ -102,7 +105,7 @@ const LoginPage = () => {
               router.replace("/confirm");
             } else {
               // 매장이 없는 경우 처리 (예: 매장 생성 페이지로 리다이렉트)
-              router.replace("/create-shop");
+              router.replace("/shop/create");
             }
           } else {
             // 매장 조회 실패 시 에러 처리

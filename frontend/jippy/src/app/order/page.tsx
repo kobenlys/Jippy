@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import CreateCategory from "@/features/order/components/category";
 
 interface MenuItem {
   id: number;
@@ -15,54 +16,11 @@ interface OrderItem {
   quantity: number;
 }
 
-interface Category {
-  id: number;
-  categoryName: string;
-}
+const POSOrderPage = () => {
+  const DEFAULT_IMAGE_PATH = "/images/PlaceHolder.png";
 
-interface ApiResponse<T> {
-  code: number;
-  success: boolean;
-  data: T;
-}
-
-export default function POSOrderPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("전체");
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Replace this with your actual store ID
-  const storeId = 1; 
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/category/${storeId}/select`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch categories');
-        }
-        
-        const result: ApiResponse<Category[]> = await response.json();
-        
-        if (result.success) {
-          setCategories([
-            { id: -1, categoryName: "전체" }, // Add "전체" category
-            ...result.data
-          ]);
-        } else {
-          throw new Error('Failed to fetch categories');
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCategories();
-  }, [storeId]);
 
   const menuItems: MenuItem[] = [
     {
@@ -70,16 +28,18 @@ export default function POSOrderPage() {
       name: "카페라떼 (HOT)",
       price: 4500,
       category: "커피",
-      image: "/coffee-latte.jpg"
+      image: DEFAULT_IMAGE_PATH,
     },
     // Add more menu items here
   ];
 
   const addToOrder = (menuItem: MenuItem) => {
-    setOrderItems(prev => {
-      const existingItem = prev.find(item => item.menuItem.id === menuItem.id);
+    setOrderItems((prev) => {
+      const existingItem = prev.find(
+        (item) => item.menuItem.id === menuItem.id
+      );
       if (existingItem) {
-        return prev.map(item =>
+        return prev.map((item) =>
           item.menuItem.id === menuItem.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
@@ -90,8 +50,8 @@ export default function POSOrderPage() {
   };
 
   const removeFromOrder = (menuItem: MenuItem) => {
-    setOrderItems(prev =>
-      prev.filter(item => item.menuItem.id !== menuItem.id)
+    setOrderItems((prev) =>
+      prev.filter((item) => item.menuItem.id !== menuItem.id)
     );
   };
 
@@ -100,88 +60,65 @@ export default function POSOrderPage() {
       removeFromOrder(menuItem);
       return;
     }
-    
-    setOrderItems(prev =>
-      prev.map(item =>
-        item.menuItem.id === menuItem.id
-          ? { ...item, quantity }
-          : item
+
+    setOrderItems((prev) =>
+      prev.map((item) =>
+        item.menuItem.id === menuItem.id ? { ...item, quantity } : item
       )
     );
   };
 
-  const filteredMenuItems = selectedCategory === "전체"
-    ? menuItems
-    : menuItems.filter(item => item.category === selectedCategory);
+  const filteredMenuItems =
+    selectedCategory === "전체"
+      ? menuItems
+      : menuItems.filter((item) => item.category === selectedCategory);
 
   const totalAmount = orderItems.reduce(
-    (sum, item) => sum + (item.menuItem.price * item.quantity),
+    (sum, item) => sum + item.menuItem.price * item.quantity,
     0
   );
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-red-500">
-          {error}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex h-screen">
       {/* 메뉴 영역 */}
-      <div className="flex-1 p-4 overflow-auto">
-        {/* 카테고리 선택 */}
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-          {categories.map(category => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.categoryName)}
-              className={`px-4 py-2 rounded-full whitespace-nowrap ${
-                selectedCategory === category.categoryName
-                  ? "bg-pink-500 text-white"
-                  : "bg-gray-100"
-              }`}
-            >
-              {category.categoryName}
-            </button>
-          ))}
+      <div className="flex-1 flex flex-col">
+        {/* 카테고리 영역 - 상단 고정 */}
+        <div className="w-full sticky top-0">
+          <CreateCategory
+            selectedCategory={selectedCategory}
+            onCategorySelect={setSelectedCategory}
+          />
         </div>
 
-        {/* 메뉴 그리드 */}
-        <div className="grid grid-cols-3 gap-4">
-          {filteredMenuItems.map((item) => (
-            <div
-              key={item.id}
-              onClick={() => addToOrder(item)}
-              className="bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow"
-            >
-              <div className="w-full h-32 bg-gray-200 rounded-lg mb-2" />
-              <h3 className="font-semibold">{item.name}</h3>
-              <p className="text-gray-600">{item.price.toLocaleString()}원</p>
-            </div>
-          ))}
+        {/* 메뉴 그리드 영역 - 스크롤 가능 */}
+        <div className="flex-1 overflow-auto p-4">
+          <div className="grid grid-cols-3 gap-4">
+            {filteredMenuItems.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => addToOrder(item)}
+                className="bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow"
+              >
+                <div className="w-full h-32 bg-gray-200 rounded-lg mb-2" />
+                <h3 className="font-semibold">{item.name}</h3>
+                <p className="text-gray-600">{item.price.toLocaleString()}원</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* 주문 영역 */}
       <div className="w-96 bg-gray-100 p-4 flex flex-col">
         <h2 className="text-xl font-bold mb-4">주문 내역</h2>
-        
+
         {/* 주문 목록 */}
         <div className="flex-1 overflow-auto">
           {orderItems.map((item) => (
-            <div key={item.menuItem.id} className="bg-white p-4 rounded-lg mb-2">
+            <div
+              key={item.menuItem.id}
+              className="bg-white p-4 rounded-lg mb-2"
+            >
               <div className="flex justify-between items-center mb-2">
                 <span className="font-semibold">{item.menuItem.name}</span>
                 <button
@@ -194,20 +131,26 @@ export default function POSOrderPage() {
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => updateQuantity(item.menuItem, item.quantity - 1)}
+                    onClick={() =>
+                      updateQuantity(item.menuItem, item.quantity - 1)
+                    }
                     className="px-2 py-1 bg-gray-200 rounded"
                   >
                     -
                   </button>
                   <span>{item.quantity}</span>
                   <button
-                    onClick={() => updateQuantity(item.menuItem, item.quantity + 1)}
+                    onClick={() =>
+                      updateQuantity(item.menuItem, item.quantity + 1)
+                    }
                     className="px-2 py-1 bg-gray-200 rounded"
                   >
                     +
                   </button>
                 </div>
-                <span>{(item.menuItem.price * item.quantity).toLocaleString()}원</span>
+                <span>
+                  {(item.menuItem.price * item.quantity).toLocaleString()}원
+                </span>
               </div>
             </div>
           ))}
@@ -233,4 +176,6 @@ export default function POSOrderPage() {
       </div>
     </div>
   );
-}
+};
+
+export default POSOrderPage;
