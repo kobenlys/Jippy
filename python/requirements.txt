@@ -3,6 +3,7 @@ uvicorn[standard]
 sqlalchemy
 mysql-connector-python
 pandas
+openpyxl
 transformers
 torch --index-url https://download.pytorch.org/whl/cpu
 accelerate
