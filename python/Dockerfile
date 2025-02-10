@@ -53,6 +53,12 @@ RUN apt-get update && \
 # 예: COPY --from=builder /usr/local/bin/mecab* /usr/local/bin/
 #     COPY --from=builder /usr/local/lib/libmecab* /usr/local/lib/
 
+#########################
+# PATH 업데이트
+#########################
+# MeCab가 /usr/local/bin에 설치되어 있으므로 해당 경로를 PATH에 추가
+ENV PATH="/usr/local/bin:${PATH}"
+
 # 애플리케이션 코드 및 requirements.txt 복사
 COPY requirements.txt .
 COPY . .
