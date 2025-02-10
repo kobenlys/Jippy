@@ -58,7 +58,7 @@ public class PaymentHistoryController {
                 .storeId(storeId)  // 예시 storeId
                 .paymentStatus(PaymentStatus.PURCHASE.getDescription())
                 .paymentType(PaymentType.QRCODE.getDescription())
-                .createdAt(DateTimeUtils.nowString())
+                .updatedAt(DateTimeUtils.nowString())
                 .buyProductHistories(buyProductHistories)
                 .totalCost(250000)
                 .build();

@@ -1,5 +1,6 @@
 package com.hbhw.jippy.domain.payment.entity;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.Id;
 import lombok.*;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -13,6 +14,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Builder
 public class PaymentHistory {
 
@@ -21,14 +23,17 @@ public class PaymentHistory {
     @Field("UUID")
     private String UUID;
 
+    @Field("payment_key")
+    private String paymentKey;
+
     @Field("store_id")
     private Integer storeId;
 
     @Field("total_cost")
     private Integer totalCost;
 
-    @Field("created_at")
-    private String createdAt;
+    @Field("updated_at")
+    private String updatedAt;
 
     @Field("payment_status")
     private String paymentStatus;

@@ -9,6 +9,8 @@ import com.hbhw.jippy.domain.payment.enums.PaymentType;
 import com.hbhw.jippy.domain.payment.mapper.PaymentMapper;
 import com.hbhw.jippy.domain.payment.repository.PaymentHistoryCustomRepository;
 import com.hbhw.jippy.domain.payment.repository.PaymentHistoryRepository;
+import com.hbhw.jippy.global.code.CommonErrorCode;
+import com.hbhw.jippy.global.error.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -27,7 +29,6 @@ public class PaymentHistoryService {
      * 결재내역 저장
      */
     public void savePaymentHistory(PaymentHistory paymentHistory) {
-
 
 
         paymentHistoryRepository.save(paymentHistory);
@@ -79,7 +80,7 @@ public class PaymentHistoryService {
                 .paymentStatus(paymentHistoryEntity.getPaymentStatus())
                 .buyProduct(paymentHistoryEntity.getBuyProductHistories())
                 .totalCost(paymentHistoryEntity.getTotalCost())
-                .createdAt(paymentHistoryEntity.getCreatedAt())
+                .createdAt(paymentHistoryEntity.getUpdatedAt())
                 .UUID(paymentHistoryEntity.getUUID())
                 .build();
     }
@@ -118,6 +119,6 @@ public class PaymentHistoryService {
      */
     public PaymentHistory getPaymentHistory(String UUID) {
         return paymentHistoryRepository.findByUUID(UUID)
-                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 결제기록 입니다."));
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재하지 않는 결제기록 입니다."));
     }
 }

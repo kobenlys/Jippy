@@ -1,17 +1,14 @@
 package com.hbhw.jippy.domain.payment.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hbhw.jippy.domain.cash.service.CashService;
-import com.hbhw.jippy.domain.payment.dto.request.ConfirmCashPaymentRequest;
-import com.hbhw.jippy.domain.payment.dto.request.ConfirmPaymentRequest;
-import com.hbhw.jippy.domain.payment.dto.request.ConfirmQrCodePaymentRequest;
-import com.hbhw.jippy.domain.payment.dto.request.PaymentProductInfoRequest;
+import com.hbhw.jippy.domain.payment.dto.request.*;
 import com.hbhw.jippy.domain.payment.entity.BuyProduct;
 import com.hbhw.jippy.domain.payment.entity.PaymentHistory;
 import com.hbhw.jippy.domain.payment.enums.PaymentStatus;
 import com.hbhw.jippy.domain.payment.enums.PaymentType;
+import com.hbhw.jippy.domain.payment.repository.PaymentHistoryCustomRepository;
 import com.hbhw.jippy.domain.product.entity.Ingredient;
 import com.hbhw.jippy.domain.product.entity.Product;
 import com.hbhw.jippy.domain.product.entity.Recipe;
@@ -27,7 +24,6 @@ import com.hbhw.jippy.utils.UUIDProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.net.URI;
@@ -42,35 +38,41 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
-
     private final CashService cashService;
     private final ProductService productService;
     private final PaymentHistoryService paymentHistoryService;
-    private final UUIDProvider uuidProvider;
+    private final PaymentHistoryCustomRepository paymentHistoryCustomRepository;
     private final StockStatusService stockStatusService;
     private final StockService stockService;
     private final RecipeService recipeService;
+    private final UUIDProvider uuidProvider;
     private final ObjectMapper objectMapper;
 
-    @Transactional
+    /**
+     * 현금결제 확인
+     */
     public void cashPaymentConfirm(ConfirmCashPaymentRequest confirmCashPaymentRequest) {
         Integer storeId = confirmCashPaymentRequest.getStoreId();
-        basePaymentConfirm(confirmCashPaymentRequest);
+        basePaymentConfirm(confirmCashPaymentRequest, PaymentType.CASH, "");
         cashService.updatePaymentCash(storeId, confirmCashPaymentRequest.getCashRequest());
     }
 
-    @Transactional
-    public void qrCodePaymentConfirm(ConfirmQrCodePaymentRequest confirmQrCodePaymentRequest){
-        try{
+    /**
+     * QrCode 결제 확인
+     */
+    public void qrCodePaymentConfirm(ConfirmQrCodePaymentRequest confirmQrCodePaymentRequest) {
+        try {
             HttpResponse<String> response = tossPaymentConfirm(confirmQrCodePaymentRequest);
-            basePaymentConfirm(confirmQrCodePaymentRequest);
-        }catch (Exception e) {
+            basePaymentConfirm(confirmQrCodePaymentRequest, PaymentType.QRCODE, confirmQrCodePaymentRequest.getPaymentKey());
+        } catch (Exception e) {
             throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "결제서버와 연결이 불가능합니다. 다시 시도해 주세요");
         }
     }
 
-    @Transactional
-    public void basePaymentConfirm(ConfirmPaymentRequest confirmPaymentRequest){
+    /**
+     * 결제 후 재고량스텟 감소 및 결제내역 저장
+     */
+    private void basePaymentConfirm(ConfirmPaymentRequest confirmPaymentRequest, PaymentType paymentType, String PaymentKey) {
         List<BuyProduct> buyProductList = new ArrayList<>();
 
         for (PaymentProductInfoRequest info : confirmPaymentRequest.getProductList()) {
@@ -86,10 +88,11 @@ public class PaymentService {
         }
 
         PaymentHistory paymentHistoryEntity = PaymentHistory.builder()
-                .paymentType(PaymentType.CASH.getDescription())
+                .paymentType(paymentType.getDescription())
                 .paymentStatus(PaymentStatus.PURCHASE.getDescription())
                 .UUID(uuidProvider.generateUUID())
-                .createdAt(DateTimeUtils.nowString())
+                .paymentKey(PaymentKey)
+                .updatedAt(DateTimeUtils.nowString())
                 .totalCost(confirmPaymentRequest.getTotalCost())
                 .storeId(confirmPaymentRequest.getStoreId())
                 .buyProductHistories(buyProductList)
@@ -131,7 +134,74 @@ public class PaymentService {
         paymentHistoryService.savePaymentHistory(paymentHistoryEntity);
     }
 
-    public HttpResponse<String> tossPaymentConfirm(ConfirmQrCodePaymentRequest request) throws IOException, InterruptedException {
+    /**
+     * 현금결제 취소
+     */
+    public void cancelCashPayment(CancelCashPaymentRequest request) {
+        PaymentHistory paymentHistoryEntity = paymentHistoryService
+                .getPaymentHistory(request.getPaymentUUIDRequest().getPaymentUUID());
+
+        baseCancelPayment(request.getPaymentUUIDRequest(), paymentHistoryEntity);
+        cashService.updatePaymentCash(paymentHistoryEntity.getStoreId(), request.getCashRequest());
+    }
+
+    /**
+     * QrCode 결제 취소
+     */
+    public void cancelQrCodePayment(PaymentUUIDRequest paymentUUIDRequest) {
+        PaymentHistory paymentHistoryEntity = paymentHistoryService
+                .getPaymentHistory(paymentUUIDRequest.getPaymentUUID());
+        try {
+            tossPaymentCancel(paymentHistoryEntity.getPaymentKey());
+            baseCancelPayment(paymentUUIDRequest, paymentHistoryEntity);
+        } catch (Exception e) {
+            throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "결제서버와 연결이 불가능합니다. 다시 시도해 주세요");
+        }
+    }
+
+    /**
+     * 결제 취소에 따른 재고량 복구 및 결제취소 내역 업데이트
+     */
+    private void baseCancelPayment(PaymentUUIDRequest paymentUUIDRequest, PaymentHistory paymentHistoryEntity) {
+        List<InventoryItem> inventoryItemList = stockService.getInventoryItemList(paymentUUIDRequest.getStoreId());
+        List<StockStatusService.StockUpdateInfo> stockUpdateInfoList = new ArrayList<>();
+
+        for (BuyProduct product : paymentHistoryEntity.getBuyProductHistories()) {
+            Recipe recipeEntity = recipeService.getRecipe(product.getProductId());
+
+            for (Ingredient ingredient : recipeEntity.getIngredient()) {
+                InventoryItem beforeInventory = new InventoryItem();
+
+                for (InventoryItem item : inventoryItemList) {
+                    if (ingredient.getName().equals(item.getStockName())) {
+                        beforeInventory = item;
+                        break;
+                    }
+                }
+
+                InventoryItem newInventoryItem = InventoryItem.builder()
+                        .stock(beforeInventory.getStock())
+                        .stockName(beforeInventory.getStockName())
+                        .stockTotalValue(beforeInventory.getStockTotalValue())
+                        .updatedAt(beforeInventory.getUpdatedAt())
+                        .build();
+
+                StockStatusService.StockUpdateInfo stockUpdateInfo = StockStatusService.StockUpdateInfo.builder()
+                        .item(newInventoryItem)
+                        .decreaseAmount(ingredient.getAmount() * product.getProductQuantity() * -1)
+                        .build();
+
+                stockUpdateInfoList.add(stockUpdateInfo);
+            }
+        }
+        paymentHistoryCustomRepository.updateTypeHistory(paymentHistoryEntity.getUUID(), PaymentStatus.CANCEL.getDescription());
+        stockStatusService.updateBatchStockStatus(paymentUUIDRequest.getStoreId(), stockUpdateInfoList);
+    }
+
+    /**
+     * TossPay 결제 확인 요청
+     */
+    private HttpResponse<String> tossPaymentConfirm(ConfirmQrCodePaymentRequest request) throws IOException, InterruptedException {
         JsonNode json = objectMapper.createObjectNode()
                 .put("orderId", request.getOrderId())
                 .put("paymentKey", request.getPaymentKey())
@@ -139,15 +209,37 @@ public class PaymentService {
         String requestBody = objectMapper.writeValueAsString(json);
         // 이거 숨길게여...
         String secreteKey = "test_sk_ex6BJGQOVDk9Mw4M99eO3W4w2zNb";
-        String auth = Base64.getEncoder().encodeToString((secreteKey+":").getBytes());
+        String auth = Base64.getEncoder().encodeToString((secreteKey + ":").getBytes());
 
         HttpRequest confirmRequest = HttpRequest.newBuilder()
                 .uri(URI.create("https://api.tosspayments.com/v1/payments/confirm"))
-                .header("Authorization", "Basic "+ auth)
+                .header("Authorization", "Basic " + auth)
                 .header("Content-Type", "application/json")
                 .method("POST", HttpRequest.BodyPublishers.ofString(requestBody))
                 .build();
 
         return HttpClient.newHttpClient().send(confirmRequest, HttpResponse.BodyHandlers.ofString());
+    }
+
+    /**
+     * TossPay 결제 취소 요청
+     */
+    private void tossPaymentCancel(String paymentKey) throws IOException, InterruptedException {
+        JsonNode json = objectMapper.createObjectNode()
+                .put("cancelReason", "환불 요청");
+
+        String requestBody = objectMapper.writeValueAsString(json);
+        // 하드코딩 수정하겠습니다.
+        String secreteKey = "test_sk_ex6BJGQOVDk9Mw4M99eO3W4w2zNb";
+        String auth = Base64.getEncoder().encodeToString((secreteKey + ":").getBytes());
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://api.tosspayments.com/v1/payments/" + paymentKey + "/cancel"))
+                .header("Authorization", "Basic " + auth)
+                .header("Content-Type", "application/json")
+                .method("POST", HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
+
+        HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
     }
 }

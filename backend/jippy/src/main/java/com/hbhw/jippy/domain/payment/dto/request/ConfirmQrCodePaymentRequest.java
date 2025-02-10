@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ConfirmQrCodePaymentRequest extends ConfirmPaymentRequest{
+public class ConfirmQrCodePaymentRequest extends ConfirmPaymentRequest {
     private String orderId;
     private String paymentKey;
     private Long amount;
