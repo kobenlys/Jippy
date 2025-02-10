@@ -32,24 +32,131 @@ model = AutoModelForSequenceClassification.from_pretrained(model_name, num_label
 model.to(device)
 model.eval()
 
-def predict_sentiment(text: str, max_len: int = 128) -> str:
-    """
-    입력 텍스트에 대해 KcELECTRA 모델로 긍정/부정을 예측하는 함수.
-    """
+import pandas as pd
+
+df = pd.read_excel('data/한국어_단발성_대화_데이터셋.xlsx')
+print(df.head())
+
+print(df['Emotion'].value_counts())
+
+# 7개 감정을 긍정/부정 두 클래스로 매핑하는 함수 정의
+def map_emotion_to_sentiment(emotion):
+    if emotion in ['행복', '놀람', '중립']:
+        return 1  # positive
+    else:
+        return 0  # negative
+
+# 새 레이블 컬럼 추가
+df['label'] = df['Emotion'].apply(map_emotion_to_sentiment)
+
+
+from sklearn.model_selection import train_test_split
+
+# 학습/검증 데이터 분할 (레이블 분포 유지)
+train_df, val_df = train_test_split(df, test_size=0.2, stratify=df['label'], random_state=42)
+
+# KcELECTRA 토크나이저 로드 (모델 이름은 Beomi/KcELECTRA-base로 설정)
+tokenizer = AutoTokenizer.from_pretrained("Beomi/KcELECTRA-base")
+
+# 최대 토큰 길이 설정
+MAX_LEN = 128
+
+class EmotionDataset(torch.utils.data.Dataset):
+    def __init__(self, dataframe, tokenizer, max_length):
+        self.data = dataframe.reset_index(drop=True)
+        self.tokenizer = tokenizer
+        self.max_length = max_length
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        text = str(self.data.loc[idx, "Sentence"])
+        label = int(self.data.loc[idx, "label"])
+        encoding = self.tokenizer(
+            text,
+            add_special_tokens=True,
+            max_length=self.max_length,
+            truncation=True,
+            padding='max_length',
+            return_tensors="pt"
+        )
+        # encoding은 배치 차원이 있으므로 squeeze하여 차원 축소
+        item = {key: encoding[key].squeeze() for key in encoding}
+        item["labels"] = torch.tensor(label, dtype=torch.long)
+        return item
+
+# 데이터셋 객체 생성
+train_dataset = EmotionDataset(train_df, tokenizer, MAX_LEN)
+val_dataset = EmotionDataset(val_df, tokenizer, MAX_LEN)
+
+
+from transformers import TrainingArguments, Trainer
+import accelerate
+
+training_args = TrainingArguments(
+    output_dir="./kcelectra_sentiment",
+    num_train_epochs=3,
+    per_device_train_batch_size=16,
+    per_device_eval_batch_size=16,
+    evaluation_strategy="epoch",  # 평가 주기를 epoch 단위로 설정
+    save_strategy="epoch",         # 저장 주기를 epoch 단위로 설정
+    logging_dir="./logs",
+    logging_steps=10,
+    load_best_model_at_end=True,
+    metric_for_best_model="accuracy"
+)
+
+
+# 평가 지표 함수 정의 (accuracy)
+import numpy as np
+import evaluate  # huggingface evaluate 라이브러리
+
+accuracy_metric = evaluate.load("accuracy")
+
+def compute_metrics(eval_pred):
+    logits, labels = eval_pred
+    predictions = np.argmax(logits, axis=-1)
+    return accuracy_metric.compute(predictions=predictions, references=labels)
+
+# Trainer 객체 생성
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    train_dataset=train_dataset,
+    eval_dataset=val_dataset,
+    compute_metrics=compute_metrics
+)
+
+# 모델 학습
+trainer.train()
+
+# 평가
+eval_result = trainer.evaluate()
+print("\nEvaluation results:")
+print(eval_result)
+
+
+tokenizer = AutoTokenizer.from_pretrained("Beomi/KcELECTRA-base")
+
+def predict_sentiment(model, tokenizer, sentence, max_len=128):
+    model.eval()
     encoding = tokenizer(
-        text,
+        sentence,
         add_special_tokens=True,
         max_length=max_len,
         truncation=True,
-        padding="max_length",
+        padding='max_length',
         return_tensors="pt"
     )
-    # GPU 사용 시 encoding 값들을 device로 이동
+    # GPU 사용 시 디바이스로 이동 (예: device가 "cuda"라면)
     encoding = {key: val.to(device) for key, val in encoding.items()}
+    
     with torch.no_grad():
         outputs = model(**encoding)
         logits = outputs.logits
         prediction = torch.argmax(logits, dim=1).item()
+    
     return "positive" if prediction == 1 else "negative"
 
 mecab = Mecab(dicpath='/usr/local/lib/mecab/dic/mecab-ko-dic')
@@ -98,7 +205,7 @@ def get_predictions(store_id: int):
         results = connection.execute(query, {"store_id": store_id})
         for row in results:
             category, content, created_at = row
-            sentiment = predict_sentiment(content)
+            sentiment = predict_sentiment(model, tokenizer, content)
             review_data = {
                 "category": CATEGORY_MAPPING.get(category, str(category)),
                 "content": content,
