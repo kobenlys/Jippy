@@ -1,5 +1,5 @@
 # 기존 konlpy 이미지 사용 (필요한 경우 태그를 확인)
-FROM rurouni24/konlpy
+FROM rurouni24/konlpy:python3.7
 
 WORKDIR /app
 
