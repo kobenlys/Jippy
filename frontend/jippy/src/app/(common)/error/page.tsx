@@ -1,4 +1,5 @@
-import Link from 'next/link';
+import Link from "next/link";
+import Image from "next/image";
 
 export const dynamic = "force-static"; // 정적 페이지 강제 설정
 
@@ -8,7 +9,11 @@ export default function FeedbackPage() {
       <div className="bg-white w-full max-w-md sm:max-w-lg md:max-w-xl min-h-screen flex flex-col justify-center items-center px-8 py-12 shadow-lg">
          <div className="flex-grow flex flex-col items-center justify-center">
           {/* 아이콘 */}
-          <img className="w-48 h-48" src="/images/AccessDeny.png" alt="Access Denied" />
+          <Image
+            src="/images/AccessDeny.png"
+            alt="Access Denied"
+            className="w-48 h-48"
+          />
           <p className="text-xl font-semibold mt-6">잘못된 접근이거나 요청하신</p>
           <p className="text-xl font-bold text-[#FF5C00] mt-2">페이지를 찾을 수 없습니다.</p>
         </div>

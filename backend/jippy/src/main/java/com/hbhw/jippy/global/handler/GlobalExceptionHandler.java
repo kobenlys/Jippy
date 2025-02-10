@@ -1,6 +1,7 @@
 package com.hbhw.jippy.global.handler;
 
 import com.hbhw.jippy.global.code.CommonErrorCode;
+import com.hbhw.jippy.global.error.BusinessException;
 import com.hbhw.jippy.global.response.ErrorResponse;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -65,6 +66,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoSuchElementException.class)
     protected ResponseEntity<ErrorResponse> handlerNoSuchElementException(NoSuchElementException e) {
         final ErrorResponse errorResponse = ErrorResponse.of(CommonErrorCode.NOT_FOUND, e);
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    protected ResponseEntity<ErrorResponse> handlerBusinessException(BusinessException e) {
+        final ErrorResponse errorResponse = ErrorResponse.of(e.getErrorCode(), e.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 

@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
 import Link from "next/link";
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const SignupOwner = () => {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    name: '',
-    age: '',
-    email: '',
-    password: '',
+    name: "",
+    age: "",
+    email: "",
+    password: "",
   });
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -26,27 +26,25 @@ const SignupOwner = () => {
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/signup/owner`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...formData,
-          userType: 'OWNER',
+          userType: "OWNER",
         }),
       });
 
-      const responseData = await response.json();
-
-      if (response.ok && responseData.success) {
-        // 회원가입 성공 시 바로 로그인 페이지로 이동
-        router.push('/login');
+      if (response.ok) {
+        await response.json(); // 응답 확인용으로만 사용
+        router.push("/login");
       } else {
-        setError(responseData.message || '회원가입에 실패했습니다.');
+        const errorData = await response.json();
+        setError(errorData.message || "회원가입에 실패했습니다.");
       }
-    } catch (error: unknown) {
-      console.error("회원가입 에러:", error);
-      setError('서버와의 연결에 실패했습니다.');
+    } catch {
+      setError("서버와의 연결에 실패했습니다.");
     } finally {
       setIsLoading(false);
     }
@@ -112,10 +110,10 @@ const SignupOwner = () => {
           </div>
           <button
             type="submit"
-            className={`w-full p-3 text-white rounded ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-gray-900 hover:bg-gray-800'}`}
+            className={`w-full p-3 text-white rounded ${isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-gray-900 hover:bg-gray-800"}`}
             disabled={isLoading}
           >
-            {isLoading ? '처리중...' : '가입하기'}
+            {isLoading ? "처리중..." : "가입하기"}
           </button>
 
           <div className="h-px bg-gray-300 my-6"></div>
@@ -126,6 +124,7 @@ const SignupOwner = () => {
               로그인
             </Link>
           </div>
+
         </form>
       </div>
     </div>

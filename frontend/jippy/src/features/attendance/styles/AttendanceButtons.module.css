@@ -1,0 +1,43 @@
+.container {
+  @apply flex gap-4 p-4;
+}
+
+.button {
+  @apply flex-1 rounded-lg p-4 flex flex-col items-center justify-center h-32 transition-colors duration-200;
+}
+
+.checkInButton {
+  @apply bg-[#F27B39] hover:bg-orange-600 text-white;
+}
+
+.checkInButtonDisabled {
+  @apply bg-orange-300;
+}
+
+.checkOutButton {
+  @apply bg-[#3D3733] hover:bg-amber-900 text-white;
+}
+
+.checkOutButtonDisabled {
+  @apply bg-amber-300;
+}
+
+.buttonTimeText {
+  @apply text-2xl font-bold;
+}
+
+.buttonStatusText {
+  @apply mt-2;
+}
+
+.buttonDefaultText {
+  @apply text-xl font-semibold;
+}
+
+.overlay {
+  @apply fixed inset-0 bg-black/60 backdrop-blur-sm z-40;
+}
+
+.notificationWrapper {
+  @apply relative z-50;
+}

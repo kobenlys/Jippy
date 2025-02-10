@@ -1,6 +1,7 @@
 package com.hbhw.jippy.domain.product.mapper;
 
 import com.hbhw.jippy.domain.product.dto.response.CategoryListResponse;
+import com.hbhw.jippy.domain.product.dto.response.ProductDetailResponse;
 import com.hbhw.jippy.domain.product.dto.response.ProductListResponse;
 import com.hbhw.jippy.domain.product.entity.Product;
 import com.hbhw.jippy.domain.product.entity.ProductCategory;
@@ -27,6 +28,20 @@ public class ProductMapper {
         return CategoryListResponse.builder()
                 .id(productCategory.getId())
                 .categoryName(productCategory.getProductCategoryName())
+                .build();
+    }
+
+    public static ProductDetailResponse convertProductDetailResponse(Product product){
+        return ProductDetailResponse.builder()
+                .productSize(product.getProductSize())
+                .productType(product.getProductType())
+                .productId(product.getId())
+                .storeId(product.getStore().getId())
+                .productCategoryId(product.getProductCategory().getId())
+                .status(product.isStatus())
+                .price(product.getPrice())
+                .image(product.getImage())
+                .name(product.getName())
                 .build();
     }
 

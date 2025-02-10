@@ -9,11 +9,12 @@ import com.hbhw.jippy.domain.product.entity.ProductCategory;
 import com.hbhw.jippy.domain.product.mapper.ProductMapper;
 import com.hbhw.jippy.domain.product.repository.ProductRepository;
 import com.hbhw.jippy.domain.store.entity.Store;
-import com.hbhw.jippy.domain.user.entity.UserOwner;
-import com.hbhw.jippy.domain.user.enums.StaffType;
-import jakarta.transaction.Transactional;
+import com.hbhw.jippy.domain.store.service.StoreService;
+import com.hbhw.jippy.global.code.CommonErrorCode;
+import com.hbhw.jippy.global.error.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -24,22 +25,20 @@ import java.util.Optional;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final StoreService storeService;
+    private final ProductCategoryService productCategoryService;
 
     /**
      * 상품 등록
      */
     public void createProduct(CreateProductRequest createProductRequest) {
-//        Store store = storeRepository.findById(createProductRequest.getStoreId())
-//                .orElseThrow(() -> new RuntimeException("Store not found"));
+        Store storeEntity = storeService.getStoreEntity(createProductRequest.getStoreId());
+        ProductCategory productCategoryEntity = productCategoryService
+                .getProductCategoryEntity(createProductRequest.getStoreId(), createProductRequest.getProductCategoryId());
 
-//        ProductCategory productCategory = productCategoryRepository.findById(createProductRequest.getProductCategoryId())
-//                .orElseThrow(() -> new RuntimeException("ProductCategory not found"));
-
-        Store storeDump = new Store(1, new UserOwner("dwa", "dwa", "Dwa", "dwa", StaffType.STAFF), "dwa", "daw", "dwa", 2, "dwa");
-        ProductCategory categoryDump = new ProductCategory(0, storeDump, "상점");
         Product product = Product.builder()
-                .store(storeDump)
-                .productCategory(categoryDump)
+                .store(storeEntity)
+                .productCategory(productCategoryEntity)
                 .name(createProductRequest.getName())
                 .price(createProductRequest.getPrice())
                 .status(createProductRequest.isStatus())
@@ -72,7 +71,7 @@ public class ProductService {
         Product productEntity = getProduct(storeId, productId);
 
         return ProductDetailResponse.builder()
-                .id(productEntity.getId())
+                .productId(productEntity.getId())
                 .storeId(storeId)
                 .name(productEntity.getName())
                 .status(productEntity.isStatus())
@@ -111,10 +110,9 @@ public class ProductService {
     /**
      * 매장번호, 상품번호로 상품 조회하기
      */
+    @Transactional(readOnly = true)
     public Product getProduct(Integer storeId, Long productId) {
         Optional<Product> product = productRepository.findByIdAndStoreId(productId, storeId);
-        return product.orElseThrow(() -> new NoSuchElementException("존재하지 않는 상품입니다."));
+        return product.orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "상품이 존재하지 않습니다."));
     }
-
-
 }

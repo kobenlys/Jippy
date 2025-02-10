@@ -6,31 +6,31 @@ import com.hbhw.jippy.domain.product.entity.ProductCategory;
 import com.hbhw.jippy.domain.product.mapper.ProductMapper;
 import com.hbhw.jippy.domain.product.repository.ProductCategoryRepository;
 import com.hbhw.jippy.domain.store.entity.Store;
-import com.hbhw.jippy.domain.user.entity.UserOwner;
-import com.hbhw.jippy.domain.user.enums.StaffType;
+import com.hbhw.jippy.domain.store.service.StoreService;
+import com.hbhw.jippy.global.code.CommonErrorCode;
+import com.hbhw.jippy.global.error.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
 public class ProductCategoryService {
-
     private final ProductCategoryRepository productCategoryRepository;
+    private final StoreService storeService;
 
     /***
      *  카테고리 추가
      */
     public void addCategory(String categoryName, Integer storeId) {
-        // 쿼리로 체크할 예정
-        Store storeDump = new Store(storeId, new UserOwner("dwa", "dwa", "Dwa", "dwa", StaffType.STAFF), "dwa", "daw", "dwa", 2, "dwa");
+
+        Store storeEntity = storeService.getStoreEntity(storeId);
 
         ProductCategory productCategoryEntity = ProductCategory.builder()
                 .productCategoryName(categoryName)
-                .store(storeDump)
+                .store(storeEntity)
                 .build();
 
         productCategoryRepository.save(productCategoryEntity);
@@ -69,7 +69,7 @@ public class ProductCategoryService {
      */
     public ProductCategory getProductCategoryEntity(Integer storeId, Integer categoryId) {
         return productCategoryRepository.findByStoreIdAndId(storeId, categoryId)
-                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 카테고리 입니다"));
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재하지 않는 카테고리 입니다"));
     }
 
 }
