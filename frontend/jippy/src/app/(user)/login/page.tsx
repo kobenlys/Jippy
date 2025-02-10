@@ -5,21 +5,30 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useDispatch } from "react-redux";
 import { loginStart, loginSuccess, loginFailure } from "@/redux/slices/userSlice";
+import { setShops, setCurrentShop } from "@/redux/slices/shopSlice"; // 여기 주목
 import { AppDispatch } from "@/redux/store";
 import "@/app/globals.css";
 import styles from "@/app/page.module.css";
-import Button from "@/components/ui/button/Button";
+import Button from "@/features/common/components/ui/button/Button";
 
 interface LoginResponse {
+  success: boolean;
   data: {
-    accessToken: string;
-    refreshToken: string;
-    id: string;
+    id: number;
     email: string;
     name: string;
-    age: number;
+    age: string;
     staff_type: string;
+    access_token: string;
+    refresh_token: string;
   };
+}
+
+interface Shop {
+  id: number;
+  userOwnerId: number;
+  name: string;
+  address: string;
 }
 
 const LoginPage = () => {
@@ -40,33 +49,71 @@ const LoginPage = () => {
         body: JSON.stringify({ email, password, userType }),
         credentials: "include",
       });
-
+  
       if (!response.ok) {
         const errorData = await response.text();
         throw new Error(`로그인 실패: ${response.status} - ${errorData}`);
       }
-
+  
       const responseData: LoginResponse = await response.json();
-      const { data } = responseData;
-
-      if (data.accessToken) {
-        localStorage.setItem("token", data.accessToken);
-
+      
+      if (responseData.success && responseData.data.access_token) {
+        localStorage.setItem("token", responseData.data.access_token);
+  
+        // 로그인 성공 처리
         dispatch(loginSuccess({
-          user: {
-            id: data.id,
-            email: data.email,
-            name: data.name,
-            age: data.age.toString(),
-            userType: data.staff_type,
+          profile: {
+            id: responseData.data.id.toString(),
+            email: responseData.data.email,
+            name: responseData.data.name,
+            age: responseData.data.age,
+            userType: responseData.data.staff_type,
           },
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
+          accessToken: responseData.data.access_token,
+          refreshToken: responseData.data.refresh_token,
         }));
-
-        router.replace("/confirm");
+  
+        // 매장 정보 조회 및 리덕스 업데이트
+        try {
+          const shopsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/store/select`, {
+            headers: {
+              "Authorization": `Bearer ${responseData.data.access_token}`,
+              "Content-Type": "application/json"
+            }
+          });
+  
+          if (shopsResponse.ok) {
+            const shopsData = await shopsResponse.json();
+            
+            // 로그인한 사용자의 ID와 일치하는 매장 필터링
+            const userShops: Shop[] = shopsData.data.filter(
+              (shop: Shop) => shop.userOwnerId === responseData.data.id
+            );
+            
+            // 매장이 있다면 리덕스에 업데이트
+            if (userShops.length > 0) {
+              // 모든 매장 설정
+              dispatch(setShops(userShops));
+              
+              // 첫 번째 매장을 현재 매장으로 설정
+              dispatch(setCurrentShop(userShops[0]));
+              
+              // 확인 페이지로 이동
+              router.replace("/confirm");
+            } else {
+              // 매장이 없는 경우 처리 (예: 매장 생성 페이지로 리다이렉트)
+              router.replace("/create-shop");
+            }
+          } else {
+            // 매장 조회 실패 시 에러 처리
+            throw new Error("매장 정보를 불러오는 데 실패했습니다.");
+          }
+        } catch (error) {
+          console.error("매장 정보 조회 중 오류 발생:", error);
+          dispatch(loginFailure(error instanceof Error ? error.message : "매장 정보 조회 중 오류가 발생했습니다."));
+        }
       } else {
-        throw new Error("토큰이 응답에 없습니다");
+        throw new Error("로그인 응답이 올바르지 않습니다");
       }
     } catch (error) {
       dispatch(loginFailure(error instanceof Error ? error.message : "로그인 중 오류가 발생했습니다"));
@@ -122,7 +169,7 @@ const LoginPage = () => {
         className="border p-2 m-2 w-64 rounded"
       />
 
-      <Button type="orange" onClick={handleLogin}>
+      <Button variant="orange" onClick={handleLogin}>
         로그인
       </Button>
 

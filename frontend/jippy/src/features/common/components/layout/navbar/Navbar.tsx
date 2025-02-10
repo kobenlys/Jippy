@@ -14,7 +14,7 @@ const Navbar = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const { auth, user } = useSelector((state: RootState) => state.user); // state 구조 변경
-  const accessToken = auth.accessToken; // auth에서 accessToken 가져오기
+  const accessToken = useSelector((state: RootState) => state.user.accessToken);
   const email = user?.email; // user에서 email 가져오기
   
   const [isOpen, setIsOpen] = useState(false);

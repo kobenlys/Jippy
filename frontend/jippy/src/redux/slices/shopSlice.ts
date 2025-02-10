@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import { RootState } from "@/redux/store";
 
-interface Shop {
+export interface Shop {
   id: number;
   userOwnerId: number;
   name: string;
@@ -12,21 +12,17 @@ interface Shop {
 }
 
 interface ShopState {
-  shop: {
-    shops: Shop[];
-    currentShop: Shop | null;
-    isLoading: boolean;
-    error: string | null;
-  }
+  shops: Shop[];
+  currentShop: Shop | null;
+  isLoading: boolean;
+  error: string | null;
 }
 
 const initialState: ShopState = {
-  shop: {
-    shops: [],
-    currentShop: null,
-    isLoading: false,
-    error: null,
-  }
+  shops: [],
+  currentShop: null,
+  isLoading: false,
+  error: null,
 };
 
 export const createShop = createAsyncThunk(
@@ -34,9 +30,9 @@ export const createShop = createAsyncThunk(
   async (shopData: Omit<Shop, "id" | "totalCash">, { rejectWithValue, getState }) => {
     try {
       const state = getState() as RootState;
-      const token = state.user.auth.accessToken;  // 수정된 경로
+      const accessToken = state.user.accessToken;
 
-      if (!token) {
+      if (!accessToken) {
         throw new Error("인증 토큰이 없습니다.");
       }
 
@@ -44,7 +40,7 @@ export const createShop = createAsyncThunk(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Authorization": `Bearer ${accessToken}`
         },
         body: JSON.stringify({
           ...shopData,
@@ -58,7 +54,7 @@ export const createShop = createAsyncThunk(
 
       const data = await response.json();
       return data.data;
-    } catch (error: unknown) {
+    } catch (error) {
       console.error("매장 등록 중 오류 발생:", error);
       return rejectWithValue("매장 등록에 실패했습니다.");
     }
@@ -70,15 +66,15 @@ export const fetchShop = createAsyncThunk(
   async (userId: number, { rejectWithValue, getState }) => {
     try {
       const state = getState() as RootState;
-      const token = state.user.auth.accessToken;
+      const accessToken = state.user.accessToken;
 
-      if (!token) {
+      if (!accessToken) {
         throw new Error("인증 토큰이 없습니다.");
       }
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/store/select`, {
         headers: {
-          "Authorization": `Bearer ${token}`,
+          "Authorization": `Bearer ${accessToken}`,
           "Content-Type": "application/json"
         }
       });
@@ -88,11 +84,16 @@ export const fetchShop = createAsyncThunk(
       }
 
       const jsonResponse = await response.json();
-      const filteredShops = jsonResponse.data.filter((shop: Shop) => 
+      
+      if (!jsonResponse.success) {
+        throw new Error("매장 정보 조회에 실패했습니다.");
+      }
+
+      const userShops = jsonResponse.data.filter((shop: Shop) => 
         shop.userOwnerId === userId
       );
 
-      return filteredShops;
+      return userShops;
     } catch (error: unknown) {
       console.error("매장 정보 조회 중 오류 발생:", error);
       return rejectWithValue("매장 정보를 불러오지 못했습니다.");
@@ -100,136 +101,62 @@ export const fetchShop = createAsyncThunk(
   }
 );
 
-export const updateShop = createAsyncThunk(
-  "shop/update",
-  async ({ storeId, data }: { storeId: number; data: Partial<Shop> }, { rejectWithValue, getState }) => {
-    try {
-      const state = getState() as RootState;
-      const token = state.user.auth.accessToken;  // 수정된 경로
-
-      if (!token) {
-        throw new Error("인증 토큰이 없습니다.");
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/store/update/${storeId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(data)
-      });
-
-      if (!response.ok) {
-        throw new Error("매장 정보 수정 실패");
-      }
-
-      const result = await response.json();
-      return result.data;
-    } catch (error: unknown) {
-      console.error("매장 정보 수정 중 오류 발생:", error);
-      return rejectWithValue("매장 정보 수정에 실패했습니다.");
-    }
-  }
-);
-
-export const deleteShop = createAsyncThunk(
-  "shop/deleteShop",
-  async (storeId: number, { rejectWithValue, getState }) => {
-    try {
-      const state = getState() as RootState;
-      const token = state.user.auth.accessToken;  // 수정된 경로
-
-      if (!token) {
-        throw new Error("인증 토큰이 없습니다.");
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/store/delete/${storeId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        }
-      });
-
-      // 서버 응답 본문 로깅 추가
-      const responseBody = await response.text();
-      console.log('서버 응답:', responseBody);
-
-      if (!response.ok) {
-        throw new Error("매장 삭제 실패");
-      }
-
-      return storeId;
-    } catch (error: unknown) {
-      console.error("매장 삭제 중 오류 발생:", error);
-      return rejectWithValue("매장 삭제에 실패했습니다.");
-    }
-  }
-);
-
 const shopSlice = createSlice({
   name: "shop",
   initialState,
-  reducers: {},
+  reducers: {
+    // 명시적으로 setShops 리듀서 추가
+    setShops: (state, action: PayloadAction<Shop[]>) => {
+      state.shops = action.payload;
+      // 첫 번째 매장을 현재 매장으로 자동 설정
+      state.currentShop = action.payload.length > 0 ? action.payload[0] : null;
+    },
+    setCurrentShop: (state, action: PayloadAction<Shop>) => {
+      state.currentShop = action.payload;
+    },
+    clearShopState: (state) => {
+      state.shops = [];
+      state.currentShop = null;
+      state.isLoading = false;
+      state.error = null;
+    }
+  },
   extraReducers: (builder) => {
     builder
       .addCase(createShop.pending, (state) => {
-        state.shop.isLoading = true;
-        state.shop.error = null;
+        state.isLoading = true;
+        state.error = null;
       })
       .addCase(createShop.fulfilled, (state, action: PayloadAction<Shop>) => {
-        state.shop.isLoading = false;
-        state.shop.currentShop = action.payload;
-        state.shop.shops.push(action.payload);
+        state.isLoading = false;
+        state.currentShop = action.payload;
+        state.shops.push(action.payload);
       })
       .addCase(createShop.rejected, (state, action) => {
-        state.shop.isLoading = false;
-        state.shop.error = action.payload as string;
+        state.isLoading = false;
+        state.error = action.payload as string;
       })
       .addCase(fetchShop.pending, (state) => {
-        state.shop.isLoading = true;
-        state.shop.error = null;
+        state.isLoading = true;
+        state.error = null;
       })
       .addCase(fetchShop.fulfilled, (state, action: PayloadAction<Shop[]>) => {
-        state.shop.isLoading = false;
-        state.shop.shops = action.payload;
-        state.shop.currentShop = action.payload[0] || null;
+        state.isLoading = false;
+        state.shops = action.payload;
+        state.currentShop = action.payload[0] || null;
       })
       .addCase(fetchShop.rejected, (state, action) => {
-        state.shop.isLoading = false;
-        state.shop.error = action.payload as string;
-      })
-      .addCase(updateShop.pending, (state) => {
-        state.shop.isLoading = true;
-        state.shop.error = null;
-      })
-      .addCase(updateShop.fulfilled, (state, action: PayloadAction<Shop>) => {
-        state.shop.isLoading = false;
-        state.shop.currentShop = action.payload;
-        const index = state.shop.shops.findIndex(shop => shop.id === action.payload.id);
-        if (index !== -1) {
-          state.shop.shops[index] = action.payload;
-        }
-      })
-      .addCase(updateShop.rejected, (state, action) => {
-        state.shop.isLoading = false;
-        state.shop.error = action.payload as string;
-      })
-      .addCase(deleteShop.pending, (state) => {
-        state.shop.isLoading = true;
-        state.shop.error = null;
-      })
-      .addCase(deleteShop.fulfilled, (state, action: PayloadAction<number>) => {
-        state.shop.isLoading = false;
-        state.shop.shops = state.shop.shops.filter(shop => shop.id !== action.payload);
-        state.shop.currentShop = state.shop.shops.length > 0 ? state.shop.shops[0] : null;
-      })
-      .addCase(deleteShop.rejected, (state, action) => {
-        state.shop.isLoading = false;
-        state.shop.error = action.payload as string;
+        state.isLoading = false;
+        state.error = action.payload as string;
       });
   },
 });
+
+// 액션 크리에이터들을 명시적으로 내보내기
+export const { 
+  setShops, 
+  setCurrentShop, 
+  clearShopState 
+} = shopSlice.actions;
 
 export default shopSlice.reducer;

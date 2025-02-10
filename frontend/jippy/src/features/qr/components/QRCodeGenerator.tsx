@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { Printer } from "lucide-react";
-import Button from "@/components/ui/button/Button";
-import { Card, CardContent } from "@/components/ui/card/Card";
+import { Button } from "@/features/common/components/ui/button";
+import { Card, CardContent } from "@/features/common/components/ui/card/Card";
 import { RootState } from "@/redux/store";
 import { QR_PAGES } from "@/features/qr/constants/pages";
 import Image from "next/image";
@@ -71,7 +71,7 @@ const QRCodeCRUD: React.FC = () => {
           <Button
             key={page.path}
             onClick={() => handleQRGenerate(page.name, page.path)}
-            type={selectedQR === page.name ? "orangeBorder" : "default"}
+            variant={selectedQR === page.name ? "orangeBorder" : "default"}
           >
             {page.name} QR
           </Button>

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Input } from "@/components/ui/input/Input";
+import { Input } from "@/features/common/components/ui/input/Input";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 
@@ -9,7 +9,7 @@ interface FormFieldProps {
   label: string;
   name: string;
   type?: string;
-  value?: string;
+  value?: string | number;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
   required?: boolean;

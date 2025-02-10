@@ -1,7 +1,7 @@
 "use client";
 
 import "./staff-globals.css"
-import BottomNavBar from "@/components/layout/navbar/BottomNavBar"
+import BottomNavBar from "@/features/common/components/layout/navbar/BottomNavBar"
 
 export default function StaffLayout({
   children,
