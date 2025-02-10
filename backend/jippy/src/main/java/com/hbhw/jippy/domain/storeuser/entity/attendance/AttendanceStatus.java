@@ -17,4 +17,5 @@ public class AttendanceStatus {
     @Id
     private Integer id;
     private String staffName;
+    private Integer storeId;
 }
