@@ -17,7 +17,10 @@ RUN wget https://bitbucket.org/eunjeon/mecab-ko/downloads/mecab-0.996-ko-0.9.2.t
     rm mecab-0.996-ko-0.9.2.tar.gz
 
 WORKDIR /build/mecab-0.996-ko-0.9.2
-RUN ./configure && make && make install && ldconfig
+RUN ./configure --prefix=/usr/local && \
+    make && \
+    make install && \
+    ldconfig
 
 #########################
 # mecab-ko-dic 설치
@@ -28,10 +31,10 @@ RUN wget https://bitbucket.org/eunjeon/mecab-ko-dic/downloads/mecab-ko-dic-2.0.1
     rm mecab-ko-dic-2.0.1-20150920.tar.gz
 
 WORKDIR /build/mecab-ko-dic-2.0.1-20150920
-RUN ./autogen.sh && ./configure && make && make install && ldconfig
+RUN ./autogen.sh && ./configure --prefix=/usr/local && make && make install && ldconfig
 
 #########################
-# mecab-python 설치
+# mecab-python 설치 (Python binding)
 #########################
 WORKDIR /build
 RUN git clone https://bitbucket.org/eunjeon/mecab-python-0.996.git mecab-python-0.996
@@ -48,15 +51,14 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends openjdk-17-jdk-headless && \
     rm -rf /var/lib/apt/lists/*
 
-# 빌드 단계에서 설치한 MeCab 관련 바이너리, 라이브러리 등을 런타임 이미지로 복사
-# 보통 /usr/local에 설치되었으므로, 필요한 경우 이 부분은 생략해도 됩니다.
-# 예: COPY --from=builder /usr/local/bin/mecab* /usr/local/bin/
-#     COPY --from=builder /usr/local/lib/libmecab* /usr/local/lib/
+#########################
+# 빌드 단계에서 설치한 MeCab 관련 바이너리, 라이브러리 복사
+#########################
+COPY --from=builder /usr/local /usr/local
 
 #########################
-# PATH 업데이트
+# PATH 업데이트: /usr/local/bin 에 설치된 MeCab 바이너리를 찾을 수 있도록 함
 #########################
-# MeCab가 /usr/local/bin에 설치되어 있으므로 해당 경로를 PATH에 추가
 ENV PATH="/usr/local/bin:${PATH}"
 
 # 애플리케이션 코드 및 requirements.txt 복사
