@@ -6,11 +6,11 @@ from sqlalchemy.engine import Engine
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from konlpy.tag import Mecab
+from collections import Counter
 import uvicorn
 from dotenv import load_dotenv
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("Using device:", device)
 
 # Load environment variables from .env file
 load_dotenv()
