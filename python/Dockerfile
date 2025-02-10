@@ -14,7 +14,7 @@ COPY requirements.txt .
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends openjdk-11-jdk-headless python3-dev && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* \
     && pip install --no-cache-dir --disable-pip-version-check -r requirements.txt
 
 # Install Mecab
