@@ -32,10 +32,10 @@ public class StockStatusService {
         private int decreaseAmount;
     }
 
-    private boolean checkIsDessert(InventoryItem item) {
+    private boolean checkIsCountable(InventoryItem item) {
         return item.getStock().stream()
                 .findFirst()
-                .map(stock -> "개".equals(stock.getStockUnit()) && stock.getStockUnitSize() == 0)
+                .map(stock -> "개".equals(stock.getStockUnit()))
                 .orElse(false);
     }
 
@@ -52,7 +52,7 @@ public class StockStatusService {
                 .currentStock(item.getStockTotalValue() - soldStock)
                 .soldPercentage(calculatePercentage(soldStock, item.getStockTotalValue()))
                 .lastUpdated(currentTime)
-                .isDessert(checkIsDessert(item))
+                .isDessert(checkIsCountable(item))
                 .isLowStock(false)
                 .build();
 
@@ -80,7 +80,7 @@ public class StockStatusService {
                 .currentStock(targetItem.getStockTotalValue())
                 .soldPercentage(0)
                 .lastUpdated(currentTime)
-                .isDessert(checkIsDessert(targetItem))
+                .isDessert(checkIsCountable(targetItem))
                 .isLowStock(false)
                 .build();
 
@@ -121,7 +121,7 @@ public class StockStatusService {
                     .currentStock(item.getStockTotalValue() - decreaseAmount)
                     .soldPercentage(calculatePercentage(decreaseAmount, item.getStockTotalValue()))
                     .lastUpdated(currentTime)
-                    .isDessert(checkIsDessert(item))
+                    .isDessert(checkIsCountable(item))
                     .isLowStock(false)
                     .build();
         } else {
@@ -169,7 +169,7 @@ public class StockStatusService {
                         .currentStock(update.getItem().getStockTotalValue() - update.getDecreaseAmount())
                         .soldPercentage(calculatePercentage(update.getDecreaseAmount(), update.getItem().getStockTotalValue()))
                         .lastUpdated(currentTime)
-                        .isDessert(checkIsDessert(update.getItem()))
+                        .isDessert(checkIsCountable(update.getItem()))
                         .isLowStock(false)
                         .build();
                 checkLowStock(newStatus);
