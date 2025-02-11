@@ -4,6 +4,7 @@ sqlalchemy
 mysql-connector-python
 pandas
 openpyxl
+scikit-learn
 transformers
 torch --index-url https://download.pytorch.org/whl/cpu
 accelerate
