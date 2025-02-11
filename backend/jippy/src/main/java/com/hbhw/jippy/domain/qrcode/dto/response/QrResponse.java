@@ -17,7 +17,6 @@ public class QrResponse {
     private String explain;
 
     @Schema(description = "QR 생성 일시")
-    @JsonProperty("created_at")
     private String createdAt;
 
     public static QrResponse of(QrCode qrCode) {

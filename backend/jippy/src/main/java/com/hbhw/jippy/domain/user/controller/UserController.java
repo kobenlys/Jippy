@@ -3,6 +3,7 @@ package com.hbhw.jippy.domain.user.controller;
 import com.hbhw.jippy.domain.user.dto.request.*;
 import com.hbhw.jippy.domain.user.dto.response.LoginResponse;
 import com.hbhw.jippy.domain.user.dto.response.UpdateUserResponse;
+import com.hbhw.jippy.domain.user.dto.response.UserInfoResponse;
 import com.hbhw.jippy.domain.user.enums.UserType;
 import com.hbhw.jippy.domain.user.service.UserService;
 import com.hbhw.jippy.global.response.ApiResponse;
@@ -74,5 +75,12 @@ public class UserController {
     public ApiResponse<?> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
         userService.resetPassword(request);
         return ApiResponse.success(HttpStatus.OK);
+    }
+
+    @Operation(summary = "사용자 정보 조회", description = "현재 로그인한 사용자 정보를 조회합니다")
+    @GetMapping("/select/userInfo")
+    public ApiResponse<UserInfoResponse> getUserInfo() {
+        UserInfoResponse response = userService.getUserInfo();
+        return ApiResponse.success(response);
     }
 }

@@ -1,6 +1,5 @@
 package com.hbhw.jippy.domain.user.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hbhw.jippy.domain.user.enums.UserType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
@@ -25,6 +24,5 @@ public class LoginRequest {
 
     @Schema(description = "사용자 유형(OWNER/STAFF)", example = "OWNER")
     @NotNull(message = "사용자 유형은 필수입니다.")
-    @JsonProperty("user_type")
     private UserType userType;
 }

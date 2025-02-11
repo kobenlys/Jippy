@@ -3,16 +3,15 @@ package com.hbhw.jippy.domain.user.dto.response;
 import com.hbhw.jippy.domain.user.entity.BaseUser;
 import com.hbhw.jippy.domain.user.enums.StaffType;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
-@Schema(description = "로그인 응답")
+@Schema(description = "사용자 정보 응답")
 @Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
 @Builder
-public class LoginResponse {
+public class UserInfoResponse {
     @Schema(description = "사용자 ID")
     private Integer id;
 
@@ -28,22 +27,17 @@ public class LoginResponse {
     @Schema(description = "사용자 유형(OWNER/MANAGER/STAFF)")
     private StaffType staffType;
 
-    @Schema(description = "Access Token")
-    private String accessToken;
+    @Schema(description = "가입 일시")
+    private String createdAt;
 
-    @Schema(description = "Refresh Token")
-    private String refreshToken;
-
-    public static LoginResponse of(BaseUser user, StaffType staffType, String accessToken, String refreshToken) {
-        LoginResponseBuilder builder = LoginResponse.builder()
+    public static UserInfoResponse of(BaseUser user, StaffType staffType) {
+        return UserInfoResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .name(user.getName())
                 .age(user.getAge())
                 .staffType(staffType)
-                .accessToken(accessToken)
-                .refreshToken(refreshToken);
-
-        return builder.build();
+                .createdAt(user.getCreatedAt())
+                .build();
     }
 }
