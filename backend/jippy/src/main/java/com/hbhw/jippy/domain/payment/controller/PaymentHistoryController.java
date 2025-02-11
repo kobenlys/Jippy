@@ -36,15 +36,15 @@ public class PaymentHistoryController {
 
         // 덤프 데이터 (삭제 예정)
         BuyProduct buyProduct1 = BuyProduct.builder()
-                .productId(1)
-                .productCategory(101)
+                .productId(1L)
+                .productCategoryId(101)
                 .productQuantity(2)
                 .price(1000)
                 .build();
 
         BuyProduct buyProduct2 = BuyProduct.builder()
-                .productId(2)
-                .productCategory(102)
+                .productId(2L)
+                .productCategoryId(102)
                 .productQuantity(1)
                 .price(500)
                 .build();
@@ -58,7 +58,7 @@ public class PaymentHistoryController {
                 .storeId(storeId)  // 예시 storeId
                 .paymentStatus(PaymentStatus.PURCHASE.getDescription())
                 .paymentType(PaymentType.QRCODE.getDescription())
-                .createdAt(DateTimeUtils.nowString())
+                .updatedAt(DateTimeUtils.nowString())
                 .buyProductHistories(buyProductHistories)
                 .totalCost(250000)
                 .build();
