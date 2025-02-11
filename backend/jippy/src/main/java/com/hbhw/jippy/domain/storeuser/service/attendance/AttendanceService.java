@@ -74,6 +74,7 @@ public class AttendanceService {
         AttendanceStatus attendanceStatus = AttendanceStatus.builder()
                 .id(staff.getId())
                 .staffName(staff.getUserStaff().getName())
+                .storeId(storeId)
                 .build();
 
         AttendanceStatus savedStatus = attendanceStatusRepository.save(attendanceStatus);

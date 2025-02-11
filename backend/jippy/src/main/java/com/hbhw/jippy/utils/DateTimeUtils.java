@@ -46,6 +46,23 @@ public class DateTimeUtils {
     }
 
     /**
+     * 해당 월의 시작 시점으로 변환
+     */
+    public static String getStartOfMonth(String yearMonth) {
+        return yearMonth + "-01 00:00:00";
+    }
+
+    /**
+     * 해당 월의 마지막 시점으로 변환
+     */
+    public static String getEndOfMonth(String yearMonth) {
+        LocalDateTime startDateTime = parseDateTime(getStartOfMonth(yearMonth));
+        return startDateTime
+                .withDayOfMonth(startDateTime.toLocalDate().lengthOfMonth())
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + " 23:59:59";
+    }
+
+    /**
      * Jwt 생성 시간용 메서드
      */
     public static Date now() {
