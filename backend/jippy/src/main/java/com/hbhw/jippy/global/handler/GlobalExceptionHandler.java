@@ -3,6 +3,7 @@ package com.hbhw.jippy.global.handler;
 import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
 import com.hbhw.jippy.global.response.ErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.NoSuchElementException;
@@ -73,6 +75,17 @@ public class GlobalExceptionHandler {
     protected ResponseEntity<ErrorResponse> handlerBusinessException(BusinessException e) {
         final ErrorResponse errorResponse = ErrorResponse.of(e.getErrorCode(), e.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(NoHandlerFoundException ex, HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        if (uri.startsWith("/v3/api-docs") || uri.startsWith("/swagger-ui")) {
+            return ResponseEntity.notFound().build();
+        }
+
+        final ErrorResponse errorResponse = ErrorResponse.of(CommonErrorCode.NOT_FOUND, "리소스를 찾지 못했습니다.");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
     @ExceptionHandler(Exception.class)
