@@ -23,6 +23,7 @@ import com.hbhw.jippy.utils.DateTimeUtils;
 import com.hbhw.jippy.utils.UUIDProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -34,7 +35,6 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -47,6 +47,9 @@ public class PaymentService {
     private final RecipeService recipeService;
     private final UUIDProvider uuidProvider;
     private final ObjectMapper objectMapper;
+
+    @Value("${toss.secret.key}")
+    private String secretKey;
 
     /**
      * 현금결제 확인
@@ -207,9 +210,7 @@ public class PaymentService {
                 .put("paymentKey", request.getPaymentKey())
                 .put("amount", request.getAmount().intValue());
         String requestBody = objectMapper.writeValueAsString(json);
-        // 이거 숨길게여...
-        String secreteKey = "test_sk_ex6BJGQOVDk9Mw4M99eO3W4w2zNb";
-        String auth = Base64.getEncoder().encodeToString((secreteKey + ":").getBytes());
+        String auth = Base64.getEncoder().encodeToString((secretKey + ":").getBytes());
 
         HttpRequest confirmRequest = HttpRequest.newBuilder()
                 .uri(URI.create("https://api.tosspayments.com/v1/payments/confirm"))
@@ -227,11 +228,8 @@ public class PaymentService {
     private void tossPaymentCancel(String paymentKey) throws IOException, InterruptedException {
         JsonNode json = objectMapper.createObjectNode()
                 .put("cancelReason", "환불 요청");
-
         String requestBody = objectMapper.writeValueAsString(json);
-        // 하드코딩 수정하겠습니다.
-        String secreteKey = "test_sk_ex6BJGQOVDk9Mw4M99eO3W4w2zNb";
-        String auth = Base64.getEncoder().encodeToString((secreteKey + ":").getBytes());
+        String auth = Base64.getEncoder().encodeToString((secretKey + ":").getBytes());
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://api.tosspayments.com/v1/payments/" + paymentKey + "/cancel"))
