@@ -17,8 +17,8 @@ const Button = ({
   disabled = false 
 }: ButtonProps) => {
   const baseStyles = variant.includes("Square") 
-    ? "rounded-md w-64 transition-colors"
-    : "rounded-full w-64 mt-3 p-3 transition-colors";
+    ? "rounded-md w-64 transition-colors flex items-center justify-center"
+    : "rounded-full w-64 mt-3 p-3 transition-colors flex items-center justify-center";
   
   const buttonStyle = cn(
     baseStyles,

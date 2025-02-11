@@ -1,39 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { fetchProducts } from "@/redux/slices/productSlice";
 import CreateCategory from "@/features/order/components/category";
-
-interface MenuItem {
-  id: number;
-  name: string;
-  price: number;
-  category: string;
-  image: string;
-}
+import Image from "next/image";
+import { ProductDetailResponse } from "@/features/product/types";
+import Button from "@/features/common/components/ui/button/Button";
 
 interface OrderItem {
-  menuItem: MenuItem;
+  menuItem: ProductDetailResponse;
   quantity: number;
 }
 
 const POSOrderPage = () => {
-  const DEFAULT_IMAGE_PATH = "/images/PlaceHolder.png";
-
+  const dispatch = useDispatch<AppDispatch>();
+  const currentShop = useSelector((state: RootState) => state.shop.currentShop);
+  const { products, loading, error } = useSelector((state: RootState) => state.product);
+  
   const [selectedCategory, setSelectedCategory] = useState<string>("전체");
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  
+  const DEFAULT_IMAGE_PATH = "/images/ProductPlaceholder.png";
 
-  const menuItems: MenuItem[] = [
-    {
-      id: 1,
-      name: "카페라떼 (HOT)",
-      price: 4500,
-      category: "커피",
-      image: DEFAULT_IMAGE_PATH,
-    },
-    // Add more menu items here
-  ];
+  // 이미지 URL 유효성 검사 함수
+  const getValidImageUrl = (url: string): string => {
+    if (!url) return DEFAULT_IMAGE_PATH;
+    return url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/") 
+      ? url 
+      : DEFAULT_IMAGE_PATH;
+  };
 
-  const addToOrder = (menuItem: MenuItem) => {
+  useEffect(() => {
+    if (currentShop?.id) {
+      dispatch(fetchProducts(currentShop.id));
+    }
+  }, [dispatch, currentShop?.id]);
+
+  const productList = products?.data || [];
+  
+  const filteredProducts = selectedCategory === "전체"
+    ? productList
+    : productList.filter((item) => item.productCategoryId.toString() === selectedCategory);
+
+  const addToOrder = (menuItem: ProductDetailResponse) => {
     setOrderItems((prev) => {
       const existingItem = prev.find(
         (item) => item.menuItem.id === menuItem.id
@@ -49,13 +60,13 @@ const POSOrderPage = () => {
     });
   };
 
-  const removeFromOrder = (menuItem: MenuItem) => {
+  const removeFromOrder = (menuItem: ProductDetailResponse) => {
     setOrderItems((prev) =>
       prev.filter((item) => item.menuItem.id !== menuItem.id)
     );
   };
 
-  const updateQuantity = (menuItem: MenuItem, quantity: number) => {
+  const updateQuantity = (menuItem: ProductDetailResponse, quantity: number) => {
     if (quantity <= 0) {
       removeFromOrder(menuItem);
       return;
@@ -68,109 +79,173 @@ const POSOrderPage = () => {
     );
   };
 
-  const filteredMenuItems =
-    selectedCategory === "전체"
-      ? menuItems
-      : menuItems.filter((item) => item.category === selectedCategory);
-
   const totalAmount = orderItems.reduce(
     (sum, item) => sum + item.menuItem.price * item.quantity,
     0
   );
 
+  if (!currentShop) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-gray-500">매장을 선택해주세요.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen max-h-screen overflow-hidden">
       {/* 메뉴 영역 */}
-      <div className="flex-1 flex flex-col">
-        {/* 카테고리 영역 - 상단 고정 */}
-        <div className="w-full sticky top-0">
+      <div className="flex-1 flex flex-col h-full">
+      {/* 카테고리 영역 */}
+      <div className="p-3 w-full bg-white sticky top-0 border-b border-gray-200">
+        <div className="px-4">
           <CreateCategory
             selectedCategory={selectedCategory}
             onCategorySelect={setSelectedCategory}
           />
         </div>
+      </div>
 
-        {/* 메뉴 그리드 영역 - 스크롤 가능 */}
-        <div className="flex-1 overflow-auto p-4">
-          <div className="grid grid-cols-3 gap-4">
-            {filteredMenuItems.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => addToOrder(item)}
-                className="bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow"
-              >
-                <div className="w-full h-32 bg-gray-200 rounded-lg mb-2" />
-                <h3 className="font-semibold">{item.name}</h3>
-                <p className="text-gray-600">{item.price.toLocaleString()}원</p>
-              </div>
-            ))}
-          </div>
+        {/* 메뉴 그리드 영역 */}
+        <div className="flex-1 overflow-auto m-4">
+          {loading ? (
+            <div className="flex justify-center items-center h-full">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
+            </div>
+          ) : error ? (
+            <div className="flex justify-center items-center h-full text-red-500">
+              {error}
+            </div>
+          ) : (
+            <div className="grid grid-cols-4 gap-4 mb-8">
+              {filteredProducts.length === 0 ? (
+                <div className="col-span-4 text-center py-8 text-gray-500">
+                  표시할 상품이 없습니다.
+                </div>
+              ) : (
+                filteredProducts.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => item.status && addToOrder(item)}
+                    className={`bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow ${
+                      !item.status && "opacity-50"
+                    }`}
+                  >
+                    <div className="relative w-full h-32 bg-gray-200 rounded-lg mb-2">
+                      <Image
+                        src={getValidImageUrl(item.image)}
+                        alt={item.name}
+                        fill
+                        className="object-cover rounded-lg"
+                        onError={(e) => {
+                          const imgElement = e.target as HTMLImageElement;
+                          if (imgElement.src !== DEFAULT_IMAGE_PATH) {
+                            imgElement.src = DEFAULT_IMAGE_PATH;
+                          }
+                        }}
+                      />
+                    </div>
+                    <h3 className="font-semibold">{item.name}</h3>
+                    <p className="text-gray-600">{item.price.toLocaleString()}원</p>
+                    {!item.status && (
+                      <span className="inline-block mt-2 px-2 py-1 text-sm bg-red-100 text-red-800 rounded">
+                        품절
+                      </span>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* 주문 영역 */}
-      <div className="w-96 bg-gray-100 p-4 flex flex-col">
-        <h2 className="text-xl font-bold mb-4">주문 내역</h2>
-
-        {/* 주문 목록 */}
-        <div className="flex-1 overflow-auto">
-          {orderItems.map((item) => (
-            <div
-              key={item.menuItem.id}
-              className="bg-white p-4 rounded-lg mb-2"
-            >
-              <div className="flex justify-between items-center mb-2">
-                <span className="font-semibold">{item.menuItem.name}</span>
-                <button
-                  onClick={() => removeFromOrder(item.menuItem)}
-                  className="text-red-500"
-                >
-                  삭제
-                </button>
-              </div>
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
+      <div className="w-[420px] bg-gray-100 flex flex-col h-full">
+        {/* 주문 내역 헤더 */}
+        <div className="p-6 bg-white border-b border-gray-200 w-full sticky top-0">
+          <h2 className="text-xl font-bold">주문 내역</h2>
+        </div>
+        
+        {/* 주문 목록 - 스크롤 가능 영역 */}
+        <div className="flex-1 overflow-auto p-4">
+          {orderItems.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              주문 내역이 없습니다.
+            </div>
+          ) : (
+            orderItems.map((item) => (
+              <div
+                key={item.menuItem.id}
+                className="bg-white p-4 rounded-lg mb-2 shadow-sm"
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-semibold">{item.menuItem.name}</span>
                   <button
-                    onClick={() =>
-                      updateQuantity(item.menuItem, item.quantity - 1)
-                    }
-                    className="px-2 py-1 bg-gray-200 rounded"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFromOrder(item.menuItem);
+                    }}
+                    className="text-red-500 hover:text-red-600"
                   >
-                    -
-                  </button>
-                  <span>{item.quantity}</span>
-                  <button
-                    onClick={() =>
-                      updateQuantity(item.menuItem, item.quantity + 1)
-                    }
-                    className="px-2 py-1 bg-gray-200 rounded"
-                  >
-                    +
+                    삭제
                   </button>
                 </div>
-                <span>
-                  {(item.menuItem.price * item.quantity).toLocaleString()}원
-                </span>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateQuantity(item.menuItem, item.quantity - 1);
+                      }}
+                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                    >
+                      -
+                    </button>
+                    <span>{item.quantity}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateQuantity(item.menuItem, item.quantity + 1);
+                      }}
+                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <span>
+                    {(item.menuItem.price * item.quantity).toLocaleString()}원
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
-        {/* 총액 및 결제 버튼 */}
-        <div className="mt-4">
-          <div className="flex justify-between items-center mb-4">
-            <span className="font-bold">총 금액</span>
-            <span className="font-bold text-xl">
-              {totalAmount.toLocaleString()}원
-            </span>
+        {/* 결제 영역 - 고정 높이 */}
+        <div className="min-h-[320px] border-t border-gray-200 p-8 bg-white rounded-xl">
+          {/* 총 금액 표시 */}
+          <div className="mb-4">
+            <div className="flex justify-between items-center">
+              <span className="font-bold text-gray-800 text-xl">총 금액</span>
+              <span className="font-bold text-3xl text-gray-800">
+                {totalAmount.toLocaleString()}원
+              </span>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button className="w-full py-3 bg-gray-500 text-white rounded-lg">
+
+          {/* 결제 버튼 */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <button className="w-full py-6 bg-gray-500 text-white text-xl font-medium rounded-lg hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">
               현금
             </button>
-            <button className="w-full py-3 bg-pink-500 text-white rounded-lg">
+            <button className="w-full py-6 bg-pink-500 text-white text-xl font-medium rounded-lg hover:bg-pink-600 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-opacity-50">
               QR
             </button>
+          </div>
+
+          <div className="mb-8">
+            <Button variant="brownSquare" className="w-full">결제하기</Button>
           </div>
         </div>
       </div>

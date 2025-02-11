@@ -1,69 +1,81 @@
+// features/product/hooks/useProductForm.ts
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { createProduct } from "@/redux/slices/productSlice";
-import { ProductFormData } from "../types";
+
+type ProductSize = 'S' | 'M' | 'L';
+type ProductType = 'HOT' | 'ICE';
+
+interface ProductFormData {
+  name: string;
+  price: number;
+  productCategoryId: number;
+  image: File | null;
+  productSize: ProductSize;
+  productType: ProductType;
+  status: boolean;
+}
+
+interface ProductFormErrors {
+  name?: string;
+  price?: string;
+  productCategoryId?: string;
+  productSize?: string;
+  productType?: string;
+  submit?: string;
+}
 
 export const useProductForm = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { loading, error } = useSelector((state: RootState) => state.product);
-  const { currentStore } = useSelector((state: RootState) => state.shop);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const { currentShop } = useSelector((state: RootState) => state.shop);
+  const { loading: isLoading, error } = useSelector((state: RootState) => state.product);
 
   const [formData, setFormData] = useState<ProductFormData>({
     name: "",
     price: 0,
+    productCategoryId: 0,
+    image: null,
     productSize: "M",
     productType: "HOT",
     status: true,
-    storeId: currentStore?.id || 0,
-    productCategoryId: 0,
-    image: null
   });
 
-  const [errors, setErrors] = useState<Partial<Record<keyof ProductFormData, string>>>({});
+  const [errors, setErrors] = useState<ProductFormErrors>({});
+  const [selectedCategory, setSelectedCategory] = useState("전체");
+  const [imagePreview, setImagePreview] = useState<string>("");
 
   const validateForm = () => {
-    const newErrors: Partial<Record<keyof ProductFormData, string>> = {};
+    const newErrors: ProductFormErrors = {};
 
-    if (!formData.name) {
-      newErrors.name = "상품명을 입력해주세요";
+    if (!formData.name.trim()) {
+      newErrors.name = "상품명을 입력해주세요.";
     }
-    if (!formData.price || formData.price <= 0) {
-      newErrors.price = "올바른 가격을 입력해주세요";
+
+    if (formData.price <= 0) {
+      newErrors.price = "올바른 가격을 입력해주세요.";
     }
-    if (!formData.productSize) {
-      newErrors.productSize = "상품 사이즈를 선택해주세요";
-    }
-    if (!formData.productType) {
-      newErrors.productType = "상품 온도를 선택해주세요";
-    }
-    if (!formData.productCategoryId) {
-      newErrors.productCategoryId = "카테고리를 선택해주세요";
+
+    if (!formData.productCategoryId && selectedCategory !== "전체") {
+      newErrors.productCategoryId = "카테고리를 선택해주세요.";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type } = e.target as HTMLInputElement;
-    setFormData({
-      ...formData,
-      [name]: type === "number" ? Number(value) : value,
-    });
-    if (errors[name as keyof ProductFormData]) {
-      setErrors({ ...errors, [name]: "" });
-    }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "price" ? Number(value) : value,
+    }));
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData({ ...formData, image: file });
-      // 이미지 미리보기 생성
+      setFormData((prev) => ({ ...prev, image: file }));
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -72,51 +84,69 @@ export const useProductForm = () => {
     }
   };
 
-  const handleCategoryChange = (categoryId: number) => {
-    setFormData({ ...formData, productCategoryId: categoryId });
-    if (errors.productCategoryId) {
-      setErrors({ ...errors, productCategoryId: "" });
-    }
+  const handleCategorySelect = (categoryName: string, categoryId: number) => {
+    setSelectedCategory(categoryName);
+    setFormData((prev) => ({
+      ...prev,
+      productCategoryId: categoryId,
+    }));
   };
 
-  const handleSizeChange = (size: ProductFormData["productSize"]) => {
-    setFormData({ ...formData, productSize: size });
-    if (errors.productSize) {
-      setErrors({ ...errors, productSize: "" });
-    }
+  const handleSizeChange = (size: ProductSize) => {
+    setFormData((prev) => ({ ...prev, productSize: size }));
   };
 
-  const handleTypeChange = (type: ProductFormData["productType"]) => {
-    setFormData({ ...formData, productType: type });
-    if (errors.productType) {
-      setErrors({ ...errors, productType: "" });
-    }
+  const handleTypeChange = (type: ProductType) => {
+    setFormData((prev) => ({ ...prev, productType: type }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      const formDataToSend = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value !== null) {
-          formDataToSend.append(key, value);
-        }
+
+    if (!validateForm()) return;
+
+    if (!currentShop?.id) {
+      setErrors({ ...errors, submit: "매장 정보를 찾을 수 없습니다." });
+      return;
+    }
+
+    try {
+      await dispatch(
+        createProduct({
+          formData,
+          storeId: currentShop.id,
+        })
+      ).unwrap();
+
+      // 성공 시 폼 초기화
+      setFormData({
+        name: "",
+        price: 0,
+        productCategoryId: 0,
+        image: null,
+        productSize: "M",
+        productType: "HOT",
+        status: true,
       });
-      dispatch(createProduct(formDataToSend));
+      setImagePreview("");
+      setSelectedCategory("전체");
+    } catch (error) {
+      console.error("Product creation failed:", error);
     }
   };
 
   return {
     formData,
     errors,
-    isLoading: loading,
+    isLoading,
     error,
+    selectedCategory,
     imagePreview,
     handleChange,
-    handleImageChange,
-    handleCategoryChange,
+    handleSubmit,
+    handleCategorySelect,
+    handleImageUpload,
     handleSizeChange,
     handleTypeChange,
-    handleSubmit,
   };
 };

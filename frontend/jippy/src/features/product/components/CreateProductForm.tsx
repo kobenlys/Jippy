@@ -1,12 +1,13 @@
 "use client";
 
 import React from "react";
-import { useProductForm } from "../hooks/userProductForm";
+import { useProductForm } from "@/features/product/hooks/userProductForm";
+import "@/app/globals.css";
 import { FormField } from "@/features/common/components/ui/form/FormFields";
 import { Alert, AlertDescription } from "@/features/common/components/ui/Alert";
 import { Button } from "@/features/common/components/ui/button";
-import { ProductSize, ProductType } from "../types";
-import Image from "next/image";
+import CreateCategory from "@/features/order/components/category";
+import ProductImageUpload from "@/features/product/components/ProductImageUpload";
 
 const CreateProductForm = () => {
   const {
@@ -14,18 +15,28 @@ const CreateProductForm = () => {
     errors,
     isLoading,
     error,
+    selectedCategory,
     imagePreview,
     handleChange,
-    handleImageChange,
-    handleCategoryChange,
+    handleSubmit,
+    handleCategorySelect,
+    handleImageUpload,
     handleSizeChange,
     handleTypeChange,
-    handleSubmit,
   } = useProductForm();
 
   return (
     <div className="flex flex-col items-center justify-center">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-md">
+        {/* 카테고리 선택 */}
+        <div className="mb-4">
+          <CreateCategory
+            selectedCategory={selectedCategory}
+            onCategorySelect={handleCategorySelect}
+          />
+        </div>
+
+        {/* 상품 기본 정보 */}
         <FormField
           label="상품명"
           name="name"
@@ -45,63 +56,35 @@ const CreateProductForm = () => {
           required
         />
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium mb-2">
-            카테고리
-            <span className="text-red-500">*</span>
-          </label>
-          <select
-            name="productCategoryId"
-            value={formData.productCategoryId}
-            onChange={(e) => handleCategoryChange(Number(e.target.value))}
-            className="w-full p-2 border rounded-md"
-          >
-            <option value="">카테고리 선택</option>
-            {/* 카테고리 옵션들은 API로 받아온 데이터를 매핑 */}
-          </select>
-          {errors.productCategoryId && (
-            <p className="text-red-500 text-sm mt-1">{errors.productCategoryId}</p>
-          )}
-        </div>
+        {/* 상품 이미지 업로드 */}
+        <FormField
+          label="상품 이미지"
+          name="image"
+          customInput={
+            <ProductImageUpload
+              imagePreview={imagePreview}
+              onImageUpload={handleImageUpload}
+            />
+          }
+        />
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium mb-2">
-            상품 이미지
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="w-full"
-          />
-          {imagePreview && (
-            <div className="mt-2">
-              <Image
-                src={imagePreview}
-                alt="상품 이미지 미리보기"
-                width={200}
-                height={200}
-                className="rounded-md"
-              />
-            </div>
-          )}
-        </div>
-
+        {/* 상품 사이즈 선택 */}
         <div className="space-y-2">
           <label className="block text-sm font-medium mb-2">
             상품 사이즈
             <span className="text-red-500">*</span>
           </label>
           <div className="grid grid-cols-3 gap-2">
-          {(["S", "M", "L"] as ProductSize[]).map((size) => (
-            <Button
+            {(["S", "M", "L"] as const).map((size) => (
+              <Button
                 key={size}
+                type="button"
                 variant={formData.productSize === size ? "orange" : "default"}
                 onClick={() => handleSizeChange(size)}
                 className="w-full"
-            >
+              >
                 {size}
-            </Button>
+              </Button>
             ))}
           </div>
           {errors.productSize && (
@@ -109,21 +92,23 @@ const CreateProductForm = () => {
           )}
         </div>
 
+        {/* 상품 온도 선택 */}
         <div className="space-y-2">
           <label className="block text-sm font-medium mb-2">
             상품 온도
             <span className="text-red-500">*</span>
           </label>
           <div className="grid grid-cols-2 gap-2">
-          {(["HOT", "ICE"] as ProductType[]).map((type) => (
-            <Button
+            {(["HOT", "ICE"] as const).map((type) => (
+              <Button
                 key={type}
+                type="button"
                 variant={formData.productType === type ? "orange" : "default"}
                 onClick={() => handleTypeChange(type)}
                 className="w-full"
-            >
+              >
                 {type}
-            </Button>
+              </Button>
             ))}
           </div>
           {errors.productType && (
@@ -138,9 +123,10 @@ const CreateProductForm = () => {
         )}
 
         <Button
-          variant="brown"
+          variant="orange"
           disabled={isLoading}
-          className="w-full mt-4 bg-orange-500 text-white hover:bg-orange-600"
+          type="submit"
+          className="w-full mt-4"
         >
           {isLoading ? "등록 중..." : "상품 등록"}
         </Button>
