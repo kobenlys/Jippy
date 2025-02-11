@@ -32,12 +32,16 @@ public abstract class BaseUser {
     @Column(name = "created_at", nullable = false, length = 20)
     private String createdAt;
 
-    protected BaseUser(String email, String password, String name, String age) {
+    @Column(name = "fcm_token", nullable = true, length = 256)
+    private String fcmToken;
+
+    protected BaseUser(String email, String password, String name, String age, String fcmToken) {
         this.email = email;
         this.password = password;
         this.name = name;
         this.age = age;
         this.createdAt = DateTimeUtils.nowString();
+        this.fcmToken = fcmToken;
     }
 
     public void updateInfo(String name, String age) {
@@ -52,4 +56,7 @@ public abstract class BaseUser {
     public void updatePassword(String newPassword) {
         this.password = newPassword;
     }
+
+    // 만약 사용자가 초기에 알림 허용을 거부하고 나중에 허용 승인 할 경우
+    public void updateFcmToken(String fcmToken) {this.fcmToken = fcmToken;}
 }
