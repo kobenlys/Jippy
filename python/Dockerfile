@@ -3,6 +3,10 @@ FROM python:3.11-slim as builder
 
 WORKDIR /build
 
+# 파이썬 출력 버퍼링 및 pyc 파일 생성을 비활성화
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
 # 시스템 업데이트 및 빌드에 필요한 패키지 설치
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
