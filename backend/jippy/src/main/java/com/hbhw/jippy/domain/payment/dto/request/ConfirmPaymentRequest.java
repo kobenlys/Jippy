@@ -7,7 +7,6 @@ import lombok.ToString;
 
 import java.util.List;
 
-@ToString
 @Getter
 @Setter
 public class ConfirmPaymentRequest {
