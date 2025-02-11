@@ -42,6 +42,7 @@ const data = {
 
 const options = {
   responsive: true,
+  maintainAspectRatio: false,
   plugins: {
     legend: {
       position: 'top'
@@ -65,8 +66,8 @@ const options = {
 
 export default function InventoryChart() {
   return (
-    <div className="p-4 border rounded-lg shadow-md">
-      <Bar data={data} options={options} />
-    </div>
+      <div className="h-full p-2">
+        <Bar data={data} options={options} />
+      </div>
   );
 }

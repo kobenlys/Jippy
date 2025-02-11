@@ -73,11 +73,11 @@ const dataFormatChange = (stockData: any) => {
 
   // 상위 5개만 선택하여 차트 데이터 생성
   const topStocks = [...stockData]
-    .sort((a, b) => b.stock_total_value - a.stock_total_value)
+    .sort((a, b) => b.stockTotalValue - a.stockTotalValue)
     .slice(0, 5);
 
-  const labels = topStocks.map(stock => stock.stock_name);
-  const data = topStocks.map(stock => stock.stock_total_value);
+  const labels = topStocks.map(stock => stock.stockName);
+  const data = topStocks.map(stock => stock.stockTotalValue);
   const colors = generateColorShades("#FF5C00", labels.length);
 
   return {
@@ -93,27 +93,27 @@ const ChartPage = () => {
 
   useEffect(() => {
     if (stockData && Array.isArray(stockData)) {
-      const topStocks = [...stockData].sort((a, b) => b.stock_total_value - a.stock_total_value).slice(0, 5);
+      const topStocks = [...stockData].sort((a, b) => b.stockTotalValue - a.stockTotalValue).slice(0, 5);
       setTopStockList(topStocks);
       setChartData(dataFormatChange(stockData));
     }
   }, [stockData]);
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", gap: "20px", alignItems: "center", marginTop: "20px" }}>
-      <div style={{ width: "300px" }}>
+    <div style={{ display: "flex", justifyContent: "center", gap: "10px", alignItems: "center", marginTop: "20px" }}>
+      <div style={{ width: "280px" }}>
         {chartData.labels.length > 0 ? <Pie data={chartData} options={{ responsive: true, plugins: { legend: { position: "bottom" } } }} /> : <p>데이터를 불러오는 중...</p>}
       </div>
 
-      <div style={{ width: "300px", padding: "10px", border: "1px solid #ddd", borderRadius: "10px" }}>
+      <div style={{ width: "200px", padding: "10px", border: "1px solid #ddd", borderRadius: "10px" }}>
         <h3 style={{ fontSize: "16px", marginBottom: "10px" }}>재고별 데이터</h3>
         {topStockList.map((stock, index) => (
           <div key={index} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
             <span style={{ display: "flex", alignItems: "center" }}>
               <span style={{ width: "10px", height: "10px", backgroundColor: chartData.datasets[0].backgroundColor[index], borderRadius: "50%", marginRight: "5px" }}></span>
-              {stock.stock_name}
+              {stock.stockName}
             </span>
-            <span>{stock.stock_total_value.toLocaleString()}</span>
+            <span>{stock.stockTotalValue}</span>
           </div>
         ))}
       </div>

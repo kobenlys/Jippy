@@ -2,7 +2,6 @@ import Navigation from "@/components/Navigation";
 import StockTable from "./StockTable";
 import StockChart from "./StockChart";
 import { StoreProvider } from "@/redux/StoreProvider";
-import PieChart from "./PieCharts";
 import StockBarChart from "./StockBarChart";
 
 
@@ -30,12 +29,16 @@ export default async function StockPage() {
     <StoreProvider  preloadedState={stockData}>
       <div className="min-h-screen">
         <Navigation />
-        <div className="bg-white p-4 rounded-lg shadow-md">
+        <div className="bg-white pt-0 p-4 rounded-lg shadow-md">
           <StockTable />
         </div>
-        <div className="bg-white p-4 rounded-lg shadow-md">
+        <div className="bg-white rounded-lg shadow-md flex ">
+          <div className="p-4 w-1/2">
           <StockChart />
+          </div>
+          <div className="p-4 w-1/2">
           <StockBarChart />
+          </div>
           {/* <PieChart /> */}
         </div>
       </div>
