@@ -205,8 +205,8 @@ public class StockStatusService {
             // 디저트 개수 체크
             status.setIsLowStock(status.getCurrentStock() <= 3);
         } else {
-            // 판매율 체크
-            status.setIsLowStock(status.getSoldPercentage() >= 0);
+            // 판매율 체크 (회의 필요)
+            status.setIsLowStock(status.getSoldPercentage() >= 70);
         }
     }
 
