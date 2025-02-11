@@ -3,7 +3,6 @@ package com.hbhw.jippy.domain.feedback.service;
 import com.google.firebase.messaging.*;
 import com.hbhw.jippy.domain.user.entity.UserOwner;
 import com.hbhw.jippy.domain.user.repository.UserOwnerRepository;
-import com.hbhw.jippy.domain.user.repository.UserStaffRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
