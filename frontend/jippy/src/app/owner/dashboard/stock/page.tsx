@@ -7,6 +7,7 @@ import StockBarChart from "./StockBarChart";
 
 async function getStockData(storeId: string) {
   const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/stock/${storeId}/select`;
+  console.log(API_URL);
 
   try {
     const response = await fetch(API_URL, { cache: "no-store" });

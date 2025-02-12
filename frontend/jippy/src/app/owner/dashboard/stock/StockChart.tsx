@@ -1,6 +1,12 @@
 "use client";
 
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  ChartData
+} from "chart.js";
 import { Pie } from "react-chartjs-2";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -8,17 +14,27 @@ import { useState, useEffect } from "react";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-// HEX 색상을 HSL로 변환하는 함수
-const hexToHsl = (hex: string) => {
-  let r = parseInt(hex.substring(1, 3), 16) / 255;
-  let g = parseInt(hex.substring(3, 5), 16) / 255;
-  let b = parseInt(hex.substring(5, 7), 16) / 255;
+// Define TypeScript type for stock item
+interface StockItem {
+  stockName: string;
+  stockTotalValue: number;
+}
 
-  let max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h = 0, s = 0, l = (max + min) / 2;
+// Define ChartData Type
+type PieChartData = ChartData<"pie", number[], string>;
+
+// HEX to HSL Conversion
+const hexToHsl = (hex: string) => {
+  const r = parseInt(hex.substring(1, 3), 16) / 255;
+  const g = parseInt(hex.substring(3, 5), 16) / 255;
+  const b = parseInt(hex.substring(5, 7), 16) / 255;
+
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0;
+  const l = (max + min) / 2;
 
   if (max !== min) {
-    let d = max - min;
+    const d = max - min;
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
     switch (max) {
       case r: h = (g - b) / d + (g < b ? 6 : 0); break;
@@ -30,13 +46,13 @@ const hexToHsl = (hex: string) => {
   return { h: h * 360, s: s * 100, l: l * 100 };
 };
 
-// HSL 색상을 HEX로 변환하는 함수
+// HSL to HEX Conversion
 const hslToHex = (h: number, s: number, l: number) => {
   s /= 100;
   l /= 100;
-  let c = (1 - Math.abs(2 * l - 1)) * s;
-  let x = c * (1 - Math.abs((h / 60) % 2 - 1));
-  let m = l - c / 2;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+  const m = l - c / 2;
   let r = 0, g = 0, b = 0;
 
   if (h >= 0 && h < 60) { r = c; g = x; b = 0; }
@@ -53,7 +69,7 @@ const hslToHex = (h: number, s: number, l: number) => {
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 };
 
-// 데이터 개수에 맞춰 밝기를 조절하여 색상을 생성하는 함수
+// Generate color shades
 const generateColorShades = (baseHex: string, count: number) => {
   const baseHSL = hexToHsl(baseHex);
   const minLightness = 40;
@@ -65,13 +81,12 @@ const generateColorShades = (baseHex: string, count: number) => {
   });
 };
 
-// stockData를 Chart.js에서 사용할 데이터 형식으로 변환하는 함수
-const dataFormatChange = (stockData: any) => {
+// Convert stockData to Chart.js format
+const dataFormatChange = (stockData: StockItem[]): PieChartData => {
   if (!stockData || !Array.isArray(stockData)) {
     return { labels: [], datasets: [{ data: [], backgroundColor: [], hoverBackgroundColor: [] }] };
   }
 
-  // 상위 5개만 선택하여 차트 데이터 생성
   const topStocks = [...stockData]
     .sort((a, b) => b.stockTotalValue - a.stockTotalValue)
     .slice(0, 5);
@@ -81,15 +96,22 @@ const dataFormatChange = (stockData: any) => {
   const colors = generateColorShades("#FF5C00", labels.length);
 
   return {
-    labels,
-    datasets: [{ data, backgroundColor: colors, hoverBackgroundColor: colors.map(c => hslToHex(hexToHsl(c).h, hexToHsl(c).s, hexToHsl(c).l + 10)) }],
+    labels: labels ?? [],
+    datasets: [{
+      data: data ?? [],
+      backgroundColor: colors ?? [],
+      hoverBackgroundColor: colors.map(c => hslToHex(hexToHsl(c).h, hexToHsl(c).s, hexToHsl(c).l + 10)) ?? []
+    }],
   };
 };
 
 const ChartPage = () => {
   const stockData = useSelector((state: RootState) => state.stock);
-  const [chartData, setChartData] = useState({ labels: [], datasets: [{ data: [], backgroundColor: [], hoverBackgroundColor: [] }] });
-  const [topStockList, setTopStockList] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<PieChartData>({
+    labels: [],
+    datasets: [{ data: [], backgroundColor: [], hoverBackgroundColor: [] }]
+  });
+  const [topStockList, setTopStockList] = useState<StockItem[]>([]);
 
   useEffect(() => {
     if (stockData && Array.isArray(stockData)) {
@@ -102,7 +124,11 @@ const ChartPage = () => {
   return (
     <div style={{ display: "flex", justifyContent: "center", gap: "10px", alignItems: "center", marginTop: "20px" }}>
       <div style={{ width: "280px" }}>
-        {chartData.labels.length > 0 ? <Pie data={chartData} options={{ responsive: true, plugins: { legend: { position: "bottom" } } }} /> : <p>데이터를 불러오는 중...</p>}
+        {chartData.labels && chartData.labels.length > 0 ? (
+          <Pie data={chartData} options={{ responsive: true, plugins: { legend: { position: "bottom" } } }} />
+        ) : (
+          <p>데이터를 불러오는 중...</p>
+        )}
       </div>
 
       <div style={{ width: "200px", padding: "10px", border: "1px solid #ddd", borderRadius: "10px" }}>
@@ -110,7 +136,18 @@ const ChartPage = () => {
         {topStockList.map((stock, index) => (
           <div key={index} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
             <span style={{ display: "flex", alignItems: "center" }}>
-              <span style={{ width: "10px", height: "10px", backgroundColor: chartData.datasets[0].backgroundColor[index], borderRadius: "50%", marginRight: "5px" }}></span>
+              {/* ✅ Fix: Ensure `backgroundColor` is an array before indexing */}
+              <span 
+                style={{ 
+                  width: "10px", 
+                  height: "10px", 
+                  backgroundColor: Array.isArray(chartData.datasets[0]?.backgroundColor)
+                    ? chartData.datasets[0]?.backgroundColor[index] || "#CCC"
+                    : "#CCC",
+                  borderRadius: "50%", 
+                  marginRight: "5px" 
+                }}
+              ></span>
               {stock.stockName}
             </span>
             <span>{stock.stockTotalValue}</span>

@@ -1,11 +1,25 @@
-'use client';
+"use client";
 
 import { RootState } from "@/redux/store";
 import React from "react";
 import { useSelector } from "react-redux";
 
+// ✅ Define the Stock Type
+interface StockUnit {
+  stockUnitSize: string;
+  stockUnit: string;
+  stockCount: number;
+}
+
+interface StockItem {
+  stockName: string;
+  stock: StockUnit[];
+}
+
 const StockTable = () => {
-  const stockData = useSelector((state: RootState) => state.stock);
+  // ✅ Explicitly type `stockData`
+  const stockData = useSelector((state: RootState) => state.stock) as StockItem[];
+
   console.log(stockData);
 
   return (
@@ -31,7 +45,8 @@ const StockTable = () => {
                 </tr>
               </thead>
               <tbody>
-                {stockData.length > 0 ? (
+                {/* ✅ Ensure `stockData` is an array before accessing it */}
+                {Array.isArray(stockData) && stockData.length > 0 ? (
                   stockData.map((item, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="p-2 border-b">{index + 1}</td>
@@ -66,12 +81,14 @@ const StockTable = () => {
               </tbody>
               <tfoot className="bg-orange-50 sticky bottom-0 z-10">
                 <tr>
-                  <td className="p-2">{stockData.length}</td>
+                  <td className="p-2">{Array.isArray(stockData) ? stockData.length : 0}</td>
                   <td colSpan={2} className="p-2 text-right">전체 수량</td>
                   <td className="p-2">
-                    {stockData.reduce((sum, item) =>
-                      sum + item.stock.reduce((s, unit) => s + unit.stockCount, 0), 0
-                    )}
+                    {Array.isArray(stockData)
+                      ? stockData.reduce((sum, item) =>
+                          sum + item.stock.reduce((s, unit) => s + unit.stockCount, 0), 0
+                        )
+                      : 0}
                   </td>
                   <td></td>
                 </tr>
