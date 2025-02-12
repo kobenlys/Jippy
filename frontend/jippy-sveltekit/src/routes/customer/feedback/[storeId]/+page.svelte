@@ -20,7 +20,6 @@
         storedId = uuidv4();
         localStorage.setItem("customerId", storedId);
       }
-      console.log(storedId);
       customerId = storedId;
     });
   
