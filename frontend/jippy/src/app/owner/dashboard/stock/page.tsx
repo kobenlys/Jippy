@@ -1,4 +1,4 @@
-import Navigation from "@/components/Navigation";
+import Navigation from "@/features/common/components/Navigation";
 import StockTable from "./StockTable";
 import StockChart from "./StockChart";
 import { StoreProvider } from "@/redux/StoreProvider";

@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import LoadingSpinner from "@/features/common/components/ui/LoadingSpinner";
 import {
   ApiResponse,
   StaffScheduleData,
   TimeSlot,
 } from "@/features/calendar/types/calendar";
-import PageTitle from "@/components/layout/title/PageTitle";
+import PageTitle from "@/features/common/components/layout/title/PageTitle";
 import CalendarGrid from "@/features/calendar/components/CalendarGrid";
 import CalendarHeader from "@/features/calendar/components/CalendarHeader";
 

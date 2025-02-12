@@ -2,7 +2,7 @@
 
 import React from "react";
 import AttendanceButtons from "@/features/attendance/components/AttendanceButtons";
-import PageTitle from "@/components/layout/title/PageTitle";
+import PageTitle from "@/features/common/components/layout/title/PageTitle";
 
 const Home = () => {
   return (

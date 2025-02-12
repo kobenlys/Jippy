@@ -1,7 +1,7 @@
 "use client";
 
 import "./globals.css";
-import BottomNavBar from "@/components/layout/navbar/BottomNavBar";
+import BottomNavBar from "@/features/common/components/layout/navbar/BottomNavBar";
 
 const StaffLayout = ({ children }: { children: React.ReactNode }) => {
   return (

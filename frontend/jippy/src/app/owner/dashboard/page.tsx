@@ -1,6 +1,6 @@
 // import InventoryTable from "./InventoryTable";
 // import InventoryStats from "./InventoryStats";
-import Navigation from "@/components/Navigation";
+import Navigation from "@/features/common/components/Navigation";
 
 export default function DashboardPage() {
   return (
