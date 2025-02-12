@@ -12,7 +12,7 @@ public class PaymentMapper {
                 .paymentType(paymentHistory.getPaymentType())
                 .paymentStatus(paymentHistory.getPaymentStatus())
                 .UUID(paymentHistory.getUUID())
-                .createdAt(paymentHistory.getCreatedAt())
+                .createdAt(paymentHistory.getUpdatedAt())
                 .totalCost(paymentHistory.getTotalCost())
                 .build();
     }

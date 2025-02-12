@@ -1,20 +1,20 @@
 package com.hbhw.jippy.domain.payment.service;
 
 import com.hbhw.jippy.domain.payment.dto.request.PaymentUUIDRequest;
-import com.hbhw.jippy.domain.payment.dto.response.PaymentDetailResponse;
-import com.hbhw.jippy.domain.payment.dto.response.PaymentHistoryListResponse;
+import com.hbhw.jippy.domain.payment.dto.response.*;
 import com.hbhw.jippy.domain.payment.entity.PaymentHistory;
 import com.hbhw.jippy.domain.payment.enums.PaymentStatus;
 import com.hbhw.jippy.domain.payment.enums.PaymentType;
 import com.hbhw.jippy.domain.payment.mapper.PaymentMapper;
 import com.hbhw.jippy.domain.payment.repository.PaymentHistoryCustomRepository;
 import com.hbhw.jippy.domain.payment.repository.PaymentHistoryRepository;
+import com.hbhw.jippy.global.code.CommonErrorCode;
+import com.hbhw.jippy.global.error.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +27,8 @@ public class PaymentHistoryService {
      * 결재내역 저장
      */
     public void savePaymentHistory(PaymentHistory paymentHistory) {
+
+
         paymentHistoryRepository.save(paymentHistory);
     }
 
@@ -76,7 +78,7 @@ public class PaymentHistoryService {
                 .paymentStatus(paymentHistoryEntity.getPaymentStatus())
                 .buyProduct(paymentHistoryEntity.getBuyProductHistories())
                 .totalCost(paymentHistoryEntity.getTotalCost())
-                .createdAt(paymentHistoryEntity.getCreatedAt())
+                .createdAt(paymentHistoryEntity.getUpdatedAt())
                 .UUID(paymentHistoryEntity.getUUID())
                 .build();
     }
@@ -115,6 +117,29 @@ public class PaymentHistoryService {
      */
     public PaymentHistory getPaymentHistory(String UUID) {
         return paymentHistoryRepository.findByUUID(UUID)
-                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 결제기록 입니다."));
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재하지 않는 결제기록 입니다."));
     }
+
+    public SalesByDayResponse fetchSalesByDay(Integer storeId, String startDate, String endDate){
+        List<SalesResponse> salesByDayResponseList = paymentHistoryRepository.getDailySales(storeId, startDate, endDate)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "조회된 매출이 없습니다"));
+        return SalesByDayResponse.builder()
+                .salesByDay(salesByDayResponseList).build();
+    }
+
+    public SalesByWeekResponse fetchSalesByWeek(Integer storeId, String startDate, String endDate){
+
+        List<SalesResponse> salesByDayResponseList = paymentHistoryRepository.getWeeklySales(storeId, startDate, endDate)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "조회된 매출이 없습니다"));
+        return SalesByWeekResponse.builder()
+                .salesByWeek(salesByDayResponseList).build();
+    }
+
+    public SalesByMonthResponse fetchSalesByMonth(Integer storeId, String startDate, String endDate){
+        List<SalesResponse> salesByDayResponseList = paymentHistoryRepository.getMonthlySales(storeId, startDate, endDate)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "조회된 매출이 없습니다"));
+        return SalesByMonthResponse.builder()
+                .salesByMonth(salesByDayResponseList).build();
+    }
+
 }

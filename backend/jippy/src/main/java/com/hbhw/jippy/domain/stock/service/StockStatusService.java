@@ -16,10 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,10 +32,10 @@ public class StockStatusService {
         private int decreaseAmount;
     }
 
-    private boolean checkIsDessert(InventoryItem item) {
+    private boolean checkIsCountable(InventoryItem item) {
         return item.getStock().stream()
                 .findFirst()
-                .map(stock -> "개".equals(stock.getStockUnit()) && stock.getStockUnitSize() == 0)
+                .map(stock -> "개".equals(stock.getStockUnit()))
                 .orElse(false);
     }
 
@@ -55,7 +52,7 @@ public class StockStatusService {
                 .currentStock(item.getStockTotalValue() - soldStock)
                 .soldPercentage(calculatePercentage(soldStock, item.getStockTotalValue()))
                 .lastUpdated(currentTime)
-                .isDessert(checkIsDessert(item))
+                .isDessert(checkIsCountable(item))
                 .isLowStock(false)
                 .build();
 
@@ -83,7 +80,7 @@ public class StockStatusService {
                 .currentStock(targetItem.getStockTotalValue())
                 .soldPercentage(0)
                 .lastUpdated(currentTime)
-                .isDessert(checkIsDessert(targetItem))
+                .isDessert(checkIsCountable(targetItem))
                 .isLowStock(false)
                 .build();
 
@@ -124,7 +121,7 @@ public class StockStatusService {
                     .currentStock(item.getStockTotalValue() - decreaseAmount)
                     .soldPercentage(calculatePercentage(decreaseAmount, item.getStockTotalValue()))
                     .lastUpdated(currentTime)
-                    .isDessert(checkIsDessert(item))
+                    .isDessert(checkIsCountable(item))
                     .isLowStock(false)
                     .build();
         } else {
@@ -141,15 +138,28 @@ public class StockStatusService {
     // 여러 상품 처리
     @Transactional
     public void updateBatchStockStatus(Integer storeId, List<StockUpdateInfo> updates) {
-        List<String> stockNames = updates.stream()
-                .map(update -> update.getItem().getStockName())
-                .collect(Collectors.toList());
+        Map<String, StockUpdateInfo> mergedUpdates = new HashMap<>();
+
+        for (StockUpdateInfo update : updates) {
+            String stockName = update.getItem().getStockName();
+
+            if (mergedUpdates.containsKey(stockName)) {
+                mergedUpdates.computeIfPresent(stockName, (k, existing) -> StockUpdateInfo.builder()
+                        .item(update.getItem())
+                        .decreaseAmount(existing.getDecreaseAmount() + update.getDecreaseAmount())
+                        .build());
+            } else {
+                mergedUpdates.put(stockName, update);
+            }
+        }
+
+        List<String> stockNames = new ArrayList<>(mergedUpdates.keySet());
 
         Map<String, StockStatusRedis> currentStatuses = stockStatusRedisRepository.getBatchStatus(storeId, stockNames);
         Map<String, StockStatusRedis> batchUpdates = new HashMap<>();
         String currentTime = DateTimeUtils.nowString();
 
-        for (StockUpdateInfo update : updates) {
+        for (StockUpdateInfo update : mergedUpdates.values()) {
             StockStatusRedis currentStatus = currentStatuses.get(update.getItem().getStockName());
 
             if (currentStatus == null) {
@@ -159,7 +169,7 @@ public class StockStatusService {
                         .currentStock(update.getItem().getStockTotalValue() - update.getDecreaseAmount())
                         .soldPercentage(calculatePercentage(update.getDecreaseAmount(), update.getItem().getStockTotalValue()))
                         .lastUpdated(currentTime)
-                        .isDessert(checkIsDessert(update.getItem()))
+                        .isDessert(checkIsCountable(update.getItem()))
                         .isLowStock(false)
                         .build();
                 checkLowStock(newStatus);
@@ -175,12 +185,14 @@ public class StockStatusService {
                         .isDessert(currentStatus.getIsDessert())
                         .isLowStock(currentStatus.getIsLowStock())
                         .build();
+
                 checkLowStock(updatedStatus);
                 batchUpdates.put(update.getItem().getStockName(), updatedStatus);
             }
         }
         if (!batchUpdates.isEmpty()) {
             stockStatusRedisRepository.saveBatchStatus(storeId, batchUpdates);
+            Map<String, StockStatusRedis> verifiedStatus = stockStatusRedisRepository.getBatchStatus(storeId, stockNames);
         }
     }
 
@@ -193,8 +205,8 @@ public class StockStatusService {
             // 디저트 개수 체크
             status.setIsLowStock(status.getCurrentStock() <= 3);
         } else {
-            // 판매율 체크
-            status.setIsLowStock(status.getSoldPercentage() >= 0);
+            // 판매율 체크 (회의 필요)
+            status.setIsLowStock(status.getSoldPercentage() >= 70);
         }
     }
 

@@ -1,4 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
+import stockReducer from "./stockSlice";
 import userReducer from "./slices/userSlice";
 import shopReducer from "./slices/shopSlice";
 import productReducer from "./slices/productSlice";
@@ -8,6 +9,7 @@ import recipeReducer from "./slices/recipeSlice";
 export const store = configureStore({
   reducer: {
     user: userReducer,
+    stock: stockReducer,
     shop: shopReducer,
     product: productReducer,
     category: categoryReducer,

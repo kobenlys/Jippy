@@ -2,11 +2,13 @@ package com.hbhw.jippy.global.error;
 
 import com.hbhw.jippy.global.code.ErrorCode;
 import com.hbhw.jippy.global.response.ErrorResponse;
+import lombok.Getter;
 
 import java.util.List;
 
+@Getter
 public class BusinessException extends RuntimeException {
-    private ErrorCode errorCode;
+    private final ErrorCode errorCode;
     private List<ErrorResponse.CustomFieldError> errorList;
 
     public BusinessException(ErrorCode errorCode) {

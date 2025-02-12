@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class StockDetailDeleteRequest {
 
-    @Schema(description = "재고별 크기", example = "100")
+    @Schema(description = "재고별 크기 (개 단위가 아닐 경우 필수)", example = "100")
     private Integer stockUnitSize;
 
     @Schema(description = "재고 단위 크기", example = "g")

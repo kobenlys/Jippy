@@ -66,10 +66,10 @@ public class StockService {
 
     private StockDetail convertToStandardUnit(StockDetailCreateUpdateRequest request) {
 
-        if (Boolean.TRUE.equals(request.getIsDessert())) {
+        if (request.getStockUnit().equals("개")) {
             return StockDetail.builder()
                     .stockCount(request.getStockCount())
-                    .stockUnitSize(0)
+                    .stockUnitSize(request.getStockCount())
                     .stockUnit("개")
                     .build();
         }
@@ -94,6 +94,7 @@ public class StockService {
     }
 
     private StockDetailDeleteRequest convertDeleteRequestToStandardUnit(StockDetailDeleteRequest request) {
+
         String standardUnit = UNIT_STANDARDIZATION.getOrDefault(request.getStockUnit(), request.getStockUnit());
 
         if (request.getStockUnit().equals(standardUnit)) {
@@ -165,6 +166,7 @@ public class StockService {
                 });
 
                 updateInventoryItem(existingItem.get(), newItem);
+                recalculateTotalValues(stock);
                 stockStatusService.resetStockStatus(storeId, existingItem.get());
             } else {
                 newItem.getStock().forEach(stockDetail -> {
@@ -188,7 +190,10 @@ public class StockService {
                         .filter(item -> compareStockNames(item.getStockName(), newItem.getStockName()))
                         .findFirst();
 
-                addedItem.ifPresent(item -> stockStatusService.resetStockStatus(storeId, item));
+                addedItem.ifPresent(item -> {
+                    recalculateTotalValues(stock);
+                    stockStatusService.resetStockStatus(storeId, item);
+                });
             }
         });
 
@@ -214,6 +219,9 @@ public class StockService {
             Optional<StockDetail> existingStock = existingItem.getStock().stream()
                     .filter(stock -> {
                         if (stock.getStockUnit().equals(convertedNewStock.getStockUnit())) {
+                            if (stock.getStockUnit().equals("개")) {
+                                return true;
+                            }
                             return stock.getStockUnitSize().equals(convertedNewStock.getStockUnitSize());
                         } else {
                             String standardUnit = UNIT_STANDARDIZATION.getOrDefault(stock.getStockUnit(), stock.getStockUnit());
@@ -228,9 +236,13 @@ public class StockService {
                     .findFirst();
 
             if (existingStock.isPresent()) {
-                existingStock.get().setStockCount(
-                        existingStock.get().getStockCount() + convertedNewStock.getStockCount()
-                );
+                int newCount = existingStock.get().getStockCount() + convertedNewStock.getStockCount();
+                existingStock.get().setStockCount(newCount);
+
+                if (existingStock.get().getStockUnit().equals("개")) {
+                    existingStock.get().setStockCount(newCount);
+                    existingStock.get().setStockUnitSize(newCount);
+                }
             } else {
                 existingItem.getStock().add(convertedNewStock);
             }
@@ -244,21 +256,14 @@ public class StockService {
     private void recalculateTotalValues(Stock stock) {
 
         stock.getInventory().forEach(item -> {
-            int totalValue;
-
-            boolean isDessert = !item.getStock().isEmpty() &&
-                    item.getStock().get(0).getStockUnit().equals("개") &&
-                    item.getStock().get(0).getStockUnitSize() == 0;
-
-            if (isDessert) {
-                totalValue = item.getStock().stream()
-                        .mapToInt(StockDetail::getStockCount)
+            int totalValue = item.getStock().stream()
+                        .mapToInt(detail -> {
+                            if (detail.getStockUnit().equals("개")) {
+                                return detail.getStockCount();
+                            }
+                            return detail.getStockUnitSize() * detail.getStockCount();
+                        })
                         .sum();
-            } else {
-                totalValue = item.getStock().stream()
-                            .mapToInt(detail -> detail.getStockUnitSize() * detail.getStockCount())
-                            .sum();
-            }
             item.setStockTotalValue(totalValue);
         });
     }
@@ -406,6 +411,9 @@ public class StockService {
                     Optional<StockDetail> sourceDetail = sourceItem.getStock().stream()
                             .filter(detail -> {
                                 if (detail.getStockUnit().equals(convertedMoveDetail.getStockUnit())) {
+                                    if (detail.getStockUnit().equals("개")) {
+                                        return true;
+                                    }
                                     return detail.getStockUnitSize().equals(convertedMoveDetail.getStockUnitSize());
                                 } else {
                                     String standardUnit = UNIT_STANDARDIZATION.getOrDefault(detail.getStockUnit(), detail.getStockUnit());
@@ -431,6 +439,9 @@ public class StockService {
                     Optional<StockDetail> targetDetail = targetItem.getStock().stream()
                             .filter(detail -> {
                                 if (detail.getStockUnit().equals(convertedMoveDetail.getStockUnit())) {
+                                    if (detail.getStockUnit().equals("개")) {
+                                        return true;
+                                    }
                                     return detail.getStockUnitSize().equals(convertedMoveDetail.getStockUnitSize());
                                 } else {
                                     String standardUnit = UNIT_STANDARDIZATION.getOrDefault(detail.getStockUnit(), detail.getStockUnit());
@@ -486,6 +497,7 @@ public class StockService {
                 });
 
                 sourceItem.setUpdatedAt(DateTimeUtils.nowString());
+                recalculateTotalValues(stock);
                 // redis 상태 업데이트 (이름 변경, 재고 이동 후)
                 stockStatusService.handleStockNameChange(storeId, stockName, updateRequest.getStockName(), sourceItem, targetItem);
             } else {
@@ -547,6 +559,9 @@ public class StockService {
                 Optional<StockDetail> existingStock = sourceItem.getStock().stream()
                         .filter(detail -> {
                             if (detail.getStockUnit().equals(convertedNewStock.getStockUnit())) {
+                                if (detail.getStockUnit().equals("개")) {
+                                    return true;
+                                }
                                 return detail.getStockUnitSize().equals(convertedNewStock.getStockUnitSize());
                             } else {
                                 String standardUnit = UNIT_STANDARDIZATION.getOrDefault(detail.getStockUnit(), detail.getStockUnit());
@@ -564,6 +579,11 @@ public class StockService {
 
                     int beforeCount = existingStock.get().getStockCount();
                     int afterCount = convertedNewStock.getStockCount();
+
+                    if (existingStock.get().getStockUnit().equals("개")) {
+                        existingStock.get().setStockCount(afterCount);
+                        existingStock.get().setStockUnitSize(afterCount);
+                    }
 
                     ChangeType changeType;
                     ChangeReason changeReason;
@@ -642,6 +662,9 @@ public class StockService {
                 Optional<StockDetail> stockToDelete = targetItem.getStock().stream()
                         .filter(stockDetail -> {
                             if (stockDetail.getStockUnit().equals(standardizedDeleteRequest.getStockUnit())) {
+                                if (stockDetail.getStockUnit().equals("개")) {
+                                    return true;
+                                }
                                 return stockDetail.getStockUnitSize().equals(standardizedDeleteRequest.getStockUnitSize());
                             } else {
                                 String standardUnit = UNIT_STANDARDIZATION.getOrDefault(stockDetail.getStockUnit(), stockDetail.getStockUnit());
@@ -688,18 +711,22 @@ public class StockService {
 
         if (targetItem.getStock().isEmpty()) {
             stock.getInventory().remove(targetItem);
-
+            recalculateTotalValues(stock);
             stockStatusService.handleStockDelete(storeId, stockName, null);
         } else {
+            recalculateTotalValues(stock);
             stockStatusService.handleStockDelete(storeId, stockName, targetItem);
         }
-
-        recalculateTotalValues(stock);
 
         Query query = new Query(Criteria.where("store_id").is(storeId));
         Update update = new Update().set("inventory", stock.getInventory());
         mongoTemplate.upsert(query, update, Stock.class);
 
         return mapEntityToResponse(stock);
+    }
+
+    public List<InventoryItem> getInventoryItemList(Integer storeId){
+        return stockRepository.findByStoreId(storeId)
+                .map(Stock::getInventory).orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "재고 인벤토리가 존재하지 않습니다."));
     }
 }

@@ -28,7 +28,6 @@ out/
 !**/src/test/**/out/
 /src/main/resources/*.properties
 
-
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/

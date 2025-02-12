@@ -1,6 +1,7 @@
 package com.hbhw.jippy.domain.storeuser.repository.staff;
 
 import com.hbhw.jippy.domain.storeuser.entity.staff.StoreUserStaff;
+import com.hbhw.jippy.domain.storeuser.enums.StaffSalaryType;
 import com.hbhw.jippy.domain.user.entity.UserStaff;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,9 +16,11 @@ public interface StoreStaffRepository extends JpaRepository<StoreUserStaff, Inte
     @Query("SELECT ss FROM StoreUserStaff ss JOIN FETCH ss.userStaff WHERE ss.store.id = :storeId")
     List<StoreUserStaff> findAllByStoreIdWithUserStaff(@PathVariable Integer storeId);
 
-    Optional<StoreUserStaff> findByStoreIdAndUserStaffId(Integer storeId, Integer staffId);
-
     Optional<StoreUserStaff> findByUserStaff(UserStaff userStaff);
 
     Optional<StoreUserStaff> findByUserStaffId(Integer userStaffId);
+
+    List<StoreUserStaff> findByStoreId(Integer storeId);
+
+    List<StoreUserStaff> findByStoreIdAndStaffSalaryType(Integer storeId, StaffSalaryType staffSalaryType);
 }

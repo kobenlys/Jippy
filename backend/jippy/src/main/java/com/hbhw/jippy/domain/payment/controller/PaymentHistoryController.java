@@ -2,8 +2,7 @@ package com.hbhw.jippy.domain.payment.controller;
 
 
 import com.hbhw.jippy.domain.payment.dto.request.PaymentUUIDRequest;
-import com.hbhw.jippy.domain.payment.dto.response.PaymentDetailResponse;
-import com.hbhw.jippy.domain.payment.dto.response.PaymentHistoryListResponse;
+import com.hbhw.jippy.domain.payment.dto.response.*;
 import com.hbhw.jippy.domain.payment.entity.BuyProduct;
 import com.hbhw.jippy.domain.payment.entity.PaymentHistory;
 import com.hbhw.jippy.domain.payment.enums.PaymentStatus;
@@ -36,15 +35,15 @@ public class PaymentHistoryController {
 
         // 덤프 데이터 (삭제 예정)
         BuyProduct buyProduct1 = BuyProduct.builder()
-                .productId(1)
-                .productCategory(101)
+                .productId(1L)
+                .productCategoryId(101)
                 .productQuantity(2)
                 .price(1000)
                 .build();
 
         BuyProduct buyProduct2 = BuyProduct.builder()
-                .productId(2)
-                .productCategory(102)
+                .productId(2L)
+                .productCategoryId(102)
                 .productQuantity(1)
                 .price(500)
                 .build();
@@ -58,7 +57,7 @@ public class PaymentHistoryController {
                 .storeId(storeId)  // 예시 storeId
                 .paymentStatus(PaymentStatus.PURCHASE.getDescription())
                 .paymentType(PaymentType.QRCODE.getDescription())
-                .createdAt(DateTimeUtils.nowString())
+                .updatedAt(DateTimeUtils.nowString())
                 .buyProductHistories(buyProductHistories)
                 .totalCost(250000)
                 .build();
@@ -100,5 +99,23 @@ public class PaymentHistoryController {
     public ApiResponse<List<PaymentHistoryListResponse>> getCancelHistoryList(@RequestParam("storeId") Integer storeId) {
         List<PaymentHistoryListResponse> paymentHistoryListResponses = paymentHistoryService.getCancelHistoryList(storeId);
         return ApiResponse.success(HttpStatus.OK, paymentHistoryListResponses);
+    }
+
+    @GetMapping("/sales/day")
+    public ApiResponse<SalesByDayResponse> fetchSalesByDay(@RequestParam("storeId") Integer storeId, @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate ) {
+        SalesByDayResponse salesByDayResponse = paymentHistoryService.fetchSalesByDay(storeId, startDate, endDate);
+        return ApiResponse.success(HttpStatus.OK, salesByDayResponse);
+    }
+
+    @GetMapping("/sales/week")
+    public ApiResponse<SalesByWeekResponse> fetchSalesByWeek(@RequestParam("storeId") Integer storeId, @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate ) {
+        SalesByWeekResponse salesByWeekResponse = paymentHistoryService.fetchSalesByWeek(storeId, startDate, endDate);
+        return ApiResponse.success(HttpStatus.OK, salesByWeekResponse);
+    }
+
+    @GetMapping("/sales/month")
+    public ApiResponse<SalesByMonthResponse> fetchSalesByMonth(@RequestParam("storeId") Integer storeId, @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate ) {
+        SalesByMonthResponse salesByMonthResponse = paymentHistoryService.fetchSalesByMonth(storeId, startDate, endDate);
+        return ApiResponse.success(HttpStatus.OK, salesByMonthResponse);
     }
 }

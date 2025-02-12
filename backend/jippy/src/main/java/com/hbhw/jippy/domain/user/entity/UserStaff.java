@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserStaff extends BaseUser {
     @Builder
-    public UserStaff(String email, String password, String name, String age) {
-        super(email, password, name, age);
+    public UserStaff(String email, String password, String name, String age, String fcmToken) {
+        super(email, password, name, age, fcmToken);
     }
 }

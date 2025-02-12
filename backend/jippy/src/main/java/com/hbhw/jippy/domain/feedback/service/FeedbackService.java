@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 public class FeedbackService {
 
     private final FeedbackRepository feedbackRepository;
+    private final NotificationService notificationService; // ← 추가
 
     private final RedisTemplate<String, String> redisTemplate;
 
@@ -38,7 +39,6 @@ public class FeedbackService {
         //    setIfAbsent == false -> 이미 존재(중복 요청)
         Boolean isNewRequest = redisTemplate.opsForValue()
                 .setIfAbsent(request.getRequestId(), "LOCK", 24, TimeUnit.HOURS);
-        // ★ 여기서 TTL(5분)은 예시이므로, 실제로는 비즈니스 로직에 맞춰 변경하세요.
 
         if (Boolean.FALSE.equals(isNewRequest)) {
             // 이미 동일 requestId가 Redis에 존재 -> 중복 요청
@@ -51,6 +51,12 @@ public class FeedbackService {
                 .content(request.getContent())
                 .createdAt(DateTimeUtils.nowString())
                 .build();
+        Feedback saved = feedbackRepository.save(feedback);
+
+        // 4) LIVE 카테고리면 사장님에게 알림
+        if (saved.getCategory() == Category.LIVE) {
+            notificationService.notifyOwner(saved.getStoreId(), saved.getContent());
+        }
 
         feedbackRepository.save(feedback); // 저장만 수행, 반환 없음
     }

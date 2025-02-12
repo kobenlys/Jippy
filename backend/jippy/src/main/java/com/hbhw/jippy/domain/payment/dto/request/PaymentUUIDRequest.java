@@ -4,5 +4,6 @@ import lombok.Getter;
 
 @Getter
 public class PaymentUUIDRequest {
+    private Integer storeId;
     private String paymentUUID;
 }

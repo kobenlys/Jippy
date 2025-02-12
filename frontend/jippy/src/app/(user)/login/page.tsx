@@ -111,7 +111,13 @@ const LoginPage = () => {
         throw new Error("로그인 응답이 올바르지 않습니다");
       }
     } catch (error) {
-      dispatch(loginFailure(error instanceof Error ? error.message : "로그인 중 오류가 발생했습니다"));
+      dispatch(
+        loginFailure(
+          error instanceof Error
+            ? error.message
+            : "로그인 중 오류가 발생했습니다"
+        )
+      );
       console.error("로그인 에러:", error);
     }
   };
@@ -148,7 +154,7 @@ const LoginPage = () => {
           <span>직원</span>
         </label>
       </div>
-      
+
       <input
         type="email"
         placeholder="이메일 입력"
