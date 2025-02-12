@@ -2,6 +2,8 @@
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { format } from "date-fns";
+  import { v4 as uuidv4 } from "uuid";
+
   import "../../../../app.css";
   export let data;
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -15,9 +17,10 @@
   onMount(() => {
     let storedId = localStorage.getItem("customerId");
     if (!storedId) {
-      storedId = window.crypto.randomUUID();
+      storedId = uuidv4();
       localStorage.setItem("customerId", storedId);
     }
+    console.log(storedId);
     customerId = storedId;
   });
 
