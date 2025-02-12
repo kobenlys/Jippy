@@ -15,7 +15,7 @@
   onMount(() => {
     let storedId = localStorage.getItem("customerId");
     if (!storedId) {
-      storedId = crypto.randomUUID();
+      storedId = window.crypto.randomUUID();
       localStorage.setItem("customerId", storedId);
     }
     customerId = storedId;
