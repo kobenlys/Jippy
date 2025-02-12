@@ -1,13 +1,20 @@
 import { configureStore } from "@reduxjs/toolkit";
-import userReducer from "./userSlice";
 import stockReducer from "./stockSlice";
+import userReducer from "./slices/userSlice";
+import shopReducer from "./slices/shopSlice";
 
 export const store = configureStore({
   reducer: {
     user: userReducer,
     stock: stockReducer,
+    shop: shopReducer,
   },
-  devTools: process.env.NODE_ENV !== "production",
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ["user/setUserToken"],
+      },
+    }),
 });
 
 export function createStore(preloadedState = {}) {

@@ -9,8 +9,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @AllArgsConstructor
 @Builder
 public class Message {
-    @Field("receiver_id")
-    private String receiverId;
+    @Field("sender_id")
+    private String senderId;
 
     @Field("message_content")
     private String messageContent;

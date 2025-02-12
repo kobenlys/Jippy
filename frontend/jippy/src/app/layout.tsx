@@ -1,36 +1,20 @@
-"use client"; // 클라이언트 컴포넌트로 지정
+// app/layout.tsx
+import RootLayoutClient from "./RootLayoutClient";
+import type { Metadata } from "next";
 
-import { Provider } from "react-redux";
-import { store } from "@/redux/store";
-import { Archivo_Black } from 'next/font/google'
-import '@/app/globals.css';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
-// Archivo Black 설정
-const archivoBlack = Archivo_Black({
-  weight: ['400'],
-  subsets: ['latin'],
-  variable: '--font-archivo-black',
-  display: 'swap',
-})
+export const metadata: Metadata = {
+  title: "Jippy",
+  description: "소상공인을 위한 카페 매장 관리 서비스",
+  manifest: "/manifest.json", // PWA manifest 추가
+  viewport: process.env.NEXT_PUBLIC_STAFF_ROUTE 
+    ? undefined  // staff 라우트에서는 뷰포트 메타 태그 제거
+    : "width=device-width, initial-scale=1"
+};
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <html lang="ko" className={`${archivoBlack.variable}`}>
-      <head>
-        <link rel="icon" href="/icons/favicon.ico" />
-      </head>
-      <body>
-        <Provider store={store}>
-          {children}
-          <ToastContainer />
-        </Provider>
-      </body>
-    </html>
-  );
+  return <RootLayoutClient>{children}</RootLayoutClient>;
 }

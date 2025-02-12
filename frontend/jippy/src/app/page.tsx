@@ -1,76 +1,81 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import React, { useState, useEffect } from 'react';
-import '@/app/globals.css';
+import Link from "next/link";
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import { logout } from "@/redux/slices/userSlice"; // import 수정
+import "@/app/globals.css";
 import styles from "./page.module.css";
-import Button from '@/component/Button';
+import Button from "@/components/ui/button/Button";
+import Image from "next/image";
 
 const JippyPage = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // 페이지 로드 시 로그인 상태 체크
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    setIsLoggedIn(!!token);
-  }, []);
+  const dispatch = useDispatch();
+  const { auth } = useSelector((state: RootState) => state.user); // state 구조 변경
+  const accessToken = auth.accessToken;
 
   // 로그아웃 처리
   const handleLogout = async () => {
     try {
-      const token = localStorage.getItem('token');
-      console.log('저장된 토큰:', token);
-      if (!token) {
-        throw new Error('로그인 세션이 만료되었습니다.');
+      if (!accessToken) {
+        throw new Error("로그인 세션이 만료되었습니다.");
       }
 
-      const response = await fetch('http://localhost:8080/api/user/logout', {
-        method: 'POST',
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/logout`, {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
         },
       });
 
       if (!response.ok) {
-        throw new Error('로그아웃 실패');
+        throw new Error("로그아웃 실패");
       }
 
-      localStorage.removeItem('token');
-      setIsLoggedIn(false);  // 로그아웃 후 상태 업데이트
-      console.log('로그아웃 성공');
+      // Redux 상태 초기화 - 단일 액션으로 변경
+      dispatch(logout());
+      
     } catch (error) {
-      console.error('로그아웃 중 오류 발생:', error);
+      console.error("로그아웃 중 오류 발생:", error);
     }
   };
 
-  // 로그인 상태에 따라 버튼 텍스트 변경
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+    <div className="relative z-10 flex flex-col items-center justify-center min-h-screen text-center gap-8">
+      {/* 배경 요소 */}
+      <Image
+        src="/images/MainDeco.svg"
+        alt="Background decoration"
+        fill
+        className={styles.backgroundImage}
+        priority
+      />
+
       <h1 className={styles.title}>Jippy</h1>
+
+      <h3 className={styles.subtitle}>소상공인을 위한<br/>카페 매장 관리 서비스</h3>
       
-      <div className="flex flex-col gap-4 w-64">
+      <div className="flex flex-col items-center gap-4 z-10 w-[200px]">
         <Button type="orange">
-          <Link href="/signup" className="w-full block">
+          <Link href="/signup/owner" className="w-full block">
             계정 생성
           </Link>
         </Button>
 
-        {isLoggedIn ? (
+        <p> 또는 </p>
+        
+        {accessToken ? (
           <Button type="orange" onClick={handleLogout}>로그아웃</Button>
         ) : (
-          <Button type="orange-border">
+          <Button type="orangeBorder">
             <Link href="/login" className="w-full block">
               로그인
             </Link>
           </Button>
         )}
 
-        <Button type="primary">
-          <Link href="/update" className="w-full block">
-            회원 정보 수정
-          </Link>
-        </Button>
       </div>
     </div>
   );
