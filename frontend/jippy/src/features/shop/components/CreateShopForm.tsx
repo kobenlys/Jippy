@@ -4,7 +4,7 @@ import React from "react";
 import { useShopForm } from "@/features/shop/hooks/useShopForm";
 import "@/app/globals.css";
 import { FormField } from "@/components/ui/form/FormFields";
-import { Alert, AlertDescription } from "@/components/ui/Alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import Button from "@/components/ui/button/Button";
 import OCRImageUpload from "@/features/shop/components/OCRImageUpload";
 
