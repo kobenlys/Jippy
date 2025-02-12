@@ -4,7 +4,7 @@ interface TimeGridProps {
   timeSlots: TimeSlot[];
 }
 
-export default function TimeGrid({ timeSlots }: TimeGridProps) {
+const TimeGrid = ({ timeSlots }: TimeGridProps) => {
   return (
     <div className="w-10 flex flex-col">
       {timeSlots.map((slot, index) => (
@@ -17,4 +17,6 @@ export default function TimeGrid({ timeSlots }: TimeGridProps) {
       ))}
     </div>
   );
-}
+};
+
+export default TimeGrid;

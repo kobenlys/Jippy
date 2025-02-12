@@ -2,7 +2,7 @@
 
 import { Provider } from "react-redux";
 import { store } from "@/redux/store";
-import { Archivo_Black } from "next/font/google"
+import { Archivo_Black } from "next/font/google";
 import "@/app/globals.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -16,22 +16,20 @@ const archivoBlack = Archivo_Black({
   subsets: ["latin"],
   variable: "--font-archivo-black",
   display: "swap",
-})
+});
 
 const hideNavbarPaths = ["/login", "/signup", "/attendance", "/calendar"];
 
-export default function RootLayoutClient({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+const RootLayoutClient = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
-  
+
   useEffect(() => {
     registerServiceWorker(); // PWA 서비스워커 등록
   }, []);
 
-  const isHiddenPath = hideNavbarPaths.some(path => pathname.startsWith(path));
+  const isHiddenPath = hideNavbarPaths.some((path) =>
+    pathname.startsWith(path)
+  );
   const isMainPage = pathname === "/";
   const showNavbar = !isMainPage && !isHiddenPath;
 
@@ -49,9 +47,7 @@ export default function RootLayoutClient({
                 <Navbar />
               </div>
             )}
-            <div className="page-content">
-              {children}
-            </div>
+            <div className="page-content">{children}</div>
             <div id="modal-root"></div>
             <ToastContainer
               toastClassName="custom-toast"
@@ -62,4 +58,6 @@ export default function RootLayoutClient({
       </body>
     </html>
   );
-}
+};
+
+export default RootLayoutClient;

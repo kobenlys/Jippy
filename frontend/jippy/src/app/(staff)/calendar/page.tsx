@@ -8,10 +8,10 @@ import {
   TimeSlot,
 } from "@/features/calendar/types/calendar";
 import PageTitle from "@/components/layout/title/PageTitle";
-import CalendarGrid from "@/features/calendar/components/GalendarGrid";
+import CalendarGrid from "@/features/calendar/components/CalendarGrid";
 import CalendarHeader from "@/features/calendar/components/CalendarHeader";
 
-export default function CalendarPage() {
+const CalendarPage = () => {
   const [scheduleData, setScheduleData] = useState<StaffScheduleData | null>(
     null
   );
@@ -135,4 +135,6 @@ export default function CalendarPage() {
       />
     </div>
   );
-}
+};
+
+export default CalendarPage;

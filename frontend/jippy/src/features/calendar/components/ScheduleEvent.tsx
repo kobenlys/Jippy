@@ -4,7 +4,7 @@ interface ScheduleEventProps {
   event: ScheduleEvent;
 }
 
-export default function ScheduleEventComponent({ event }: ScheduleEventProps) {
+const ScheduleEventComponent = ({ event }: ScheduleEventProps) => {
   return (
     <div
       className="absolute w-full bg-yellow-100 rounded p-1 border border-orange-200"
@@ -18,4 +18,6 @@ export default function ScheduleEventComponent({ event }: ScheduleEventProps) {
       </div>
     </div>
   );
-}
+};
+
+export default ScheduleEventComponent;

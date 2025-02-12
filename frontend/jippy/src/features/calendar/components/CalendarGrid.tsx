@@ -9,12 +9,12 @@ interface CalendarGridProps {
   calculateEventPosition: (hour: number) => number;
 }
 
-export default function CalendarGrid({
+const CalendarGrid = ({
   days,
   timeSlots,
   scheduleData,
   calculateEventPosition,
-}: CalendarGridProps) {
+}: CalendarGridProps) => {
   return (
     <div className="px-4 pb-4">
       <div className="flex">
@@ -58,4 +58,6 @@ export default function CalendarGrid({
       </div>
     </div>
   );
-}
+};
+
+export default CalendarGrid;

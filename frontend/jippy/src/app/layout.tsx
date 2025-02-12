@@ -8,10 +8,8 @@ export const metadata: Metadata = {
   manifest: "/manifest.json", // PWA manifest 추가
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+const RootLayout = ({ children }: { children: React.ReactNode }) => {
   return <RootLayoutClient>{children}</RootLayoutClient>;
-}
+};
+
+export default RootLayout;

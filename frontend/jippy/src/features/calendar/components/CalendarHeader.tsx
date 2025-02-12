@@ -2,7 +2,7 @@ interface CalendarHeaderProps {
   days: readonly ["일", "월", "화", "수", "목", "금", "토"];
 }
 
-export default function CalendarHeader({ days }: CalendarHeaderProps) {
+const CalendarHeader = ({ days }: CalendarHeaderProps) => {
   return (
     <div className="flex sticky top-0 bg-[#f6f6f6] z-10 px-4 py-2">
       <div className="w-10" />
@@ -20,4 +20,6 @@ export default function CalendarHeader({ days }: CalendarHeaderProps) {
       ))}
     </div>
   );
-}
+};
+
+export default CalendarHeader;
