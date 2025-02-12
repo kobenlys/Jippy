@@ -1,3 +1,4 @@
+// 파일 이름 변경 때문에 주석 답니다.
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
