@@ -18,7 +18,7 @@ const archivoBlack = Archivo_Black({
   display: "swap",
 })
 
-const hideNavbarPaths = ["/login", "/signup", "/m"];
+const hideNavbarPaths = ["/login", "/signup", "/attendance", "/calendar"];
 
 export default function RootLayoutClient({
   children,
