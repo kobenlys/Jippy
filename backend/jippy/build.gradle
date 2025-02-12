@@ -48,6 +48,8 @@ dependencies {
 	implementation group: 'org.webjars', name: 'stomp-websocket', version: '2.3.4'
 	implementation 'com.google.zxing:core:3.5.3'
 	implementation 'com.google.zxing:javase:3.5.3'
+	implementation group: 'com.google.firebase', name: 'firebase-admin', version: '9.4.3'
+
 }
 
 tasks.named('test') {

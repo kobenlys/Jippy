@@ -19,6 +19,7 @@ WORKDIR /app
 
 # Secret File 복사 (Jenkins에서 제공)
 COPY application.properties /app/config/application.properties
+COPY serviceAccountKey.json /app/config/serviceAccountKey.json
 
 COPY --from=builder /app/build/libs/*.jar app.jar
 
