@@ -9,13 +9,13 @@ import { fetchShop, updateShop, deleteShop } from "@/redux/slices/shopSlice";
 
 export default function ShopsPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { shops, isLoading, error } = useSelector((state: RootState) => state.shop.shop);
+  const { shops, isLoading, error } = useSelector((state: RootState) => state.shop);
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   
-  const user = useSelector((state: RootState) => state.user.user);
-  const accessToken = useSelector((state: RootState) => state.user.auth.accessToken);
+  const user = useSelector((state: RootState) => state.user.profile);
+  const accessToken = useSelector((state: RootState) => state.user.accessToken);
 
   useEffect(() => {
     const fetchShops = async () => {

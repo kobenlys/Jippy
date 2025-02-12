@@ -35,6 +35,17 @@ html, body {
   overflow: hidden;
 }
 
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
 .main-layout {
   display: flex;
   flex-direction: column;
@@ -51,23 +62,6 @@ html, body {
   position: relative;
   width: 100%;
   height: calc(100vh - 64px);  /* 전체 화면 높이에서 nav-space 높이를 뺌 */
-}
-
-/* 헤더 */
-.header {
-  position: absolute;
-  width: 277px;
-  height: 58px;
-  left: 202px;
-  top: 79px;
-  font-style: normal;
-  font-weight: 700;
-  font-size: 48px;
-  line-height: 58px;
-  display: flex;
-  align-items: center;
-  text-align: center;
-  color: #21272A;
 }
 
 /* 버튼 그룹 */

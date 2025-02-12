@@ -8,10 +8,10 @@ import type { RootState, AppDispatch } from "@/redux/store";
 export const useShopForm = () => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const user = useSelector((state: RootState) => state.user.user);
-  const accessToken = useSelector((state: RootState) => state.user.auth.accessToken);
+  const user = useSelector((state: RootState) => state.user.profile);
+  const accessToken = useSelector((state: RootState) => state.user.accessToken);
 
-  const { isLoading, error } = useSelector((state: RootState) => state.shop.shop);
+  const { isLoading, error } = useSelector((state: RootState) => state.shop);
   const [formData, setFormData] = useState<FormData>({
     name: "",
     address: "",

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { FormField } from "@/components/ui/form/FormFields";
+import { FormField } from "@/features/common/components/ui/form/FormFields";
 import { Shop } from "../types/shops";
 import { cn } from "@/lib/utils";
 

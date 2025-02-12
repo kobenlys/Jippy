@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Printer } from "lucide-react";
-import Button from "@/components/ui/button/Button";
-import { Card, CardContent } from "@/components/ui/card/Card";
+import { Button } from "@/features/common/components/ui/button";
+import { Card, CardContent } from "@/features/common/components/ui/card/Card";
 import { RootState } from "@/redux/store";
 import { QR_PAGES } from "@/features/qr/constants/pages";
 import Image from "next/image";
@@ -12,8 +12,22 @@ import Image from "next/image";
 const QRCodeCRUD: React.FC = () => {
   const [selectedQR, setSelectedQR] = useState<string | null>(null);
   const [qrImage, setQrImage] = useState<string | null>(null);
-  const accessToken = useSelector((state: RootState) => state.user.auth.accessToken);
-  const storeId = useSelector((state: RootState) => state.shop.shop.currentShop?.id);
+  const [imageDimensions, setImageDimensions] = useState({ width: 200, height: 200 });
+  const accessToken = useSelector((state: RootState) => state.user.accessToken);
+  const storeId = useSelector((state: RootState) => state.shop.currentShop?.id);
+
+  useEffect(() => {
+    if (qrImage) {
+      const tempImg = document.createElement('img');
+      tempImg.src = qrImage;
+      tempImg.onload = () => {
+        setImageDimensions({ 
+          width: tempImg.naturalWidth, 
+          height: tempImg.naturalHeight 
+        });
+      };
+    }
+  }, [qrImage]);
 
   const handleQRGenerate = async (name: string, url: string) => {
     if (!storeId) {
@@ -65,39 +79,48 @@ const QRCodeCRUD: React.FC = () => {
   };
 
   return (
-    <div className="flex gap-8 p-6">
-      <div className="flex flex-col gap-4 w-48">
-        {QR_PAGES.map((page) => (
-          <Button
-            key={page.path}
-            onClick={() => handleQRGenerate(page.name, page.path)}
-            type={selectedQR === page.name ? "orangeBorder" : "default"}
-          >
-            {page.name} QR
-          </Button>
-        ))}
-      </div>
-      
-      <div className="flex-1">
-        {qrImage ? (
-          <Card>
-            <CardContent className="p-6 flex flex-col items-center gap-4">
-              <h3 className="text-lg font-semibold">{selectedQR} QR 코드</h3>
-              <Image
-                src={qrImage}
-                alt="QR Code"
-                className="border p-4 rounded-lg bg-white"
-              />
-              <Button onClick={handlePrint}>
-                <Printer className="w-4 h-4 mr-2" /> 출력하기
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            QR 코드를 생성하려면 버튼을 클릭하세요
-          </div>
-        )}
+    <div className="flex justify-center items-center min-h-screen">
+      <div className="flex w-full max-w-4xl gap-8">
+        <div className="flex flex-col gap-4 w-48">
+          {QR_PAGES.map((page) => (
+            <Button
+              key={page.path}
+              onClick={() => handleQRGenerate(page.name, page.path)}
+              variant={selectedQR === page.name ? "orangeBorder" : "orange"}
+              className="w-full"
+            >
+              {page.name} QR
+            </Button>
+          ))}
+        </div>
+        
+        <div className="flex-1 flex justify-center items-center">
+          {qrImage && imageDimensions.width > 0 ? (
+            <Card className="w-full max-w-sm">
+              <CardContent className="flex flex-col items-center gap-4 p-6">
+                <h2 className="text-xl font-bold mb-4">{selectedQR} QR 코드</h2>
+                <Image
+                  src={qrImage}
+                  alt="QR Code"
+                  width={imageDimensions.width}
+                  height={imageDimensions.height}
+                  className="border p-4 rounded-lg bg-white mb-4"
+                />
+                <Button 
+                  variant="brown" 
+                  onClick={handlePrint}
+                  className="w-full"
+                >
+                  <Printer className="w-4 h-4 mr-2" /> 출력하기
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="flex items-center justify-center text-gray-500">
+              QR 코드를 생성하려면 버튼을 클릭하세요
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
