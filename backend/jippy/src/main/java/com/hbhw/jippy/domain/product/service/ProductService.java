@@ -1,9 +1,12 @@
 package com.hbhw.jippy.domain.product.service;
 
+import com.hbhw.jippy.domain.payment.service.PaymentHistoryService;
 import com.hbhw.jippy.domain.product.dto.request.CreateProductRequest;
 import com.hbhw.jippy.domain.product.dto.request.ProductUpdateRequest;
 import com.hbhw.jippy.domain.product.dto.response.ProductDetailResponse;
 import com.hbhw.jippy.domain.product.dto.response.ProductListResponse;
+import com.hbhw.jippy.domain.product.dto.response.ProductMonthSoldResponse;
+import com.hbhw.jippy.domain.product.dto.response.ProductSoldCountResponse;
 import com.hbhw.jippy.domain.product.entity.Product;
 import com.hbhw.jippy.domain.product.entity.ProductCategory;
 import com.hbhw.jippy.domain.product.mapper.ProductMapper;
@@ -12,6 +15,7 @@ import com.hbhw.jippy.domain.store.entity.Store;
 import com.hbhw.jippy.domain.store.service.StoreService;
 import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
+import com.hbhw.jippy.utils.DateTimeUtils;
 import com.hbhw.jippy.utils.UUIDProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,9 +28,7 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +36,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final StoreService storeService;
+    private final PaymentHistoryService paymentHistoryService;
     private final ProductCategoryService productCategoryService;
     private final S3Client s3Client;
     private final UUIDProvider uuidProvider;
@@ -43,24 +46,23 @@ public class ProductService {
 
     @Value("${cloud.aws.s3.bucket.base.url}")
     private String s3BaseUrl;
-    private static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
     /**
      * 상품 등록 + S3
      */
     @Transactional
-    public void createProduct(CreateProductRequest createProductRequest, MultipartFile image){
+    public void createProduct(CreateProductRequest createProductRequest, MultipartFile image) {
         Store storeEntity = storeService.getStoreEntity(createProductRequest.getStoreId());
         ProductCategory productCategoryEntity = productCategoryService
                 .getProductCategoryEntity(createProductRequest.getStoreId(), createProductRequest.getProductCategoryId());
 
-        String imageName = uuidProvider.generateUUID() +"-"+image.getOriginalFilename();
+        String imageName = uuidProvider.generateUUID() + "-" + image.getOriginalFilename();
 
-        try{
+        try {
 
             String imageUrl = "";
 
-            if(!image.isEmpty()){
+            if (!image.isEmpty()) {
                 PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                         .bucket(s3BucketName)
                         .key(imageName)
@@ -70,7 +72,7 @@ public class ProductService {
 
                 s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(image.getInputStream(), image.getSize()));
                 imageUrl = s3Client.utilities().getUrl(builder -> builder.bucket(s3BucketName).key(imageName)).toExternalForm();
-            }else{
+            } else {
                 imageUrl = s3BaseUrl;
             }
 
@@ -86,9 +88,9 @@ public class ProductService {
                     .build();
 
             productRepository.save(product);
-        }catch (IOException e){
+        } catch (IOException e) {
             throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "이미지 업로드를 실패했습니다");
-        }catch (Exception e){
+        } catch (Exception e) {
             s3Client.deleteObject(DeleteObjectRequest.builder().bucket(s3BucketName).key(imageName).build());
             throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "상품 저장에 실패했습니다.");
         }
@@ -159,4 +161,43 @@ public class ProductService {
         Optional<Product> product = productRepository.findByIdAndStoreId(productId, storeId);
         return product.orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "상품이 존재하지 않습니다."));
     }
+
+    /**
+     *  해당 기간동안 상품들의 정보 및 판매 개수 조회
+     */
+    @Transactional(readOnly = true)
+    public List<ProductDetailResponse> fetchAllProductInfo(Integer storeId, String startDate, String endDate) {
+        List<Product> productList = productRepository.findByStoreId(storeId);
+        Map<Long, Integer> soldInfo = paymentHistoryService.getTotalSoldByProduct(storeId, DateTimeUtils.getStartOfMonth(startDate), DateTimeUtils.getEndOfMonth(endDate));
+        return productList.stream()
+                .map(product -> {
+                    Integer totalSold = soldInfo.get(product.getId());
+                    if (Objects.isNull(totalSold)) {
+                        totalSold = 0;
+                    }
+                    return ProductMapper.convertProductFetchResponse(product, totalSold);
+                })
+                .toList();
+    }
+
+    /**
+     *  달별 상품 판매 개수 조회
+     */
+    public ProductMonthSoldResponse fetchMonthProductInfo(Integer storeId, String targetYear) {
+        Map<String, List<ProductSoldCountResponse>> soldmap = new HashMap<>();
+        final String[] months = {"jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"};
+        final String[] monthByNumber = {"01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"};
+
+        for (int i = 0; i < 12; i++) {
+            String startDate = targetYear + "-" + monthByNumber[i] + "-01 00:00:00";
+            String endDate = targetYear + "-" + monthByNumber[i] + "-31 23:59:59";
+            List<ProductSoldCountResponse> resultMonth = paymentHistoryService.getMonthSoldByStoreId(storeId, startDate, endDate);
+            soldmap.put(months[i], resultMonth);
+        }
+
+        return ProductMonthSoldResponse.builder()
+                .productMonthlySold(soldmap)
+                .build();
+    }
+
 }
