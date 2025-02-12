@@ -2,8 +2,7 @@ package com.hbhw.jippy.domain.payment.controller;
 
 
 import com.hbhw.jippy.domain.payment.dto.request.PaymentUUIDRequest;
-import com.hbhw.jippy.domain.payment.dto.response.PaymentDetailResponse;
-import com.hbhw.jippy.domain.payment.dto.response.PaymentHistoryListResponse;
+import com.hbhw.jippy.domain.payment.dto.response.*;
 import com.hbhw.jippy.domain.payment.entity.BuyProduct;
 import com.hbhw.jippy.domain.payment.entity.PaymentHistory;
 import com.hbhw.jippy.domain.payment.enums.PaymentStatus;
@@ -100,5 +99,23 @@ public class PaymentHistoryController {
     public ApiResponse<List<PaymentHistoryListResponse>> getCancelHistoryList(@RequestParam("storeId") Integer storeId) {
         List<PaymentHistoryListResponse> paymentHistoryListResponses = paymentHistoryService.getCancelHistoryList(storeId);
         return ApiResponse.success(HttpStatus.OK, paymentHistoryListResponses);
+    }
+
+    @GetMapping("/sales/day")
+    public ApiResponse<SalesByDayResponse> fetchSalesByDay(@RequestParam("storeId") Integer storeId, @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate ) {
+        SalesByDayResponse salesByDayResponse = paymentHistoryService.fetchSalesByDay(storeId, startDate, endDate);
+        return ApiResponse.success(HttpStatus.OK, salesByDayResponse);
+    }
+
+    @GetMapping("/sales/week")
+    public ApiResponse<SalesByWeekResponse> fetchSalesByWeek(@RequestParam("storeId") Integer storeId, @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate ) {
+        SalesByWeekResponse salesByWeekResponse = paymentHistoryService.fetchSalesByWeek(storeId, startDate, endDate);
+        return ApiResponse.success(HttpStatus.OK, salesByWeekResponse);
+    }
+
+    @GetMapping("/sales/month")
+    public ApiResponse<SalesByMonthResponse> fetchSalesByMonth(@RequestParam("storeId") Integer storeId, @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate ) {
+        SalesByMonthResponse salesByMonthResponse = paymentHistoryService.fetchSalesByMonth(storeId, startDate, endDate);
+        return ApiResponse.success(HttpStatus.OK, salesByMonthResponse);
     }
 }

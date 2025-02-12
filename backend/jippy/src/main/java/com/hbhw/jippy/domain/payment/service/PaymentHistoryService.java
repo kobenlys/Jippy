@@ -1,8 +1,7 @@
 package com.hbhw.jippy.domain.payment.service;
 
 import com.hbhw.jippy.domain.payment.dto.request.PaymentUUIDRequest;
-import com.hbhw.jippy.domain.payment.dto.response.PaymentDetailResponse;
-import com.hbhw.jippy.domain.payment.dto.response.PaymentHistoryListResponse;
+import com.hbhw.jippy.domain.payment.dto.response.*;
 import com.hbhw.jippy.domain.payment.entity.PaymentHistory;
 import com.hbhw.jippy.domain.payment.enums.PaymentStatus;
 import com.hbhw.jippy.domain.payment.enums.PaymentType;
@@ -16,7 +15,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -121,4 +119,27 @@ public class PaymentHistoryService {
         return paymentHistoryRepository.findByUUID(UUID)
                 .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재하지 않는 결제기록 입니다."));
     }
+
+    public SalesByDayResponse fetchSalesByDay(Integer storeId, String startDate, String endDate){
+        List<SalesResponse> salesByDayResponseList = paymentHistoryRepository.getDailySales(storeId, startDate, endDate)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "조회된 매출이 없습니다"));
+        return SalesByDayResponse.builder()
+                .salesByDay(salesByDayResponseList).build();
+    }
+
+    public SalesByWeekResponse fetchSalesByWeek(Integer storeId, String startDate, String endDate){
+
+        List<SalesResponse> salesByDayResponseList = paymentHistoryRepository.getWeeklySales(storeId, startDate, endDate)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "조회된 매출이 없습니다"));
+        return SalesByWeekResponse.builder()
+                .salesByWeek(salesByDayResponseList).build();
+    }
+
+    public SalesByMonthResponse fetchSalesByMonth(Integer storeId, String startDate, String endDate){
+        List<SalesResponse> salesByDayResponseList = paymentHistoryRepository.getMonthlySales(storeId, startDate, endDate)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "조회된 매출이 없습니다"));
+        return SalesByMonthResponse.builder()
+                .salesByMonth(salesByDayResponseList).build();
+    }
+
 }
