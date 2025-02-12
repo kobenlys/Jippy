@@ -11,19 +11,6 @@ import "@/app/globals.css";
 import styles from "@/app/page.module.css";
 import Button from "@/features/common/components/ui/button/Button";
 
-interface LoginResponse {
-  success: boolean;
-  data: {
-    id: number;
-    email: string;
-    name: string;
-    age: string;
-    staffType: string;
-    accessToken: string;
-    refreshToken: string;
-  };
-}
-
 interface Shop {
   id: number;
   userOwnerId: number;
@@ -84,14 +71,19 @@ const LoginPage = () => {
               "Content-Type": "application/json"
             }
           });
-  
+        
           if (shopsResponse.ok) {
             const shopsData = await shopsResponse.json();
             
-            // 로그인한 사용자의 ID와 일치하는 매장 필터링
-            const userShops: Shop[] = shopsData.data.filter(
-              (shop: Shop) => shop.userOwnerId === responseData.data.id
-            );
+            // 로그인한 사용자의 ID와 일치하는 매장 필터링 및 데이터 변환
+            const userShops = shopsData.data
+              .filter((shop: Shop) => shop.userOwnerId === responseData.data.id)
+              .map((shop: Shop) => ({
+                ...shop,
+                openingDate: '', // 또는 적절한 기본값
+                totalCash: 0,    // 또는 적절한 기본값
+                businessRegistrationNumber: '', // 또는 적절한 기본값
+              }));
             
             // 매장이 있다면 리덕스에 업데이트
             if (userShops.length > 0) {

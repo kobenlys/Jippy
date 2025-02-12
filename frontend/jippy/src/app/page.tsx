@@ -13,7 +13,6 @@ import Image from "next/image";
 const JippyPage = () => {
   const dispatch = useDispatch();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const profile = useSelector((state: RootState) => state.user.profile);
   const accessToken = useSelector((state: RootState) => state.user.accessToken);
   const isAuthenticated = useSelector((state: RootState) => state.user.isAuthenticated);
 

@@ -18,18 +18,28 @@ const initialState: RecipeState = {
 export const createRecipe = createAsyncThunk(
   'recipe/create',
   async (recipe: Recipe) => {
-    const response = await fetch('/api/recipe/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(recipe),
-    });
-    const data: ApiResponse<Recipe> = await response.json();
-    if (!data.success) {
-      throw new Error(data.code.toString());
+    try {
+      const response = await fetch('/api/recipe/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(recipe),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create recipe');
+      }
+      
+      const data: ApiResponse<Recipe> = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || `Error code: ${data.code}`);
+      }
+      
+      return data.data;
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Unknown error occurred');
     }
-    return data.data;
   }
 );
 

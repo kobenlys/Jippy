@@ -103,8 +103,8 @@ const ConfirmPage = () => {
             </Button>
 
             <Button variant="brown">
-              <Link href="/product" className="w-full block">
-                상품 등록
+              <Link href="/order" className="w-full block">
+                POS 주문
               </Link>
             </Button>
           </>

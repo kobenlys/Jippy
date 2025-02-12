@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { fetchProducts } from "@/redux/slices/productSlice";
-import CreateCategory from "@/features/order/components/category";
+import CreateCategory from "@/features/order/components/Category";
 import Image from "next/image";
-import { ProductDetailResponse } from "@/features/product/types";
+import { ProductDetailResponse, ProductType } from "@/features/product/types";
 import Button from "@/features/common/components/ui/button/Button";
+import { Plus } from "lucide-react";
+import ProductRegistrationModal from "@/features/order/components/ProductRegistrationModal";
 
 interface OrderItem {
   menuItem: ProductDetailResponse;
@@ -17,10 +19,16 @@ interface OrderItem {
 const POSOrderPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const currentShop = useSelector((state: RootState) => state.shop.currentShop);
-  const { products, loading, error } = useSelector((state: RootState) => state.product);
-  
+  const { loading, error } = useSelector((state: RootState) => state.product);
+  const products = useSelector((state: RootState) => {
+    const productsState = state.product.products;
+    return Array.isArray(productsState) 
+      ? productsState 
+      : (productsState as { data: ProductDetailResponse[] }).data || [];
+  });
   const [selectedCategory, setSelectedCategory] = useState<string>("전체");
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
   
   const DEFAULT_IMAGE_PATH = "/images/ProductPlaceholder.png";
 
@@ -38,25 +46,37 @@ const POSOrderPage = () => {
     }
   }, [dispatch, currentShop?.id]);
 
-  const productList = products?.data || [];
+  const productList = products && Array.isArray(products)
+  ? products.map(product => ({
+      ...product,
+      storeId: currentShop?.id || 0,
+      productType: Number(product.productType) as ProductType,
+    })) 
+  : [];
   
   const filteredProducts = selectedCategory === "전체"
     ? productList
     : productList.filter((item) => item.productCategoryId.toString() === selectedCategory);
 
   const addToOrder = (menuItem: ProductDetailResponse) => {
+    // storeId가 현재 shop의 id와 같다고 가정
+    const itemWithStore = {
+      ...menuItem,
+      storeId: currentShop?.id || 0
+    };
+    
     setOrderItems((prev) => {
       const existingItem = prev.find(
-        (item) => item.menuItem.id === menuItem.id
+        (item) => item.menuItem.id === itemWithStore.id
       );
       if (existingItem) {
         return prev.map((item) =>
-          item.menuItem.id === menuItem.id
+          item.menuItem.id === itemWithStore.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
-      return [...prev, { menuItem, quantity: 1 }];
+      return [...prev, { menuItem: itemWithStore, quantity: 1 }];
     });
   };
 
@@ -96,15 +116,15 @@ const POSOrderPage = () => {
     <div className="flex h-screen max-h-screen overflow-hidden">
       {/* 메뉴 영역 */}
       <div className="flex-1 flex flex-col h-full">
-      {/* 카테고리 영역 */}
-      <div className="p-3 w-full bg-white sticky top-0 border-b border-gray-200">
-        <div className="px-4">
-          <CreateCategory
-            selectedCategory={selectedCategory}
-            onCategorySelect={setSelectedCategory}
-          />
+        {/* 카테고리 영역 */}
+        <div className="p-3 w-full bg-white sticky top-0 border-b border-gray-200">
+          <div className="px-4">
+            <CreateCategory
+              selectedCategory={selectedCategory}
+              onCategorySelect={setSelectedCategory}
+            />
+          </div>
         </div>
-      </div>
 
         {/* 메뉴 그리드 영역 */}
         <div className="flex-1 overflow-auto m-4">
@@ -117,43 +137,53 @@ const POSOrderPage = () => {
               {error}
             </div>
           ) : (
-            <div className="grid grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-4 gap-4 p-4 mb-8">
               {filteredProducts.length === 0 ? (
                 <div className="col-span-4 text-center py-8 text-gray-500">
                   표시할 상품이 없습니다.
                 </div>
               ) : (
-                filteredProducts.map((item) => (
-                  <div
-                    key={item.id}
-                    onClick={() => item.status && addToOrder(item)}
-                    className={`bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow ${
-                      !item.status && "opacity-50"
-                    }`}
-                  >
-                    <div className="relative w-full h-32 bg-gray-200 rounded-lg mb-2">
-                      <Image
-                        src={getValidImageUrl(item.image)}
-                        alt={item.name}
-                        fill
-                        className="object-cover rounded-lg"
-                        onError={(e) => {
-                          const imgElement = e.target as HTMLImageElement;
-                          if (imgElement.src !== DEFAULT_IMAGE_PATH) {
-                            imgElement.src = DEFAULT_IMAGE_PATH;
-                          }
-                        }}
-                      />
+                <>
+                  {filteredProducts.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => item.status && addToOrder(item)}
+                      className={`bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow ${
+                        !item.status && "opacity-50"
+                      }`}
+                    >
+                      <div className="relative w-full h-32 bg-gray-200 rounded-lg mb-2">
+                        <Image
+                          src={getValidImageUrl(item.image)}
+                          alt={item.name}
+                          fill
+                          className="object-cover rounded-lg"
+                          onError={(e) => {
+                            const imgElement = e.target as HTMLImageElement;
+                            if (imgElement.src !== DEFAULT_IMAGE_PATH) {
+                              imgElement.src = DEFAULT_IMAGE_PATH;
+                            }
+                          }}
+                        />
+                      </div>
+                      <h3 className="font-semibold">{item.name}</h3>
+                      <p className="text-gray-600">{item.price.toLocaleString()}원</p>
+                      {!item.status && (
+                        <span className="inline-block mt-2 px-2 py-1 text-sm bg-red-100 text-red-800 rounded">
+                          품절
+                        </span>
+                      )}
                     </div>
-                    <h3 className="font-semibold">{item.name}</h3>
-                    <p className="text-gray-600">{item.price.toLocaleString()}원</p>
-                    {!item.status && (
-                      <span className="inline-block mt-2 px-2 py-1 text-sm bg-red-100 text-red-800 rounded">
-                        품절
-                      </span>
-                    )}
+                  ))}
+
+                  {/* 상품 추가 버튼 추가 */}
+                  <div 
+                    onClick={() => setIsRegistrationModalOpen(true)}
+                    className="bg-white rounded-lg shadow-md p-4 flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <Plus className="w-12 h-12 text-gray-500" />
                   </div>
-                ))
+                </>
               )}
             </div>
           )}
@@ -249,6 +279,11 @@ const POSOrderPage = () => {
           </div>
         </div>
       </div>
+      {/* 상품 등록 모달 */}
+      <ProductRegistrationModal 
+        isOpen={isRegistrationModalOpen}
+        onClose={() => setIsRegistrationModalOpen(false)}
+      />
     </div>
   );
 };

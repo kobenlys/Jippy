@@ -1,15 +1,24 @@
 "use client";
 
 import React from "react";
-import { useProductForm } from "@/features/product/hooks/userProductForm";
+import { useProductForm } from "@/features/product/hooks/useProductForm";
 import "@/app/globals.css";
 import { FormField } from "@/features/common/components/ui/form/FormFields";
 import { Alert, AlertDescription } from "@/features/common/components/ui/Alert";
 import { Button } from "@/features/common/components/ui/button";
-import CreateCategory from "@/features/order/components/category";
+import CreateCategory from "@/features/order/components/Category";
 import ProductImageUpload from "@/features/product/components/ProductImageUpload";
 
-const CreateProductForm = () => {
+// 상단에 타입 정의
+type ProductSize = "S" | "M" | "L";
+type ProductType = "HOT" | "ICE";
+
+// 상수 배열 정의
+const PRODUCT_SIZES: ProductSize[] = ["S", "M", "L"];
+const PRODUCT_TYPES: ProductType[] = ["HOT", "ICE"];
+
+
+const CreateProductForm: React.FC = () => {
   const {
     formData,
     errors,
@@ -24,7 +33,7 @@ const CreateProductForm = () => {
     handleSizeChange,
     handleTypeChange,
   } = useProductForm();
-
+  
   return (
     <div className="flex flex-col items-center justify-center">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-md">
@@ -68,53 +77,33 @@ const CreateProductForm = () => {
           }
         />
 
-        {/* 상품 사이즈 선택 */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium mb-2">
-            상품 사이즈
-            <span className="text-red-500">*</span>
-          </label>
-          <div className="grid grid-cols-3 gap-2">
-            {(["S", "M", "L"] as const).map((size) => (
-              <Button
-                key={size}
-                type="button"
-                variant={formData.productSize === size ? "orange" : "default"}
-                onClick={() => handleSizeChange(size)}
-                className="w-full"
-              >
-                {size}
-              </Button>
-            ))}
-          </div>
-          {errors.productSize && (
-            <p className="text-red-500 text-sm mt-1">{errors.productSize}</p>
-          )}
-        </div>
+      {/* 상품 사이즈 선택 */}
+      <div className="grid grid-cols-3 gap-2">
+        {PRODUCT_SIZES.map((size) => (
+          <Button
+            key={size}
+            variant={formData.productSize === size ? "orange" : "default"}
+            onClick={() => handleSizeChange(size)}
+            className="w-full"
+          >
+            {size}
+          </Button>
+        ))}
+      </div>
 
-        {/* 상품 온도 선택 */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium mb-2">
-            상품 온도
-            <span className="text-red-500">*</span>
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            {(["HOT", "ICE"] as const).map((type) => (
-              <Button
-                key={type}
-                type="button"
-                variant={formData.productType === type ? "orange" : "default"}
-                onClick={() => handleTypeChange(type)}
-                className="w-full"
-              >
-                {type}
-              </Button>
-            ))}
-          </div>
-          {errors.productType && (
-            <p className="text-red-500 text-sm mt-1">{errors.productType}</p>
-          )}
-        </div>
+      {/* 상품 온도 선택 */}
+      <div className="grid grid-cols-2 gap-2">
+        {PRODUCT_TYPES.map((type) => (
+          <Button
+            key={type}
+            variant={formData.productType === type ? "orange" : "default"}
+            onClick={() => handleTypeChange(type)}
+            className="w-full"
+          >
+            {type}
+          </Button>
+        ))}
+      </div>
 
         {error && (
           <Alert variant="destructive">
@@ -125,7 +114,6 @@ const CreateProductForm = () => {
         <Button
           variant="orange"
           disabled={isLoading}
-          type="submit"
           className="w-full mt-4"
         >
           {isLoading ? "등록 중..." : "상품 등록"}

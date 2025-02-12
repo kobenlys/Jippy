@@ -83,18 +83,23 @@ const CreateCategory = ({
     }
   };
   
-  const handleCategoryClick = (category: Category) => {
-    if (isEditMode && category.id !== 0) {
-      setEditingCategory(category);
-      setIsActionModalOpen(true);
-      return;
-    }
+// category.tsx
+// handleCategoryClick 함수 수정
+const handleCategoryClick = (category: Category) => {
+  // 편집 모드일 때는 클릭 이벤트 무시
+  if (isEditMode) {
+    setIsActionModalOpen(true);
+    setEditingCategory(category);
+    return;
+  }
+
+  console.log('=== 선택된 카테고리 정보 ===');
+  console.log('category:', category);
+  console.log('categoryId type:', typeof category.id);
   
-    // 편집 모드가 아닐 때만 카테고리 선택하고 ID도 함께 전달
-    if (!isEditMode) {
-      onCategorySelect(category.categoryName, category.id);
-    }
-  };
+  // 카테고리 선택 처리
+  onCategorySelect(category.categoryName, category.id);
+};
   
   const handleCreateCategory = async () => {
     if (!currentShopId || !newCategoryName.trim()) return;
@@ -179,7 +184,7 @@ const CreateCategory = ({
                 key={category.id}
                 className="relative"
                 onMouseDown={() => handleLongPressStart(category)}
-                onMouseUp={() => handleLongPressEnd(category)}
+                onMouseUp={() => handleLongPressEnd()}
                 onMouseLeave={() => {
                   if (longPressTimer) {
                     clearTimeout(longPressTimer);
@@ -187,7 +192,7 @@ const CreateCategory = ({
                   }
                 }}
                 onTouchStart={() => handleLongPressStart(category)}
-                onTouchEnd={() => handleLongPressEnd(category)}
+                onTouchEnd={() => handleLongPressEnd()}
                 onClick={() => handleCategoryClick(category)}
               >
                 <Button

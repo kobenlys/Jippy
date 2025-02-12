@@ -13,15 +13,14 @@ import styles from "./Navbar.module.css";
 const Navbar = () => {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { auth, user } = useSelector((state: RootState) => state.user); // state 구조 변경
   const accessToken = useSelector((state: RootState) => state.user.accessToken);
-  const email = user?.email; // user에서 email 가져오기
   
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const username = email ? email.split("@")[0] : "";
+  const user = useSelector((state: RootState) => state.user);
+  const username = user?.profile?.name || '';
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -104,7 +103,7 @@ const Navbar = () => {
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className={styles.profileButton}
                 >
-                  <span>{username} 님</span>
+                  <span>{username ? `${username} 님` : '사용자'}</span>
                   <ChevronDown className={styles.dropdownIcon} />
                 </button>
 
