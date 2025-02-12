@@ -1,6 +1,6 @@
 import { browser } from "$app/environment";
 
-export const prerender = true;
+export const prerender = false;
 
 export function load({ params }) {
   let customerId = "";
