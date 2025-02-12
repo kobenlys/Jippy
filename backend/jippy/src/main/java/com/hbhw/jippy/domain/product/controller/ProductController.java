@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -22,9 +23,12 @@ public class ProductController {
 
     @Operation(summary = "매장 별 상품 등록", description = "상품을 등록합니다")
     @PostMapping("{storeId}/create")
-    public ApiResponse<?> createProduct(@PathVariable("storeId") Integer storeId, @RequestBody CreateProductRequest createProductRequest) {
+    public ApiResponse<?> createProduct(@PathVariable("storeId") Integer storeId,
+                                        @RequestPart("createProduct") CreateProductRequest createProductRequest,
+                                        @RequestPart("image") MultipartFile image) {
+
         createProductRequest.setStoreId(storeId);
-        productService.createProduct(createProductRequest);
+        productService.createProduct(createProductRequest, image);
         return ApiResponse.success(HttpStatus.OK);
     }
 
