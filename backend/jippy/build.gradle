@@ -51,6 +51,7 @@ dependencies {
 	implementation group: 'com.google.firebase', name: 'firebase-admin', version: '9.4.3'
 	implementation 'io.awspring.cloud:spring-cloud-aws-s3:3.0.2'
 	testImplementation group: 'software.amazon.awssdk', name: 's3', version: '2.30.17'
+	testImplementation group: 'org.mockito', name: 'mockito-inline', version: '5.2.0'
 }
 
 tasks.named('test') {
