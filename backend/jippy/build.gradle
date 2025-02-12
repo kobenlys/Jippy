@@ -49,7 +49,8 @@ dependencies {
 	implementation 'com.google.zxing:core:3.5.3'
 	implementation 'com.google.zxing:javase:3.5.3'
 	implementation group: 'com.google.firebase', name: 'firebase-admin', version: '9.4.3'
-
+	implementation 'io.awspring.cloud:spring-cloud-aws-s3:3.0.2'
+	testImplementation group: 'software.amazon.awssdk', name: 's3', version: '2.30.17'
 }
 
 tasks.named('test') {

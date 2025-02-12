@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.ArrayList;
@@ -72,6 +73,11 @@ public class ErrorResponse {
     // 파라미터로 전달된 값이 타입이 맞지 않을때 발생
     public static ErrorResponse of(final ErrorCode errorCode, final MethodArgumentTypeMismatchException methodArgumentTypeMismatchException) {
         return new ErrorResponse(errorCode, getSafeMessage(errorCode.getMessage()), CustomFieldError.of(methodArgumentTypeMismatchException));
+    }
+
+    // 10mb 이상 이미지가 업로드 될때 발생
+    public static ErrorResponse of(final ErrorCode errorCode, final MaxUploadSizeExceededException maxUploadSizeExceededException) {
+        return new ErrorResponse(errorCode, errorCode.getMessage() , CustomFieldError.of(maxUploadSizeExceededException.getMessage()));
     }
 
     public static ErrorResponse of(final ErrorCode errorCode, final NoResourceFoundException noResourceFoundException) {
