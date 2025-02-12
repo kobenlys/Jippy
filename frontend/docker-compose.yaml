@@ -3,7 +3,7 @@ version: '3'
 services:
   app:
     build: .
-    image: front
+    image: jippy-fe
     ports:
       - '5173:5173'
     command: 'npm run start'
