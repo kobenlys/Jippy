@@ -2,7 +2,6 @@
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { format } from "date-fns";
-    import { v4 as uuidv4 } from "uuid";
   
     import "../../../../app.css";
     export let data;
@@ -17,7 +16,7 @@
     onMount(() => {
       let storedId = localStorage.getItem("customerId");
       if (!storedId) {
-        storedId = uuidv4();
+        storedId = window.crypto.randomUUID();
         localStorage.setItem("customerId", storedId);
       }
       customerId = storedId;
