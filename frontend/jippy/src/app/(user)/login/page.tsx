@@ -4,7 +4,11 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useDispatch } from "react-redux";
-import { loginStart, loginSuccess, loginFailure } from "@/redux/slices/userSlice";
+import {
+  loginStart,
+  loginSuccess,
+  loginFailure,
+} from "@/redux/slices/userSlice";
 import { AppDispatch } from "@/redux/store";
 import "@/app/globals.css";
 import styles from "@/app/page.module.css";
@@ -32,14 +36,17 @@ const LoginPage = () => {
   const handleLogin = async () => {
     dispatch(loginStart());
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password, userType }),
-        credentials: "include",
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/user/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password, userType }),
+          credentials: "include",
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.text();
@@ -52,24 +59,32 @@ const LoginPage = () => {
       if (data.accessToken) {
         localStorage.setItem("token", data.accessToken);
 
-        dispatch(loginSuccess({
-          user: {
-            id: data.id,
-            email: data.email,
-            name: data.name,
-            age: data.age.toString(),
-            userType: data.staff_type,
-          },
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
-        }));
+        dispatch(
+          loginSuccess({
+            user: {
+              id: data.id,
+              email: data.email,
+              name: data.name,
+              age: data.age.toString(),
+              userType: data.staff_type,
+            },
+            accessToken: data.accessToken,
+            refreshToken: data.refreshToken,
+          })
+        );
 
         router.replace("/confirm");
       } else {
         throw new Error("토큰이 응답에 없습니다");
       }
     } catch (error) {
-      dispatch(loginFailure(error instanceof Error ? error.message : "로그인 중 오류가 발생했습니다"));
+      dispatch(
+        loginFailure(
+          error instanceof Error
+            ? error.message
+            : "로그인 중 오류가 발생했습니다"
+        )
+      );
       console.error("로그인 에러:", error);
     }
   };
@@ -106,7 +121,7 @@ const LoginPage = () => {
           <span>직원</span>
         </label>
       </div>
-      
+
       <input
         type="email"
         placeholder="이메일 입력"
