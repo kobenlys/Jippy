@@ -17,8 +17,11 @@ const ChatPage: React.FC = () => {
   const selectedChatRoom: StoreChat | null = useSelector(
     (state: RootState) => state.chat.selectedChatRoom
   );
+  
   // 실제 로그인된 사용자의 id (여기서는 1로 가정)
   const [userId] = useState<number>(1);
+  const user = useSelector((state: RootState) => state.user);
+  const userName = user?.profile?.name || '';
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [showChatList, setShowChatList] = useState<boolean>(true);
 
@@ -79,7 +82,7 @@ const ChatPage: React.FC = () => {
           <ChatList chatRooms={chatRooms} onSelect={handleChatRoomSelect} />
         )}
         {selectedChatRoom ? (
-          <ChatRoom chatRoom={selectedChatRoom} userId={userId} />
+          <ChatRoom chatRoom={selectedChatRoom} userId={userId} userName={userName} />
         ) : (
           <div className={styles.emptyRoom}>
             <h2>채팅방을 선택해 주세요.</h2>

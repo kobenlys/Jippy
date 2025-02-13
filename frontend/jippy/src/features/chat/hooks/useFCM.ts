@@ -14,27 +14,60 @@ const firebaseConfig = {
 };
 
 const useFCM = () => {
+  // 백엔드에 FCM 토큰 저장 요청을 하는 함수 (예: POST /api/fcm/token)
+  const saveTokenToBackend = useCallback(async (token: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fcm/token`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        // 필요시 사용자 정보도 함께 전송
+        // userId: 현재 사용자 ID, userType: "owner" 또는 "staff"
+        body: JSON.stringify({ userId: 1, token, userType: "owner" }),
+      });
+      if (!response.ok) {
+        throw new Error("토큰 저장 실패");
+      }
+      console.log("FCM 토큰이 백엔드에 저장되었습니다.");
+    } catch (error) {
+      console.error("토큰 저장 중 에러:", error);
+    }
+  }, []);
+
   const initializeFCM = useCallback(async () => {
     try {
+      // 사용자가 알림 허용 여부를 결정하도록 요청 (브라우저에서만 동작)
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        console.warn("FCM 알림 권한이 거부되었습니다.");
+        return;
+      }
+
+      // Firebase 앱 초기화
       const app = initializeApp(firebaseConfig);
       const messaging: Messaging = getMessaging(app);
       const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+      
+      // FCM 토큰 획득
       const token = await getToken(messaging, { vapidKey });
       console.log("FCM 토큰:", token);
-      // 필요 시, 토큰을 백엔드에 저장하여 특정 사용자에게 알림 전송 가능
+      if (token) {
+        // 획득한 토큰을 백엔드에 저장
+        await saveTokenToBackend(token);
+      }
 
+      // 백그라운드 메시지 수신 시 처리 (예: toast 또는 UI 업데이트)
       onMessage(messaging, (payload) => {
         console.log("FCM 메시지 수신:", payload);
-        // 예: toast 메시지 혹은 알림 UI 업데이트
+        // 예: 알림 UI 업데이트
       });
     } catch (error) {
       console.error("FCM 초기화 에러:", error);
     }
-  }, []);
+  }, [saveTokenToBackend]);
 
   return { initializeFCM };
 };
 
 export default useFCM;
-
-

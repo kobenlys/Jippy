@@ -5,10 +5,10 @@ import styles from "@/features/chat/styles/MessageInput.module.css";
 
 interface MessageInputProps {
   storeId: number;
-  userId: number;
+  userName: string;
 }
 
-const MessageInput: React.FC<MessageInputProps> = ({ storeId, userId }) => {
+const MessageInput: React.FC<MessageInputProps> = ({ storeId, userName }) => {
   const [message, setMessage] = useState("");
   const { sendMessage } = useWebSocket(storeId);
 
@@ -16,7 +16,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ storeId, userId }) => {
     if (message.trim() === "") return;
 
     const chatMessage = {
-      senderId: userId.toString(),
+      senderId: userName,
       messageContent: message,
       timestamp: new Date().toISOString(),
       messageType: "text",

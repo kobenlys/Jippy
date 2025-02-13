@@ -7,13 +7,15 @@ import { StoreChat } from "@/features/chat/types/chat";
 import { AppDispatch } from "@/redux/store";
 import useChatMemberCount from "@/features/chat/hooks/useChatMemberCount";
 import styles from "@/features/chat/styles/ChatRoom.module.css";
+import { userInfo } from "os";
 
 interface ChatRoomProps {
   chatRoom: StoreChat;
   userId: number;
+  userName : string;
 }
 
-const ChatRoom: React.FC<ChatRoomProps> = ({ chatRoom, userId }) => {
+const ChatRoom: React.FC<ChatRoomProps> = ({ chatRoom, userId, userName}) => {
   const dispatch = useDispatch<AppDispatch>();
   const { memberCount, loading, error } = useChatMemberCount(chatRoom.storeId);
 
@@ -37,7 +39,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ chatRoom, userId }) => {
         <MessageList storeId={chatRoom.storeId} />
       </div>
       <div className={styles.footer}>
-        <MessageInput storeId={chatRoom.storeId} userId={userId} />
+        <MessageInput storeId={chatRoom.storeId} userName={userName} />
       </div>
     </div>
   );
