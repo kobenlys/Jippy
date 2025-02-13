@@ -39,14 +39,6 @@ public class StoreController {
         return ApiResponse.success(response);
     }
 
-    @Operation(summary = "매장 전체 조회", description = "등록된 모든 매장을 조회한다.")
-    // @PreAuthorize("hasRole('OWNER')")
-    @GetMapping("/select")
-    public ApiResponse<List<StoreResponse>> getStores() {
-        List<StoreResponse> responseList = storeService.getStores();
-        return ApiResponse.success(responseList);
-    }
-
     @Operation(summary = "매장 상세 조회", description = "매장 ID로 상세 정보를 조회한다.")
     // @PreAuthorize("hasRole('OWNER')")
     @GetMapping("/select/{storeId}")
@@ -54,6 +46,14 @@ public class StoreController {
         StoreResponse response = storeService.getStore(storeId);
         return ApiResponse.success(response);
     }
+
+    @Operation(summary = "소유 매장 조회", description = "점주 id로 매장 리스트를 조회한다.")
+    @GetMapping("/select/list")
+    public ApiResponse<List<StoreResponse>> getStoreListByOwnerId(@RequestParam("ownerId") Integer ownerId) {
+        List<StoreResponse> response = storeService.getStoreListByOwnerId(ownerId);
+        return ApiResponse.success(response);
+    }
+
 
     @Operation(summary = "매장 삭제", description = "매장을 삭제한다.")
     // @PreAuthorize("hasRole('OWNER')")
