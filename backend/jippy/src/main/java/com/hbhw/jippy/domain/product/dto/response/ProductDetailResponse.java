@@ -17,6 +17,7 @@ public class ProductDetailResponse {
     private String name;
     private Integer price;
     private boolean status;
+    private Integer totalSold;
     private String image;
     private ProductType productType;
     private ProductSize productSize;

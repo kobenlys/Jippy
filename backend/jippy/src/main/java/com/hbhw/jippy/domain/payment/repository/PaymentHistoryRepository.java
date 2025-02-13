@@ -3,6 +3,7 @@ package com.hbhw.jippy.domain.payment.repository;
 import com.hbhw.jippy.domain.payment.dto.response.SalesByDayResponse;
 import com.hbhw.jippy.domain.payment.dto.response.SalesResponse;
 import com.hbhw.jippy.domain.payment.entity.PaymentHistory;
+import com.hbhw.jippy.domain.product.dto.response.ProductSoldCountResponse;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -51,4 +52,31 @@ public interface PaymentHistoryRepository extends MongoRepository<PaymentHistory
     })
     Optional<List<SalesResponse>> getMonthlySales(Integer storeId, String startDate, String endDate);
 
+    /**
+     *  특정 기간 결제 내역 조회
+     */
+    @Aggregation(pipeline = {
+            "{ $match: { updated_at: { $gte: ?1, $lte: ?2 }, store_id: ?0 } }"
+    })
+    List<PaymentHistory> getRangeDatePaymentHistoryList(Integer storeId, String startDate, String endDate);
+
+    /**
+     *  상품을 달별로 판매한 정보 조회
+     */
+    @Aggregation(pipeline = {
+            "{ $match: { store_id: ?0, updated_at: { $gte: ?1, $lte: ?2 } } }",
+            "{ $unwind: '$buyProduct' }",
+            "{ $group: { " +
+                    "_id: { productId: '$buyProduct.product_id', productName: '$buyProduct.product_name' }, " +
+                    "soldCount: { $sum: '$buyProduct.product_quantity' } " +
+                    "} }",
+            "{ $project: { " +
+                    "productId: '$_id.productId', " +
+                    "productName: '$_id.productName', " +
+                    "soldCount: 1, " +
+                    "_id: 0 " +
+                    "} }",
+            "{ $sort: { soldCount: -1 } }"
+    })
+    Optional<List<ProductSoldCountResponse>> getRangeDateSaleProduct(Integer storeId, String startDate, String endDate);
 }

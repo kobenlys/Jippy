@@ -2,8 +2,11 @@ package com.hbhw.jippy.domain.product.controller;
 
 import com.hbhw.jippy.domain.product.dto.request.CreateProductRequest;
 import com.hbhw.jippy.domain.product.dto.request.ProductUpdateRequest;
+import com.hbhw.jippy.domain.product.dto.response.ProductDetailListResponse;
 import com.hbhw.jippy.domain.product.dto.response.ProductDetailResponse;
 import com.hbhw.jippy.domain.product.dto.response.ProductListResponse;
+import com.hbhw.jippy.domain.product.dto.response.ProductMonthSoldResponse;
+import com.hbhw.jippy.domain.product.entity.Product;
 import com.hbhw.jippy.domain.product.service.ProductService;
 import com.hbhw.jippy.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -60,10 +63,19 @@ public class ProductController {
         return ApiResponse.success(HttpStatus.OK);
     }
 
-    @Operation(summary = "매장 별 기간내 상품 순위", description = "상품의 순위를 조회합니다")
-    @GetMapping("/{storeId}/select/rank")
-    public ApiResponse<?> rankListProduct(@RequestParam("startDate") String startDate, @RequestParam("startDate") String endDate) {
-        // 주문목록 구현 후 개발 진행
-        return ApiResponse.success(HttpStatus.OK);
+    @Operation(summary = "매장 별 기간내 상품의 총 판매 개수 및 정보", description = "상품의 총 판매 개수 및 정보를 조회합니다")
+    @GetMapping("/{storeId}/fetch/all")
+    public ApiResponse<ProductDetailListResponse> fetchAllListProduct(@PathVariable("storeId") Integer storeId, @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate) {
+        ProductDetailListResponse productListResponseList = ProductDetailListResponse.builder()
+                .productSoldInfo(productService.fetchAllProductInfo(storeId, startDate, endDate))
+                .build();
+        return ApiResponse.success(HttpStatus.OK, productListResponseList);
+    }
+
+    @Operation(summary = "달 별 상품 판매 개수 정보", description = "상품을 달별 판매 개수 정보를 조회합니다")
+    @GetMapping("/{storeId}/fetch/month")
+    public ApiResponse<ProductMonthSoldResponse> fetchProductListByMonth(@PathVariable("storeId") Integer storeId, @RequestParam("targetYear") String targetYear) {
+        ProductMonthSoldResponse productMonthSoldResponse = productService.fetchMonthProductInfo(storeId, targetYear);
+        return ApiResponse.success(HttpStatus.OK, productMonthSoldResponse);
     }
 }
