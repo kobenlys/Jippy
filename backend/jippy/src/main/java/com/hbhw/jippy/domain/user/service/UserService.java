@@ -251,8 +251,6 @@ public class UserService {
     }
 
     private void setCookie(HttpServletResponse response, String accessToken, String refreshToken, UserPrincipal principal, StaffType staffType) {
-
-
         // user 정보 쿠키에 저장
         ResponseCookie userIdCookie = ResponseCookie.from("userId", principal.getId().toString())
                 .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
@@ -262,6 +260,13 @@ public class UserService {
                 .sameSite("Strict")
                 .build();
         ResponseCookie staffTypeCookie = ResponseCookie.from("staffType", staffType.name())
+                .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
+                .secure(true) // HTTPS에서만 전송
+                .path("/")
+                .maxAge(refreshTokenExpireTime / 1000) // 초 단위
+                .sameSite("Strict")
+                .build();
+        ResponseCookie userNameCookie = ResponseCookie.from("userName", principal.getName())
                 .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
                 .secure(true) // HTTPS에서만 전송
                 .path("/")
@@ -284,6 +289,7 @@ public class UserService {
                 .build();
         // 응답 헤더에 쿠키 추가
         response.addHeader("Set-Cookie", userIdCookie.toString());
+        response.addHeader("Set-Cookie", userNameCookie.toString());
         response.addHeader("Set-Cookie", staffTypeCookie.toString());
         response.addHeader("Set-Cookie", jwtAccesssCookie.toString());
         response.addHeader("Set-Cookie", jwtRefreshCookie.toString());
