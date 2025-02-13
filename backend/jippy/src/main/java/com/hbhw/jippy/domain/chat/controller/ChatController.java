@@ -6,6 +6,7 @@ import com.hbhw.jippy.domain.chat.dto.response.ChatListResponse;
 import com.hbhw.jippy.domain.chat.dto.response.ChatMessageResponse;
 import com.hbhw.jippy.domain.chat.entity.StoreChat;
 import com.hbhw.jippy.domain.chat.service.ChatService;
+import com.hbhw.jippy.domain.storeuser.service.staff.StoreStaffService;
 import com.hbhw.jippy.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,7 +27,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChatController {
     private final ChatService chatService;
+    private final StoreStaffService storeStaffService;
     private final SimpMessagingTemplate messagingTemplate;
+
 
     @Operation(summary = "채팅방 목록 조회", description = "사용자가 가입된 채팅방 목록을 가져옵니다.")
     @GetMapping("/{userId}")
@@ -44,6 +47,20 @@ public class ChatController {
     ) {
         List<ChatMessageResponse> messages = chatService.getMessages(storeId, limit, before);
         return ApiResponse.success(messages);
+    }
+
+    @Operation(summary = "가장 최근 메시지 조회", description = "채팅창 미리보기를 위핸 최근 메시지 조회")
+    @GetMapping("/select/recent/{storeId}")
+    public ApiResponse<ChatMessageResponse> getRecentMessage(@PathVariable Integer storeId) {
+        ChatMessageResponse message = chatService.getMessages(storeId, 20, null).getLast();
+        return ApiResponse.success(message);
+    }
+
+    @Operation(summary = "채팅창 인원수 조회", description = "특정 채팅방의 인원수를 가져옵니다.")
+    @GetMapping("/count/{storeId}")
+    public ApiResponse<Integer> getChatMemberCount(@PathVariable Integer storeId) {
+        Integer memberCount = storeStaffService.getStaffList(storeId).size();
+        return ApiResponse.success(memberCount);
     }
 
     @Operation(summary = "채팅방 생성", description = "새로운 채팅방을 생성합니다.")
