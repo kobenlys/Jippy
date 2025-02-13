@@ -2,23 +2,25 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { Message } from "@/features/chat/types/chat";
+import styles from "@/features/chat/styles/MessageList.module.css";
 
 interface MessageListProps {
   storeId: number;
 }
 
 const MessageList: React.FC<MessageListProps> = ({ storeId }) => {
-  const messages: Message[] = useSelector((state: any) => state.chat.messages[storeId] || []);
+  const messages: Message[] = useSelector((state: { chat: { messages: { [key: number]: Message[] } } }) => state.chat.messages[storeId] || []);
 
   return (
-    <ul style={{ listStyle: "none", padding: 0 }}>
-      {messages.map((msg: Message, index: number) => (
-        <li key={index} style={{ marginBottom: "0.5rem" }}>
-          <strong>{msg.senderId}</strong>: {msg.messageContent}
-          <div style={{ fontSize: "0.8rem", color: "#999" }}>{msg.timestamp}</div>
-        </li>
-      ))}
-    </ul>
+    <ul className={styles.messageList}>
+    {messages.map((msg: Message, index: number) => (
+      <li key={index} className={styles.messageItem}>
+        <div className={styles.messageHeader}>{msg.senderId}</div>
+        <div>{msg.messageContent}</div>
+        <div className={styles.messageTimestamp}>{msg.timestamp}</div>
+      </li>
+    ))}
+  </ul>
   );
 };
 

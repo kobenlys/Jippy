@@ -1,4 +1,3 @@
-// src/app/chat/page.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -10,7 +9,7 @@ import useWebSocket from "@/features/chat/hooks/useWebSocket";
 import { fetchChatList, setSelectedChatRoom } from "@/redux/slices/chatSlice";
 import { StoreChat } from "@/features/chat/types/chat";
 import { RootState, AppDispatch } from "@/redux/store";
-
+import styles from "@/features/chat/styles/ChatPage.module.css";
 
 const ChatPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -18,24 +17,22 @@ const ChatPage: React.FC = () => {
   const selectedChatRoom: StoreChat | null = useSelector(
     (state: RootState) => state.chat.selectedChatRoom
   );
-  // 실제 로그인된 사용자의 id를 사용하세요.
+  // 실제 로그인된 사용자의 id (여기서는 1로 가정)
   const [userId] = useState<number>(1);
 
-  // FCM 초기화
-  const { initializeFCM } = useFCM();
+  // 모바일 환경에서 채팅목록 토글을 위한 상태
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [showChatList, setShowChatList] = useState<boolean>(true);
 
-  // WebSocket hook (storeId가 있을 때 연결)
+  const { initializeFCM } = useFCM();
   const { connect, disconnect } = useWebSocket(selectedChatRoom?.storeId);
 
   useEffect(() => {
-    // 채팅방 목록 불러오기
     dispatch(fetchChatList(userId));
-    // FCM 초기화 (토큰 획득 및 onMessage 핸들러 등록)
     initializeFCM();
   }, [userId, dispatch, initializeFCM]);
 
   useEffect(() => {
-    // 채팅방 선택 시 WebSocket 연결
     if (selectedChatRoom) {
       connect();
     }
@@ -44,22 +41,54 @@ const ChatPage: React.FC = () => {
     };
   }, [selectedChatRoom, connect, disconnect]);
 
+  useEffect(() => {
+    // 윈도우 크기에 따라 모바일 여부를 판단 (768px 이하면 모바일)
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setIsMobile(true);
+        setShowChatList(false); // 모바일에서는 기본적으로 채팅목록 숨김
+      } else {
+        setIsMobile(false);
+        setShowChatList(true);
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const handleChatRoomSelect = (room: StoreChat): void => {
     dispatch(setSelectedChatRoom(room));
+    if (isMobile) {
+      setShowChatList(false);
+    }
   };
 
   return (
-    <div style={{ display: "flex", height: "100vh" }}>
-      {/* 왼쪽: 채팅방 목록 */}
-      <ChatList chatRooms={chatRooms} onSelect={handleChatRoomSelect} />
-      {/* 오른쪽: 선택된 채팅방 화면 */}
-      {selectedChatRoom ? (
-        <ChatRoom chatRoom={selectedChatRoom} userId={userId} />
-      ) : (
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <h2>채팅방을 선택해 주세요.</h2>
+    <div className={styles.container}>
+      {isMobile && (
+        <div className={styles.mobileHeader}>
+          <button
+            className={styles.toggleButton}
+            onClick={() => setShowChatList(!showChatList)}
+          >
+            {showChatList ? "채팅 목록 숨기기" : "채팅 목록 보기"}
+          </button>
         </div>
       )}
+      <div className={styles.content}>
+        {showChatList && (
+          <ChatList chatRooms={chatRooms} onSelect={handleChatRoomSelect} />
+        )}
+        {selectedChatRoom ? (
+          <ChatRoom chatRoom={selectedChatRoom} userId={userId} />
+        ) : (
+          <div className={styles.emptyRoom}>
+            <h2>채팅방을 선택해 주세요.</h2>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

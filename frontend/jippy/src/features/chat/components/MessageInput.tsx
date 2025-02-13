@@ -1,6 +1,7 @@
 // src/features/chat/components/MessageInput.tsx
 import React, { useState } from "react";
 import useWebSocket from "../hooks/useWebSocket";
+import styles from "@/features/chat/styles/MessageInput.module.css";
 
 interface MessageInputProps {
   storeId: number;
@@ -32,16 +33,16 @@ const MessageInput: React.FC<MessageInputProps> = ({ storeId, userId }) => {
   };
 
   return (
-    <div style={{ display: "flex" }}>
+    <div className={styles.messageInputContainer}>
       <input
         type="text"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyPress={handleKeyPress}
-        style={{ flex: 1, padding: "0.5rem" }}
+        className={styles.inputField}
         placeholder="메시지를 입력하세요."
       />
-      <button onClick={handleSend} style={{ marginLeft: "0.5rem", padding: "0.5rem 1rem" }}>
+      <button onClick={handleSend} className={styles.sendButton}>
         전송
       </button>
     </div>
