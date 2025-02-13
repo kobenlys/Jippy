@@ -36,6 +36,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 @Slf4j
@@ -266,7 +268,8 @@ public class UserService {
                 .maxAge(refreshTokenExpireTime / 1000) // 초 단위
                 .sameSite("Strict")
                 .build();
-        ResponseCookie userNameCookie = ResponseCookie.from("userName", principal.getName())
+        String encodedUserName = URLEncoder.encode(principal.getName(), StandardCharsets.UTF_8);
+        ResponseCookie userNameCookie = ResponseCookie.from("userName", encodedUserName)
                 .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
                 .secure(true) // HTTPS에서만 전송
                 .path("/")
