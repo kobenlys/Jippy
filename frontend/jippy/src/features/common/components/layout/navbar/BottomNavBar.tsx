@@ -5,6 +5,7 @@ const BottomNavBar: React.FC = () => {
   const navItems = [
     { icon: "🏠", label: "메인", href: "/attendance" },
     { icon: "📢", label: "공지사항", href: "/notifications" },
+    { icon: "📝", label: "투두리스트", href: "/todo" },
     { icon: "📅", label: "일정", href: "/calendar" },
     { icon: "💬", label: "피드백", href: "/feedback" },
   ];
