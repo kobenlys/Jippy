@@ -138,53 +138,51 @@ const POSOrderPage = () => {
             </div>
           ) : (
             <div className="grid grid-cols-4 gap-4 p-4 mb-8">
-              {filteredProducts.length === 0 ? (
-                <div className="col-span-4 text-center py-8 text-gray-500">
-                  표시할 상품이 없습니다.
-                </div>
-              ) : (
-                <>
-                  {filteredProducts.map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => item.status && addToOrder(item)}
-                      className={`bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow ${
-                        !item.status && "opacity-50"
-                      }`}
-                    >
-                      <div className="relative w-full h-32 bg-gray-200 rounded-lg mb-2">
-                        <Image
-                          src={getValidImageUrl(item.image)}
-                          alt={item.name}
-                          fill
-                          className="object-cover rounded-lg"
-                          onError={(e) => {
-                            const imgElement = e.target as HTMLImageElement;
-                            if (imgElement.src !== DEFAULT_IMAGE_PATH) {
-                              imgElement.src = DEFAULT_IMAGE_PATH;
-                            }
-                          }}
-                        />
-                      </div>
-                      <h3 className="font-semibold">{item.name}</h3>
-                      <p className="text-gray-600">{item.price.toLocaleString()}원</p>
-                      {!item.status && (
-                        <span className="inline-block mt-2 px-2 py-1 text-sm bg-red-100 text-red-800 rounded">
-                          품절
-                        </span>
-                      )}
-                    </div>
-                  ))}
-
-                  {/* 상품 추가 버튼 추가 */}
-                  <div 
-                    onClick={() => setIsRegistrationModalOpen(true)}
-                    className="bg-white rounded-lg shadow-md p-4 flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
-                  >
-                    <Plus className="w-12 h-12 text-gray-500" />
+              {filteredProducts.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => item.status && addToOrder(item)}
+                  className={`bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow ${
+                    !item.status && "opacity-50"
+                  }`}
+                >
+                  <div className="relative w-full h-32 bg-gray-200 rounded-lg mb-2">
+                    <Image
+                      src={getValidImageUrl(item.image)}
+                      alt={item.name}
+                      fill
+                      className="object-cover rounded-lg"
+                      onError={(e) => {
+                        const imgElement = e.target as HTMLImageElement;
+                        if (imgElement.src !== DEFAULT_IMAGE_PATH) {
+                          imgElement.src = DEFAULT_IMAGE_PATH;
+                        }
+                      }}
+                    />
                   </div>
-                </>
+                  <h3 className="font-semibold">{item.name}</h3>
+                  <p className="text-gray-600">{item.price.toLocaleString()}원</p>
+                  {!item.status && (
+                    <span className="inline-block mt-2 px-2 py-1 text-sm bg-red-100 text-red-800 rounded">
+                      품절
+                    </span>
+                  )}
+                </div>
+              ))}
+              
+              {filteredProducts.length === 0 && (
+                <div className="col-span-4 text-center py-8 text-gray-500">
+                  <p>이 카테고리에 등록된 상품이 없습니다.</p>
+                </div>
               )}
+
+              {/* 상품 추가 버튼은 항상 표시 */}
+              <div 
+                onClick={() => setIsRegistrationModalOpen(true)}
+                className="bg-white rounded-lg shadow-md p-4 flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
+              >
+                <Plus className="w-12 h-12 text-gray-500" />
+              </div>
             </div>
           )}
         </div>

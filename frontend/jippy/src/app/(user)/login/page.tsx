@@ -34,8 +34,8 @@ const LoginPage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password, userType }),
         credentials: "include",
+        body: JSON.stringify({ email, password, userType }),
       });
   
       // 응답 데이터 확인을 위한 로그 추가
@@ -69,8 +69,11 @@ const LoginPage = () => {
             headers: {
               "Authorization": `Bearer ${responseData.data.accessToken}`,
               "Content-Type": "application/json"
-            }
+            },
+            credentials: "include"
           });
+        console.log('매장 조회 요청 토큰:', responseData.data.accessToken);
+        console.log('매장 조회 응답 상태:', shopsResponse.status);
         
           if (shopsResponse.ok) {
             const shopsData = await shopsResponse.json();

@@ -1,5 +1,4 @@
-"use client";
-
+// components/ProductRegistrationModal.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Image from 'next/image';
@@ -7,306 +6,342 @@ import { Modal } from "@/features/common/components/ui/modal/Modal";
 import { Button } from "@/features/common/components/ui/button";
 import { AppDispatch, RootState } from "@/redux/store";
 import { createProduct } from "@/redux/slices/productSlice";
-import { X, ImagePlus } from 'lucide-react';
 import { fetchCategories } from "@/redux/slices/categorySlice";
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface Category {
-    id: number;
-    categoryName: string;
-    description?: string;
-  }
+import { X, ImagePlus, ArrowLeft } from 'lucide-react';
+import { ProductType, ProductSize, AVAILABLE_SIZES, ProductFormData, SizeRecipeData } from '@/redux/types/product';
+import SizeRecipeForm from './SizeRecipeForm';
 
 interface ProductRegistrationModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const ProductRegistrationModal: React.FC<ProductRegistrationModalProps> = ({ 
-    isOpen, 
-    onClose 
-  }) => {
-    const dispatch = useDispatch<AppDispatch>();
-    const currentShop = useSelector((state: RootState) => state.shop.currentShop);
-    const categories = useSelector((state: RootState) => {
-        const categoriesState = state.category.categories;
-        
-        // 배열인지 확인
-        if (Array.isArray(categoriesState)) {
-            return categoriesState;
-        }
-        
-        // 객체이고 data 프로퍼티가 있는지 확인
-        if (categoriesState && 'data' in categoriesState) {
-            return (categoriesState as { data: Category[] }).data;
-        }
-        
-        // 둘 다 아니면 빈 배열 반환
-        return [];
-    });
-    const loading = useSelector((state: RootState) => state.category.loading);
+interface CategoryResponse {
+  code: number;
+  success: boolean;
+  data: Array<{
+    id: number;
+    categoryName: string;
+  }>;
+}
 
-    const [productName, setProductName] = useState('');
-    const [productPrice, setProductPrice] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('');
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
-    const [isAvailable, setIsAvailable] = useState(true);
-
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-        if (isOpen && currentShop?.id) {
-            dispatch(fetchCategories(currentShop.id));
-        }
-    }, [isOpen, currentShop?.id, dispatch]);
-
-    if (!isOpen) return null;
-
-    const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            setImageFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result as string);
-            };
-            reader.readAsDataURL(file);
-        }
+const ProductRegistrationModal: React.FC<ProductRegistrationModalProps> = ({ isOpen, onClose }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const currentShop = useSelector((state: RootState) => state.shop.currentShop);
+  
+  // 카테고리 관련 상태 가져오기
+  const { categories, loading: categoryLoading, error: categoryError } = useSelector((state: RootState) => {
+    const categoriesState = state.category.categories;
+    return {
+      categories: categoriesState?.data || [],
+      loading: state.category.loading,
+      error: state.category.error
     };
+  });
 
-    const handleRemoveImage = (e?: React.MouseEvent) => {
-        e?.stopPropagation();
-        setImageFile(null);
-        setImagePreview(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
-    };
+  const [step, setStep] = useState<'basic' | 'recipe'>('basic');
+  const [formData, setFormData] = useState<ProductFormData>({
+    name: '',
+    categoryId: 0,
+    type: ProductType.ICE,
+    isAvailable: true,
+  });
+  const [sizeData, setSizeData] = useState<Partial<Record<ProductSize, SizeRecipeData>>>({});
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-    
-        try {
-            // 입력값 검증
-            if (!productName.trim()) {
-                alert('상품명을 입력해주세요.');
-                return;
-            }
-    
-            const price = parseFloat(productPrice.replace(/,/g, ''));
-            if (isNaN(price) || price < 0) {
-                alert('올바른 가격을 입력해주세요.');
-                return;
-            }
-    
-            if (!currentShop?.id) {
-                alert('매장을 선택해주세요.');
-                return;
-            }
-    
-            if (!selectedCategory) {
-                alert('카테고리를 선택해주세요.');
-                return;
-            }
-    
-            // 상품 데이터 구성
-            const productData = {
-                name: productName.trim(),
-                price: price,
-                storeId: currentShop.id,
-                status: isAvailable,
-                productCategoryId: parseInt(selectedCategory),
-                productType: "ICE",  // 기본값 설정
-                productSize: "M"     // 기본값 설정
-            };
-    
-            // FormData 구성
-            const formData = new FormData();
-            formData.append('data', JSON.stringify(productData));
-            
-            if (imageFile) {
-                formData.append('image', imageFile);
-            }
-    
-            // 상품 등록 요청
-            const result = await dispatch(createProduct({ 
-                formData, 
-                storeId: currentShop.id 
-            })).unwrap();
-    
-            if (result.success) {
-                alert('상품이 성공적으로 등록되었습니다.');
-                onClose();
-            } else {
-                throw new Error(result.message || '상품 등록에 실패했습니다.');
-            }
-            
-        } catch (error) {
-            // console.error('상품 등록 중 오류 발생:', error);
-            
-            let errorMessage = '상품 등록에 실패했습니다.';
-            if (error instanceof Error) {
-                errorMessage = error.message;
-            } else if (typeof error === 'string') {
-                errorMessage = error;
-            }
-            
-            alert(errorMessage);
-        }
-    };
+  // 모달이 열릴 때 카테고리 목록 가져오기
+  useEffect(() => {
+    if (isOpen && currentShop?.id) {
+      dispatch(fetchCategories(currentShop.id));
+    }
+  }, [isOpen, currentShop?.id, dispatch]);
 
-    const renderCategoryOptions = () => {
-        if (loading) {
-          return <option disabled>카테고리 로딩 중...</option>;
-        }
-      
-        if (!categories || categories.length === 0) {
-          return <option disabled>등록된 카테고리가 없습니다</option>;
-        }
-      
-        return categories.map((category) => (
-          <option key={category.id} value={category.id.toString()}>
-            {category.categoryName}
-          </option>
-        ));
+  // 모달이 열릴 때 폼 초기화
+  useEffect(() => {
+    if (isOpen) {
+      setStep('basic');
+      setFormData({
+        name: '',
+        categoryId: 0,
+        type: ProductType.ICE,
+        isAvailable: true,
+      });
+      setSizeData({});
+      setImageFile(null);
+      setImagePreview(null);
+    }
+  }, [isOpen]);
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
       };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleBasicSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formData.categoryId === 0) {
+      alert('카테고리를 선택해주세요.');
+      return;
+    }
+    setStep('recipe');
+  };
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      categoryId: value ? parseInt(value) : 0
+    }));
+  };
+
+  const handleSizeDataSubmit = async (sizeData: Partial<Record<ProductSize, SizeRecipeData>>) => {
+    if (!currentShop?.id) return;
+    
+    try {
+      // 각 사이즈별로 상품 생성
+      for (const [size, data] of Object.entries(sizeData)) {
+        if (!data) continue;
+        
+        const productData = {
+          createProduct: {
+            productCategoryId: formData.categoryId,
+            storeId: currentShop.id,
+            name: formData.name.trim(),
+            price: data.price,
+            status: formData.isAvailable,
+            productType: formData.type,
+            productSize: parseInt(size)
+          },
+          image: imagePreview ? imagePreview.split(',')[1] : null
+        };
+
+        const result = await dispatch(createProduct({
+          storeId: currentShop.id,
+          productData
+        })).unwrap();
+
+        if (result.success) {
+          // 레시피 생성
+          const recipeResponse = await fetch('/api/recipe/create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              productId: result.data.id,
+              updatedAt: new Date().toISOString(),
+              ingredient: data.recipe
+            })
+          });
+
+          if (!recipeResponse.ok) {
+            throw new Error('레시피 등록에 실패했습니다.');
+          }
+        }
+      }
+      
+      onClose();
+    } catch (error) {
+      console.error('상품 등록 실패:', error);
+      alert(error instanceof Error ? error.message : '상품 등록에 실패했습니다.');
+    }
+  };
+
+  const renderCategoryOptions = () => {
+    if (categoryLoading) {
+      return <option disabled>카테고리 로딩 중...</option>;
+    }
+
+    if (categoryError) {
+      return <option disabled>카테고리 로드 실패</option>;
+    }
+
+    if (!Array.isArray(categories) || categories.length === 0) {
+      return <option disabled>등록된 카테고리가 없습니다</option>;
+    }
 
     return (
-        <Modal 
-            isOpen={isOpen} 
-            onClose={onClose}
-            className="max-w-md w-full"
-        >
-            <div className="max-w-4xl w-full mx-auto p-6">
-                <h2 className="text-xl font-bold mb-4">새 상품 등록</h2>
-                
-                <form onSubmit={handleSubmit}>
-                    {/* Image Upload Section */}
-                    <div className="mb-4">
-                        <input 
-                            type="file" 
-                            ref={fileInputRef}
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            className="hidden"
-                        />
-                        <div 
-                            className="relative w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center cursor-pointer"
-                            onClick={() => fileInputRef.current?.click()}
-                        >
-                        {imagePreview ? (
-                            <>
-                                <Image 
-                                    src={imagePreview} 
-                                    alt="상품 이미지" 
-                                    fill
-                                    sizes="(max-width: 768px) 100vw, 50vw"
-                                    className="object-cover rounded-lg"
-                                    priority  // 이미지를 빠르게 로드하기 위해 추가
-                                    onError={() => {
-                                        // console.error('이미지 로드 실패');
-                                        handleRemoveImage();
-                                    }}
-                                />
-                                <button 
-                                    type="button"
-                                    onClick={(e) => handleRemoveImage(e)}
-                                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 z-10"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </>
-                        ) : (
-                            <div className="flex flex-col items-center text-gray-500">
-                                <ImagePlus className="w-12 h-12 mb-2" />
-                                <p>이미지 업로드</p>
-                            </div>
-                        )}
-                        </div>
-                    </div>
-
-                    {/* Product Name Input */}
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            상품명
-                        </label>
-                        <input 
-                            type="text" 
-                            value={productName}
-                            onChange={(e) => setProductName(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded"
-                            placeholder="상품명을 입력하세요"
-                            required
-                        />
-                    </div>
-
-                    {/* Price Input */}
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            가격
-                        </label>
-                        <input 
-                            type="text" 
-                            value={productPrice}
-                            onChange={(e) => {
-                                const value = e.target.value.replace(/[^\d]/g, '');
-                                setProductPrice(value ? Number(value).toLocaleString() : '');
-                            }}
-                            className="w-full p-2 border border-gray-300 rounded"
-                            placeholder="가격을 입력하세요"
-                            required
-                        />
-                    </div>
-
-                    {/* Category Selection */}
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            카테고리
-                        </label>
-                        <select 
-                            value={selectedCategory} 
-                            onChange={(e) => setSelectedCategory(e.target.value)} 
-                            className="w-full p-2 border border-gray-300 rounded"
-                            required
-                        >
-                            <option value="">카테고리 선택</option>
-                            {renderCategoryOptions()}
-                        </select>
-                    </div>
-
-                    {/* Product Status */}
-                    <div className="mb-4 flex items-center">
-                        <input 
-                            type="checkbox" 
-                            id="isAvailable"
-                            checked={isAvailable}
-                            onChange={(e) => setIsAvailable(e.target.checked)}
-                            className="mr-2"
-                        />
-                        <label htmlFor="isAvailable" className="text-sm">
-                            판매 중
-                        </label>
-                    </div>
-
-                    {/* Submit Buttons */}
-                    <div className="flex justify-end space-x-2">
-                        <Button 
-                            variant="orangeBorder"
-                            onClick={onClose}
-                        >
-                            취소
-                        </Button>
-                        <Button
-                            variant="orange"
-                        >
-                            등록
-                        </Button>
-                    </div>
-                </form>
-            </div>
-        </Modal>
+      <>
+        <option value="">카테고리 선택</option>
+        {categories.map((category) => (
+          <option key={category.id} value={category.id}>
+            {category.categoryName}
+          </option>
+        ))}
+      </>
     );
+  };
+
+  const renderBasicForm = () => (
+    <form onSubmit={handleBasicSubmit}>
+      {/* 이미지 업로드 */}
+      <div className="mb-4">
+        <input 
+          type="file" 
+          ref={fileInputRef}
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="hidden"
+        />
+        <div 
+          className="relative w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center cursor-pointer"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          {imagePreview ? (
+            <>
+              <Image 
+                src={imagePreview} 
+                alt="상품 이미지" 
+                fill
+                className="object-cover rounded-lg"
+              />
+              <button 
+                type="button"
+                onClick={handleRemoveImage}
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </>
+          ) : (
+            <div className="flex flex-col items-center text-gray-500">
+              <ImagePlus className="w-12 h-12 mb-2" />
+              <p>이미지 업로드</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 기본 정보 입력 폼 */}
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            상품명
+          </label>
+          <input 
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            className="w-full p-2 border border-gray-300 rounded"
+            placeholder="상품명을 입력하세요"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            카테고리
+          </label>
+          <select
+            value={formData.categoryId || ''}
+            onChange={handleCategoryChange}
+            className="w-full p-2 border border-gray-300 rounded"
+            required
+          >
+            {renderCategoryOptions()}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            상품 타입
+          </label>
+          <div className="flex gap-2">
+            {Object.values(ProductType).filter(type => !isNaN(Number(type))).map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, type: type as ProductType }))}
+                className={`flex-1 p-2 rounded transition-colors ${
+                  formData.type === type 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                {ProductType[type]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="isAvailable"
+            checked={formData.isAvailable}
+            onChange={(e) => setFormData(prev => ({ ...prev, isAvailable: e.target.checked }))}
+            className="mr-2"
+          />
+          <label htmlFor="isAvailable" className="text-sm">
+            판매 중
+          </label>
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-2 mt-6">
+        <Button variant="orangeBorder" onClick={onClose} type="button">
+          취소
+        </Button>
+        <Button variant="orange" type="submit">
+          다음
+        </Button>
+      </div>
+    </form>
+  );
+
+  return (
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose}
+      className="max-w-2xl w-full"
+    >
+      <div className="p-6">
+        <div className="flex items-center mb-4">
+          {step === 'recipe' && (
+            <button
+              onClick={() => setStep('basic')}
+              className="mr-2 p-1 hover:bg-gray-100 rounded"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
+          <h2 className="text-xl font-bold">
+            {step === 'basic' ? '새 상품 등록' : '사이즈 및 레시피 등록'}
+          </h2>
+        </div>
+
+        {step === 'basic' ? (
+          renderBasicForm()
+        ) : (
+          <SizeRecipeForm
+            productType={formData.type}
+            sizeData={sizeData}
+            onSubmit={handleSizeDataSubmit}
+            onCancel={() => setStep('basic')}
+          />
+        )}
+      </div>
+    </Modal>
+  );
 };
 
 export default ProductRegistrationModal;

@@ -2,6 +2,11 @@ const withPWA = require("@ducanh2912/next-pwa").default;
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
+  images: {
+    domains: [
+      'jippy.s3.ap-northeast-2.amazonaws.com'
+    ],
+  },
   reactStrictMode: true,
   swcMinify: true,
   webpack(config, { isServer }) {

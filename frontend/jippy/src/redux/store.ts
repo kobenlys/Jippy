@@ -5,6 +5,7 @@ import shopReducer from "./slices/shopSlice";
 import productReducer from "./slices/productSlice";
 import categoryReducer from './slices/categorySlice';
 import recipeReducer from "./slices/recipeSlice";
+import testReducer from "./slices/testSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     product: productReducer,
     category: categoryReducer,
     recipe: recipeReducer,
+    test: testReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

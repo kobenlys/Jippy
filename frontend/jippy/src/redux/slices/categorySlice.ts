@@ -21,6 +21,12 @@ const initialState: CategoryState = {
   error: null,
 };
 
+interface CategoryResponse {
+  code: number;
+  success: boolean;
+  data: Category[];
+}
+
 // API 요청을 안전하게 처리하는 함수
 const fetchData = async (url: string, options?: RequestInit) => {
   try {
@@ -91,12 +97,10 @@ const categorySlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchCategories.fulfilled, (state, action) => {
-        console.log("fetchCategories fulfilled:", action.payload); // 확인 로그
+      .addCase(fetchCategories.fulfilled, (state, action: PayloadAction<CategoryResponse>) => {
         state.loading = false;
-        state.categories = action.payload;
+        state.categories = action.payload;  // API 응답 전체를 저장
       })
-      
       .addCase(fetchCategories.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch categories';
