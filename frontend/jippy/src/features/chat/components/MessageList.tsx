@@ -2,6 +2,7 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { Message } from "@/features/chat/types/chat";
+import { formatTimestamp } from "@/utils/formatDate";
 import styles from "@/features/chat/styles/MessageList.module.css";
 
 interface MessageListProps {
@@ -17,7 +18,7 @@ const MessageList: React.FC<MessageListProps> = ({ storeId }) => {
       <li key={index} className={styles.messageItem}>
         <div className={styles.messageHeader}>{msg.senderId}</div>
         <div>{msg.messageContent}</div>
-        <div className={styles.messageTimestamp}>{msg.timestamp}</div>
+        <div className={styles.messageTimestamp}>{formatTimestamp(msg.timestamp)}</div>
       </li>
     ))}
   </ul>

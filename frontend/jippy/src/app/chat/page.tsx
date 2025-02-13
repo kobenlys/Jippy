@@ -19,8 +19,6 @@ const ChatPage: React.FC = () => {
   );
   // 실제 로그인된 사용자의 id (여기서는 1로 가정)
   const [userId] = useState<number>(1);
-
-  // 모바일 환경에서 채팅목록 토글을 위한 상태
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [showChatList, setShowChatList] = useState<boolean>(true);
 
@@ -42,11 +40,10 @@ const ChatPage: React.FC = () => {
   }, [selectedChatRoom, connect, disconnect]);
 
   useEffect(() => {
-    // 윈도우 크기에 따라 모바일 여부를 판단 (768px 이하면 모바일)
     const handleResize = () => {
       if (window.innerWidth <= 768) {
         setIsMobile(true);
-        setShowChatList(false); // 모바일에서는 기본적으로 채팅목록 숨김
+        setShowChatList(false);
       } else {
         setIsMobile(false);
         setShowChatList(true);

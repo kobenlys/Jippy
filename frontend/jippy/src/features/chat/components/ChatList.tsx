@@ -1,5 +1,6 @@
 import React from "react";
 import { StoreChat } from "@/features/chat/types/chat";
+import ChatListItem from "./ChatListItem";
 import styles from "@/features/chat/styles/ChatList.module.css";
 
 interface ChatListProps {
@@ -13,13 +14,7 @@ const ChatList: React.FC<ChatListProps> = ({ chatRooms, onSelect }) => {
       <div className={styles.header}>채팅방 목록</div>
       <ul className={styles.list}>
         {chatRooms.map((room) => (
-          <li
-            key={room.storeId}
-            className={styles.listItem}
-            onClick={() => onSelect(room)}
-          >
-            {"채팅방 " + room.storeId}
-          </li>
+          <ChatListItem key={room.storeId} chatRoom={room} onSelect={onSelect} />
         ))}
       </ul>
     </div>
