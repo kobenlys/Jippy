@@ -1,101 +1,143 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import AttendanceNotification from "./AttendanceNotification";
-import { AttendanceStatus } from "@/features/attendance/types/status";
+import { AttendanceStatus } from "../types/attendance";
 import styles from "../styles/AttendanceButtons.module.css";
+import useWorkingStatus from "../hooks/useWorkingStatus";
+import LoadingSpinner from "@/features/common/components/ui/LoadingSpinner";
+import useAttendanceAction from "../hooks/useAttendanceAction";
 
 interface AttendanceButtonsProps {
   className?: string;
-  onStatusChange?: (status: AttendanceStatus, time: string) => void;
+  storeId: number;
+  staffId: number;
 }
 
-const AttendanceButtons: React.FC<AttendanceButtonsProps> = ({ 
+const AttendanceButtons: React.FC<AttendanceButtonsProps> = ({
   className = "",
-  onStatusChange 
+  storeId,
+  staffId,
 }) => {
-  const [attendanceStatus, setAttendanceStatus] = useState<AttendanceStatus>("NONE");
+  const [status, setStatus] = useState<AttendanceStatus>("NONE");
   const [checkInTime, setCheckInTime] = useState<string>("");
   const [checkOutTime, setCheckOutTime] = useState<string>("");
   const [showNotification, setShowNotification] = useState<boolean>(false);
-  const [currentAction, setCurrentAction] = useState<AttendanceStatus>("NONE");
 
-  // 버튼 참조를 위한 ref 추가
-  const checkInButton = useRef<HTMLButtonElement>(null);
-  const checkOutButton = useRef<HTMLButtonElement>(null);
+  const { isWorking, isLoading, refreshStatus } = useWorkingStatus(
+    storeId,
+    staffId
+  );
+  const {
+    checkIn,
+    checkOut,
+    isLoading: actionLoading,
+  } = useAttendanceAction(storeId);
 
-  // 알림창 표시될 때 body 스크롤 방지
   useEffect(() => {
-    if (showNotification) {
-      document.body.style.overflow = "hidden";
+    const savedDate = localStorage.getItem("attendanceDate");
+    const today = new Date().toDateString();
+
+    if (savedDate !== today) {
+      localStorage.removeItem("attendanceStatus");
+      localStorage.removeItem("checkInTime");
+      localStorage.removeItem("checkOutTime");
     } else {
-      document.body.style.overflow = "unset";
+      const savedStatus = localStorage.getItem(
+        "attendanceStatus"
+      ) as AttendanceStatus;
+      const savedCheckInTime = localStorage.getItem("checkInTime");
+      const savedCheckOutTime = localStorage.getItem("checkOutTime");
+
+      if (savedStatus) setStatus(savedStatus);
+      if (savedCheckInTime) setCheckInTime(savedCheckInTime);
+      if (savedCheckOutTime) setCheckOutTime(savedCheckOutTime);
     }
+    localStorage.setItem("attendanceDate", today);
+  }, []);
 
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [showNotification]);
-
-  // 버튼 상태에 따라 오버레이 표시하는 로직 추가
   useEffect(() => {
-    if (attendanceStatus === "NONE" && checkInButton.current?.disabled) {
-      setShowNotification(true);
-      setCurrentAction("CHECKED_IN");
-    } else if (attendanceStatus === "CHECKED_IN" && checkOutButton.current?.disabled) {
-      setShowNotification(true);
-      setCurrentAction("CHECKED_OUT");
+    if (status !== "NONE") {
+      localStorage.setItem("attendanceStatus", status);
+    } else {
+      localStorage.removeItem("attendanceStatus");
     }
-  }, [attendanceStatus]);
+  }, [status]);
 
-  const getCurrentTime = (): string => {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    return `${hours}:${minutes}`;
+  useEffect(() => {
+    if (checkInTime) {
+      localStorage.setItem("checkInTime", checkInTime);
+    }
+  }, [checkInTime]);
+
+  useEffect(() => {
+    if (checkOutTime) {
+      localStorage.setItem("checkOutTime", checkOutTime);
+    }
+  }, [checkOutTime]);
+
+  const formatTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
   };
 
-  const handleAttendance = (type: "CHECKED_IN" | "CHECKED_OUT") => {
-    const currentTime = getCurrentTime();
-    
-    if (type === "CHECKED_IN") {
-      setCheckInTime(currentTime);
-      setAttendanceStatus("CHECKED_IN");
-    } else {
-      setCheckOutTime(currentTime);
-      setAttendanceStatus("CHECKED_OUT");
+  useEffect(() => {
+    if (!isLoading) {
+      const savedStatus = localStorage.getItem(
+        "attendanceStatus"
+      ) as AttendanceStatus;
+      if (savedStatus === "CHECKED_OUT") {
+        setStatus("CHECKED_OUT");
+      } else {
+        setStatus(isWorking ? "CHECKED_IN" : "NONE");
+      }
     }
+  }, [isWorking, isLoading]);
 
-    setCurrentAction(type);
-    onStatusChange?.(type, currentTime);
-    setShowNotification(true);
+  const handleCheckIn = async () => {
+    try {
+      const result = await checkIn();
+      setCheckInTime(formatTime(result.checkInTime));
+      setStatus("CHECKED_IN");
+      setShowNotification(true);
+      await refreshStatus();
+    } catch (error) {
+      console.error("출근 처리 실패: ", error);
+    }
   };
+
+  const handleCheckOut = async () => {
+    try {
+      const result = await checkOut();
+      setCheckOutTime(formatTime(result.checkOutTime));
+      setStatus("CHECKED_OUT");
+      setShowNotification(true);
+      await refreshStatus();
+    } catch (error) {
+      console.error("퇴근 처리 실패:", error);
+    }
+  };
+
+  if (isLoading) return <LoadingSpinner />;
 
   return (
     <>
-      {showNotification && (
-        <>
-          {/* Backdrop Overlay */}
-          <div 
-            className={styles.overlay}
-            onClick={() => setShowNotification(false)}
-          />
-          {/* Notification */}
-          <div className={styles.notificationWrapper}>
-            <AttendanceNotification
-              status={currentAction === "NONE" ? "CHECKED_IN" : currentAction}
-              time={currentAction === "CHECKED_IN" ? checkInTime : checkOutTime}
-              onConfirm={() => setShowNotification(false)}
-            />
-          </div>
-        </>
+      {showNotification && status != "NONE" && (
+        <AttendanceNotification
+          status={status}
+          time={status === "CHECKED_IN" ? checkInTime : checkOutTime}
+          onConfirm={() => setShowNotification(false)}
+        />
       )}
 
       <div className={`${styles.container} ${className}`}>
-        <button 
-          ref={checkInButton}
-          onClick={() => handleAttendance("CHECKED_IN")}
-          disabled={attendanceStatus !== "NONE"}
+        <button
+          onClick={handleCheckIn}
+          disabled={status !== "NONE" || actionLoading}
           className={`${styles.button} ${styles.checkInButton} 
-            ${attendanceStatus !== "NONE" ? styles.checkInButtonDisabled : ""}`}
+            ${status !== "NONE" ? styles.checkInButtonDisabled : ""}`}
           type="button"
         >
           {checkInTime ? (
@@ -104,16 +146,17 @@ const AttendanceButtons: React.FC<AttendanceButtonsProps> = ({
               <span className={styles.buttonStatusText}>출근 완료</span>
             </>
           ) : (
-            <span className={styles.buttonDefaultText}>출근하기</span>
+            <span className={styles.buttonDefaultText}>
+              {actionLoading ? "처리중..." : "출근하기"}
+            </span>
           )}
         </button>
 
-        <button 
-          ref={checkOutButton}
-          onClick={() => handleAttendance("CHECKED_OUT")}
-          disabled={attendanceStatus !== "CHECKED_IN"}
+        <button
+          onClick={handleCheckOut}
+          disabled={status !== "CHECKED_IN" || actionLoading}
           className={`${styles.button} ${styles.checkOutButton}
-            ${attendanceStatus !== "CHECKED_IN" ? styles.checkOutButtonDisabled : ""}`}
+            ${status !== "CHECKED_IN" ? styles.checkOutButtonDisabled : ""}`}
           type="button"
         >
           {checkOutTime ? (
@@ -122,7 +165,9 @@ const AttendanceButtons: React.FC<AttendanceButtonsProps> = ({
               <span className={styles.buttonStatusText}>퇴근 완료</span>
             </>
           ) : (
-            <span className={styles.buttonDefaultText}>퇴근하기</span>
+            <span className={styles.buttonDefaultText}>
+              {actionLoading ? "처리중..." : "퇴근하기"}
+            </span>
           )}
         </button>
       </div>
