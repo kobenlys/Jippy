@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import FeedbackList from '@/features/dashboard/customer/components/FeedbackList';
 import MLAnalysis from '@/features/dashboard/customer/components/MLAnalysis';
-import styles from '@/features/dashboard/customer/styles/Dashboard.module.css';
 
 const CustomerDashboardPage = () => {
   // 전체/카테고리별 필터 (null이면 전체)
