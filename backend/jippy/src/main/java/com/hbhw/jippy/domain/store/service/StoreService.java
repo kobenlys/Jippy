@@ -9,9 +9,13 @@ import com.hbhw.jippy.domain.user.entity.UserOwner;
 import com.hbhw.jippy.domain.user.repository.UserOwnerRepository; // 예시
 import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
+import com.hbhw.jippy.global.response.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.Builder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -80,6 +84,16 @@ public class StoreService {
                 .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장은 존재하지 않습니다."));
         return toResponse(store);
     }
+
+    public List<StoreResponse> getStoreListByOwnerId(Integer ownerId){
+        List<Store> storeListByOwner = storeRepository.findByUserOwnerId(ownerId)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장은 존재하지 않습니다."));
+
+        return storeListByOwner.stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
 
     public Store getStoreEntity(Integer storeId) {
         return storeRepository.findById(storeId)

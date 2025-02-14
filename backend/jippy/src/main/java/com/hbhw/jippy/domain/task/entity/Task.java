@@ -3,9 +3,6 @@ package com.hbhw.jippy.domain.task.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 @Entity
 @Table(name = "store_todo_list")
 @Getter
@@ -32,10 +29,6 @@ public class Task {
     /** 할 일 제목 */
     @Column(name = "title", nullable = false, length = 50)
     private String title;
-
-    /** 할 일 내용 */
-    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
-    private String content;
 
     /**
      * 작성 시각 (DB에서 VARCHAR(20)로 관리)

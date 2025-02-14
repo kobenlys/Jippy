@@ -11,7 +11,6 @@ public class TaskResponse {
     private Long id;
     private Integer storeId;
     private String title;
-    private String content;
     private String createdAt;
     private boolean isComplete;
 }

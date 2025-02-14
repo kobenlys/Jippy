@@ -1,5 +1,6 @@
 package com.hbhw.jippy.domain.user.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hbhw.jippy.domain.store.entity.Store;
 import com.hbhw.jippy.domain.store.repository.StoreRepository;
 import com.hbhw.jippy.domain.storeuser.entity.staff.StoreUserStaff;
@@ -23,9 +24,11 @@ import com.hbhw.jippy.global.auth.repository.RefreshTokenRepository;
 import com.hbhw.jippy.global.auth.config.UserPrincipal;
 import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,6 +36,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 @Slf4j
@@ -51,6 +56,9 @@ public class UserService {
 
     @Value("${jwt.refresh.expiration}")
     private Long refreshTokenExpireTime;
+
+    @Value("${jwt.access.expiration}")
+    private Long accessTokenExpireTime;
 
     @Transactional
     public void ownerSignUp(OwnerSignUpRequest request) {
@@ -89,7 +97,7 @@ public class UserService {
     }
 
     @Transactional
-    public LoginResponse login(LoginRequest request) {
+    public LoginResponse login(LoginRequest request, HttpServletResponse response) {
         BaseUser user = findUser(request.getEmail(), request.getUserType());
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
@@ -121,6 +129,10 @@ public class UserService {
                 .orElse(null);
         log.info("Redis에 저장된 값: " + savedToken);
 
+
+        // JWT 토큰과 사용자 정보를 쿠키에 저장
+        setCookie(response, accessToken, refreshToken, principal, staffType);
+        System.out.println();
         return LoginResponse.of(user, staffType, accessToken, refreshToken);
     }
 
@@ -238,5 +250,51 @@ public class UserService {
         }
 
         return new String(password);
+    }
+
+    private void setCookie(HttpServletResponse response, String accessToken, String refreshToken, UserPrincipal principal, StaffType staffType) {
+        // user 정보 쿠키에 저장
+        ResponseCookie userIdCookie = ResponseCookie.from("userId", principal.getId().toString())
+                .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
+                .secure(true) // HTTPS에서만 전송
+                .path("/")
+                .maxAge(refreshTokenExpireTime / 1000) // 초 단위
+                .sameSite("Strict")
+                .build();
+        ResponseCookie staffTypeCookie = ResponseCookie.from("staffType", staffType.name())
+                .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
+                .secure(true) // HTTPS에서만 전송
+                .path("/")
+                .maxAge(refreshTokenExpireTime / 1000) // 초 단위
+                .sameSite("Strict")
+                .build();
+        String encodedUserName = URLEncoder.encode(principal.getName(), StandardCharsets.UTF_8);
+        ResponseCookie userNameCookie = ResponseCookie.from("userName", encodedUserName)
+                .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
+                .secure(false) // HTTPS에서만 전송
+                .path("/")
+                .maxAge(refreshTokenExpireTime / 1000) // 초 단위
+                .sameSite("Strict")
+                .build();
+        ResponseCookie jwtAccesssCookie = ResponseCookie.from("accessToken", accessToken)
+                .httpOnly(false)
+                .secure(false) // HTTPS에서만 전송
+                .path("/")
+                .maxAge(accessTokenExpireTime) // 초 단위
+                .sameSite("Strict")
+                .build();
+        ResponseCookie jwtRefreshCookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(false)
+                .secure(false) // HTTPS에서만 전송
+                .path("/")
+                .maxAge(refreshTokenExpireTime) // 초 단위
+                .sameSite("Strict")
+                .build();
+        // 응답 헤더에 쿠키 추가
+        response.addHeader("Set-Cookie", userIdCookie.toString());
+        response.addHeader("Set-Cookie", userNameCookie.toString());
+        response.addHeader("Set-Cookie", staffTypeCookie.toString());
+        response.addHeader("Set-Cookie", jwtAccesssCookie.toString());
+        response.addHeader("Set-Cookie", jwtRefreshCookie.toString());
     }
 }
