@@ -1,6 +1,6 @@
 // productSlice.ts
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { ProductDetailResponse } from "@/features/product/types";
+import { ProductDetailResponse } from "@/redux/types/product";
 
 interface ProductState {
   products: ProductDetailResponse[];
@@ -14,44 +14,22 @@ const initialState: ProductState = {
   error: null,
 };
 
+// productSlice.ts
 export const createProduct = createAsyncThunk(
-  'product/createProduct',
-  async ({ storeId, productData }: { storeId: number, productData: any }, { rejectWithValue }) => {
-    try {
-      const requestData = {
-        createProduct: {
-          productCategoryId: productData.createProduct.productCategoryId,
-          storeId: productData.createProduct.storeId,
-          name: productData.createProduct.name,
-          price: productData.createProduct.price,
-          status: productData.createProduct.status,
-          productType: productData.createProduct.productType,
-          productSize: productData.createProduct.productSize
-        },
-        image: productData.image
-      };
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/product/${storeId}/create`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestData),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return rejectWithValue(data.message || '상품 등록에 실패했습니다.');
-      }
-
-      return data;
-    } catch (error) {
-      return rejectWithValue('상품 등록 중 오류가 발생했습니다.');
+  'product/create',
+  async ({ storeId, productData }: { storeId: number, productData: FormData }) => {
+    const response = await fetch(`/api/product/${storeId}/create`, {
+      method: 'POST',
+      body: productData,  // Content-Type 헤더는 자동으로 설정됨
+    });
+    
+    const result = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(result.message || '상품 등록에 실패했습니다.');
     }
+    
+    return result;
   }
 );
 
@@ -70,7 +48,7 @@ export const fetchProducts = createAsyncThunk(
       }
 
       return data.data || [];
-    } catch (error) {
+    } catch {
       return rejectWithValue('상품 목록을 불러오는데 실패했습니다.');
     }
   }

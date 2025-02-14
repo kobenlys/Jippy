@@ -18,7 +18,7 @@ const archivoBlack = Archivo_Black({
   display: "swap",
 });
 
-const hideNavbarPaths = ["/login", "/signup", "/attendance", "/calendar"];
+const hideNavbarPaths = ["/login", "/signup", "/attendance", "/calendar", "/notifications"];
 
 const RootLayoutClient = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();

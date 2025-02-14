@@ -9,6 +9,7 @@ import com.hbhw.jippy.domain.user.service.UserService;
 import com.hbhw.jippy.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -37,8 +38,9 @@ public class UserController {
 
     @Operation(summary = "로그인", description = "사용자 로그인을 진행합니다")
     @PostMapping("/login")
-    public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
-        LoginResponse response = userService.login(request);
+    public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest request, HttpServletResponse httpServletResponse) {
+        LoginResponse response = userService.login(request, httpServletResponse);
+
         return ApiResponse.success(response);
     }
 

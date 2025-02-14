@@ -4,7 +4,11 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useDispatch } from "react-redux";
-import { loginStart, loginSuccess, loginFailure } from "@/redux/slices/userSlice";
+import {
+  loginStart,
+  loginSuccess,
+  loginFailure,
+} from "@/redux/slices/userSlice";
 import { setShops, setCurrentShop } from "@/redux/slices/shopSlice"; // 여기 주목
 import { AppDispatch } from "@/redux/store";
 import "@/app/globals.css";
@@ -26,76 +30,91 @@ const LoginPage = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   const handleLogin = async () => {
-    console.log('API URL:', process.env.NEXT_PUBLIC_API_URL);
+    console.log("API URL:", process.env.NEXT_PUBLIC_API_URL);
     dispatch(loginStart());
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ email, password, userType }),
-      });
-  
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/user/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password, userType }),
+          credentials: "include",
+        }
+      );
+
       // 응답 데이터 확인을 위한 로그 추가
       const responseData = await response.json();
-      console.log('응답 데이터:', responseData);
+      console.log("응답 데이터:", responseData);
 
       // 응답 구조 확인
-      console.log('success 존재 여부:', 'success' in responseData);
-      console.log('data 존재 여부:', 'data' in responseData);
-      
+      console.log("success 존재 여부:", "success" in responseData);
+      console.log("data 존재 여부:", "data" in responseData);
+
       if (responseData.success && responseData.data.accessToken) {
         // ... 나머지 코드
         localStorage.setItem("token", responseData.data.accessToken);
-  
+
         // 로그인 성공 처리
-        dispatch(loginSuccess({
-          profile: {
-            id: responseData.data.id,
-            email: responseData.data.email,
-            name: responseData.data.name,
-            age: responseData.data.age,
-            userType: responseData.data.staffType,
-          },
-          accessToken: responseData.data.accessToken,
-          refreshToken: responseData.data.refreshToken,
-        }));
-  
+        dispatch(
+          loginSuccess({
+            profile: {
+              id: responseData.data.id,
+              email: responseData.data.email,
+              name: responseData.data.name,
+              age: responseData.data.age,
+              userType: responseData.data.staffType,
+            },
+            accessToken: responseData.data.accessToken,
+            refreshToken: responseData.data.refreshToken,
+          })
+        );
+
         // 매장 정보 조회 및 리덕스 업데이트
         try {
-          const shopsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/store/select`, {
-            headers: {
-              "Authorization": `Bearer ${responseData.data.accessToken}`,
-              "Content-Type": "application/json"
-            },
-            credentials: "include"
-          });
-        console.log('매장 조회 요청 토큰:', responseData.data.accessToken);
-        console.log('매장 조회 응답 상태:', shopsResponse.status);
-        
+          const userId = document.cookie
+            .split("; ")
+            .find((row) => row.startsWith("userId="))
+            ?.split("=")[1];
+
+          if (!userId) {
+            throw new Error("사용자 정보를 찾을 수 없습니다.");
+          }
+
+          const shopsResponse = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/store/select/list?ownerId=${userId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${responseData.data.accessToken}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
           if (shopsResponse.ok) {
             const shopsData = await shopsResponse.json();
-            
+
             // 로그인한 사용자의 ID와 일치하는 매장 필터링 및 데이터 변환
-            const userShops = shopsData.data
-              .filter((shop: Shop) => shop.userOwnerId === responseData.data.id)
-              .map((shop: Shop) => ({
-                ...shop,
-                openingDate: '', // 또는 적절한 기본값
-                totalCash: 0,    // 또는 적절한 기본값
-                businessRegistrationNumber: '', // 또는 적절한 기본값
-              }));
-            
-            // 매장이 있다면 리덕스에 업데이트
-            if (userShops.length > 0) {
+            if (shopsData.success && shopsData.data.length > 0) {
+              const userShops = shopsData.data
+                .filter(
+                  (shop: Shop) => shop.userOwnerId === responseData.data.id
+                )
+                .map((shop: Shop) => ({
+                  ...shop,
+                  openingDate: "", // 또는 적절한 기본값
+                  totalCash: 0, // 또는 적절한 기본값
+                  businessRegistrationNumber: "", // 또는 적절한 기본값
+                }));
+
               // 모든 매장 설정
               dispatch(setShops(userShops));
-              
+
               // 첫 번째 매장을 현재 매장으로 설정
               dispatch(setCurrentShop(userShops[0]));
-              
+
               // 확인 페이지로 이동
               router.replace("/confirm");
             } else {
@@ -108,7 +127,13 @@ const LoginPage = () => {
           }
         } catch (error) {
           console.error("매장 정보 조회 중 오류 발생:", error);
-          dispatch(loginFailure(error instanceof Error ? error.message : "매장 정보 조회 중 오류가 발생했습니다."));
+          dispatch(
+            loginFailure(
+              error instanceof Error
+                ? error.message
+                : "매장 정보 조회 중 오류가 발생했습니다."
+            )
+          );
         }
       } else {
         throw new Error("로그인 응답이 올바르지 않습니다");
@@ -125,8 +150,16 @@ const LoginPage = () => {
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault(); // 기본 폼 제출 동작 방지
+    handleLogin();
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col items-center justify-center min-h-screen"
+    >
       <h1 className={styles.subtitle}>로그인</h1>
 
       <div className="flex gap-4 m-2">
@@ -185,7 +218,7 @@ const LoginPage = () => {
           비밀번호 재발급
         </Link>
       </div>
-    </div>
+    </form>
   );
 };
 

@@ -5,24 +5,15 @@ import Image from 'next/image';
 import { Modal } from "@/features/common/components/ui/modal/Modal";
 import { Button } from "@/features/common/components/ui/button";
 import { AppDispatch, RootState } from "@/redux/store";
-import { createProduct } from "@/redux/slices/productSlice";
+import { fetchProducts } from "@/redux/slices/productSlice";
 import { fetchCategories } from "@/redux/slices/categorySlice";
 import { X, ImagePlus, ArrowLeft } from 'lucide-react';
-import { ProductType, ProductSize, AVAILABLE_SIZES, ProductFormData, SizeRecipeData } from '@/redux/types/product';
+import { ProductType, ProductSize, ProductDetailResponse, ProductBasicFormData, SizeRecipeData } from '@/redux/types/product';
 import SizeRecipeForm from './SizeRecipeForm';
 
 interface ProductRegistrationModalProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-interface CategoryResponse {
-  code: number;
-  success: boolean;
-  data: Array<{
-    id: number;
-    categoryName: string;
-  }>;
 }
 
 const ProductRegistrationModal: React.FC<ProductRegistrationModalProps> = ({ isOpen, onClose }) => {
@@ -33,20 +24,21 @@ const ProductRegistrationModal: React.FC<ProductRegistrationModalProps> = ({ isO
   const { categories, loading: categoryLoading, error: categoryError } = useSelector((state: RootState) => {
     const categoriesState = state.category.categories;
     return {
-      categories: categoriesState?.data || [],
+      categories: categoriesState || [],  // 이 부분도 수정 필요
       loading: state.category.loading,
       error: state.category.error
     };
   });
 
   const [step, setStep] = useState<'basic' | 'recipe'>('basic');
-  const [formData, setFormData] = useState<ProductFormData>({
+  const [formData, setFormData] = useState<ProductBasicFormData>({
     name: '',
     categoryId: 0,
     type: ProductType.ICE,
     isAvailable: true,
   });
   const [sizeData, setSizeData] = useState<Partial<Record<ProductSize, SizeRecipeData>>>({});
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   
@@ -56,6 +48,7 @@ const ProductRegistrationModal: React.FC<ProductRegistrationModalProps> = ({ isO
   useEffect(() => {
     if (isOpen && currentShop?.id) {
       dispatch(fetchCategories(currentShop.id));
+      // console.log('현재 카테고리 목록:', categories);
     }
   }, [isOpen, currentShop?.id, dispatch]);
 
@@ -113,75 +106,126 @@ const ProductRegistrationModal: React.FC<ProductRegistrationModalProps> = ({ isO
     }));
   };
 
-  const handleSizeDataSubmit = async (sizeData: Partial<Record<ProductSize, SizeRecipeData>>) => {
-    if (!currentShop?.id) return;
-    
-    try {
-      // 각 사이즈별로 상품 생성
-      for (const [size, data] of Object.entries(sizeData)) {
-        if (!data) continue;
-        
-        const productData = {
-          createProduct: {
-            productCategoryId: formData.categoryId,
-            storeId: currentShop.id,
-            name: formData.name.trim(),
-            price: data.price,
-            status: formData.isAvailable,
-            productType: formData.type,
-            productSize: parseInt(size)
-          },
-          image: imagePreview ? imagePreview.split(',')[1] : null
-        };
-
-        const result = await dispatch(createProduct({
+  const handleSizeDataSubmit = async (sizeData: Partial<Record<ProductSize, SizeRecipeData>>) => {   
+    if (!currentShop?.id) return;    
+  
+    try {     
+      for (const [size, data] of Object.entries(sizeData)) {       
+        if (!data) continue;      
+  
+        console.log('▶️ 처리 중인 사이즈:', size);
+        console.log('📌 데이터:', data);
+  
+        // createProduct 데이터 준비
+        const createProductData = {
+          productCategoryId: formData.categoryId,
           storeId: currentShop.id,
-          productData
-        })).unwrap();
+          name: formData.name.trim(),
+          price: data.price,
+          status: formData.isAvailable,
+          productType: ProductType[formData.type],
+          productSize: ProductSize[parseInt(size)]
+        };
+  
+        console.log('📝 요청 데이터:', createProductData);
+  
+        // FormData 생성
+        const form = new FormData();
 
-        if (result.success) {
-          // 레시피 생성
-          const recipeResponse = await fetch('/api/recipe/create', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              productId: result.data.id,
-              updatedAt: new Date().toISOString(),
-              ingredient: data.recipe
-            })
-          });
+        // createProduct JSON을 Blob으로 변환하여 추가
+        const createProductBlob = new Blob(
+          [JSON.stringify(createProductData)], 
+          { type: 'application/json' }
+        );
+        form.append('createProduct', createProductBlob);
 
-          if (!recipeResponse.ok) {
-            throw new Error('레시피 등록에 실패했습니다.');
+        // 이미지 파일 추가
+        if (imageFile) {
+          form.append('image', imageFile);
+        } else {
+          // 빈 파일을 추가하여 기본 이미지가 사용되도록 함
+          const emptyBlob = new Blob([], { type: 'application/octet-stream' });
+          form.append('image', emptyBlob, 'empty.jpg');
+        }
+  
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/product/${currentShop.id}/create`, {
+          method: 'POST',
+          body: form
+        });        
+  
+        const result = await response.json();        
+  
+        console.log('✅ 상품 등록 응답:', result);
+  
+        if (result.code === 200 && result.success) {         
+          console.log('🛠 레시피 생성 시작...');
+          
+          // 상품 목록 조회
+          const products = await dispatch(fetchProducts(currentShop.id)).unwrap();
+          console.log('조회된 상품 목록:', products);
+          
+          // 방금 생성한 상품 찾기 (이름과 카테고리로만 비교)
+          const createdProduct = products.find((product: ProductDetailResponse) =>
+            product.name === formData.name.trim() &&
+            product.productCategoryId === formData.categoryId
+          );
+        
+          console.log('찾은 상품:', createdProduct);
+        
+          if (!createdProduct) {
+            throw new Error('생성된 상품을 찾을 수 없습니다.');
           }
+        
+          // 레시피 등록
+          const recipeResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/recipe/create`, {           
+            method: 'POST',           
+            headers: { 'Content-Type': 'application/json' },           
+            body: JSON.stringify({             
+              productId: createdProduct.id,             
+              updatedAt: new Date().toISOString(),             
+              ingredient: data.recipe           
+            })         
+          });          
+        
+          const recipeResult = await recipeResponse.json();
+          console.log('🍽 레시피 등록 응답:', recipeResult);
+        
+          if (!recipeResponse.ok) {           
+            throw new Error('레시피 등록에 실패했습니다.');         
+          }       
+        } else {         
+          throw new Error(result.message || '상품 등록에 실패했습니다.');       
         }
       }
-      
-      onClose();
-    } catch (error) {
-      console.error('상품 등록 실패:', error);
-      alert(error instanceof Error ? error.message : '상품 등록에 실패했습니다.');
-    }
+        
+      onClose();   
+  
+    } catch (error) {     
+      console.error('❌ 상품 등록 실패:', error);     
+      if (error instanceof Error) {       
+        alert(`상품 등록 실패: ${error.message}`);     
+      } else {       
+        alert('상품 등록 중 알 수 없는 오류가 발생했습니다.');     
+      }   
+    } 
   };
-
+  
   const renderCategoryOptions = () => {
     if (categoryLoading) {
-      return <option disabled>카테고리 로딩 중...</option>;
+      return <option value="">로딩 중...</option>;
     }
-
+  
     if (categoryError) {
-      return <option disabled>카테고리 로드 실패</option>;
+      return <option value="">카테고리를 불러올 수 없습니다</option>;
     }
-
+  
     if (!Array.isArray(categories) || categories.length === 0) {
-      return <option disabled>등록된 카테고리가 없습니다</option>;
+      return <option value="">카테고리가 없습니다</option>;
     }
-
+  
     return (
       <>
-        <option value="">카테고리 선택</option>
+        <option value="">카테고리를 선택해주세요</option>
         {categories.map((category) => (
           <option key={category.id} value={category.id}>
             {category.categoryName}
@@ -251,14 +295,21 @@ const ProductRegistrationModal: React.FC<ProductRegistrationModalProps> = ({ isO
           <label className="block text-sm font-medium text-gray-700 mb-1">
             카테고리
           </label>
-          <select
-            value={formData.categoryId || ''}
-            onChange={handleCategoryChange}
-            className="w-full p-2 border border-gray-300 rounded"
-            required
-          >
-            {renderCategoryOptions()}
-          </select>
+          <div className="relative">
+            <select
+              value={formData.categoryId || ''}
+              onChange={handleCategoryChange}
+              className="w-full p-2 border border-gray-300 rounded"
+              required
+              style={{ 
+                maxWidth: '100%',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              {renderCategoryOptions()}
+            </select>
+          </div>
         </div>
 
         <div>
@@ -266,20 +317,22 @@ const ProductRegistrationModal: React.FC<ProductRegistrationModalProps> = ({ isO
             상품 타입
           </label>
           <div className="flex gap-2">
-            {Object.values(ProductType).filter(type => !isNaN(Number(type))).map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, type: type as ProductType }))}
-                className={`flex-1 p-2 rounded transition-colors ${
-                  formData.type === type 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-100 text-gray-700'
-                }`}
-              >
-                {ProductType[type]}
-              </button>
-            ))}
+            {Object.entries(ProductType)
+              .filter(([key, value]) => !isNaN(Number(value)))
+              .map(([key, value]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, type: value as ProductType }))}
+                  className={`flex-1 p-2 rounded transition-colors ${
+                    formData.type === value 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  {key}
+                </button>
+              ))}
           </div>
         </div>
 
@@ -314,7 +367,7 @@ const ProductRegistrationModal: React.FC<ProductRegistrationModalProps> = ({ isO
       onClose={onClose}
       className="max-w-2xl w-full"
     >
-      <div className="p-6">
+      <div className="p-6 relative overflow-hidden">
         <div className="flex items-center mb-4">
           {step === 'recipe' && (
             <button
@@ -328,17 +381,19 @@ const ProductRegistrationModal: React.FC<ProductRegistrationModalProps> = ({ isO
             {step === 'basic' ? '새 상품 등록' : '사이즈 및 레시피 등록'}
           </h2>
         </div>
-
-        {step === 'basic' ? (
-          renderBasicForm()
-        ) : (
-          <SizeRecipeForm
-            productType={formData.type}
-            sizeData={sizeData}
-            onSubmit={handleSizeDataSubmit}
-            onCancel={() => setStep('basic')}
-          />
-        )}
+  
+        <div className="overflow-auto">
+          {step === 'basic' ? (
+            renderBasicForm()
+          ) : (
+            <SizeRecipeForm
+              productType={formData.type}
+              sizeData={sizeData}
+              onSubmit={handleSizeDataSubmit}
+              onCancel={() => setStep('basic')}
+            />
+          )}
+        </div>
       </div>
     </Modal>
   );
