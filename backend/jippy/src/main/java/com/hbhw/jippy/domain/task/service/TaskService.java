@@ -56,7 +56,7 @@ public class TaskService {
         Task task = findTaskByStoreAndId(storeId, todoId);
         task.setTitle(request.getTitle());
         task.setIsComplete(request.isComplete());
-
+        taskRepository.save(task);
     }
 
     /**

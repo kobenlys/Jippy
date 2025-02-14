@@ -1,0 +1,57 @@
+import { useEffect, useState, useCallback } from "react";
+import SockJS from "sockjs-client";
+import { Client } from "@stomp/stompjs";
+import { useDispatch } from "react-redux";
+import { addReceivedMessage } from "@/redux/slices/chatSlice";
+
+const SOCKET_URL = `${process.env.NEXT_PUBLIC_API_URL}/ws-chat`; // 백엔드 엔드포인트
+
+export const useWebSocket = (storeId: string) => {
+  const dispatch = useDispatch();
+  const [stompClient, setStompClient] = useState<Client | null>(null);
+
+  useEffect(() => {
+    if (!storeId) return;
+    const socket = new SockJS(SOCKET_URL);
+    const client = new Client({
+      webSocketFactory: () => socket,
+      reconnectDelay: 5000,
+      onConnect: () => {
+        console.log("✅ WebSocket 연결 성공!");
+        client.subscribe(`/topic/chat/${storeId}`, (message) => {
+          const newMsg = JSON.parse(message.body);
+          console.log("서버에서 받은 메시지:", newMsg);
+          dispatch(addReceivedMessage(newMsg));
+        });
+      },
+    });
+    client.activate();
+    setStompClient(client);
+
+    return () => {
+      client.deactivate();
+    };
+  }, [storeId, dispatch]);
+
+  const sendMessage = useCallback(
+    (message: string, senderId: string) => {
+      console.log("sendMessage 호출됨. 연결 상태:", stompClient?.active);
+      if (stompClient && stompClient.active) {
+        console.log("WebSocket 연결 상태: 전송 진행", message);
+        stompClient.publish({
+          destination: `/app/chat/${storeId}/send`,
+          body: JSON.stringify({
+            senderId,
+            messageContent: message,
+            messageType: "TEXT",
+          }),
+        });
+      } else {
+        console.warn("WebSocket이 연결되어 있지 않습니다.");
+      }
+    },
+    [stompClient, storeId]
+  );
+
+  return { sendMessage };
+};

@@ -29,6 +29,20 @@ const LoginPage = () => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
+  // const getCookie = (name: string): string | null => {
+  //   try {
+  //     const value = `; ${document.cookie}`;
+  //     const parts = value.split(`; ${name}=`);
+  //     if (parts.length === 2) {
+  //       return parts.pop()?.split(';').shift() || null;
+  //     }
+  //     return null;
+  //   } catch (error) {
+  //     console.error('쿠키 파싱 에러:', error);
+  //     return null;
+  //   }
+  // };
+  
   const handleLogin = async () => {
     console.log("API URL:", process.env.NEXT_PUBLIC_API_URL);
     dispatch(loginStart());
@@ -44,6 +58,8 @@ const LoginPage = () => {
           credentials: "include",
         }
       );
+      console.log("로그인 응답 상태:", response.status);
+      console.log("로그인 응답:", response);
 
       // 응답 데이터 확인을 위한 로그 추가
       const responseData = await response.json();
@@ -54,37 +70,39 @@ const LoginPage = () => {
       console.log("data 존재 여부:", "data" in responseData);
 
       if (responseData.success && responseData.data.accessToken) {
-        // ... 나머지 코드
-        localStorage.setItem("token", responseData.data.accessToken);
-
-        // 로그인 성공 처리
-        dispatch(
-          loginSuccess({
-            profile: {
-              id: responseData.data.id,
-              email: responseData.data.email,
-              name: responseData.data.name,
-              age: responseData.data.age,
-              userType: responseData.data.staffType,
-            },
-            accessToken: responseData.data.accessToken,
-            refreshToken: responseData.data.refreshToken,
-          })
-        );
+        // 로그인 성공 후 쿠키 설정 확인
+        console.log("설정된 쿠키:", document.cookie);
+        
+        dispatch(loginSuccess({
+          profile: {
+            id: responseData.data.id,
+            email: responseData.data.email,
+            name: responseData.data.name,
+            age: responseData.data.age,
+            userType: responseData.data.staffType,
+          },
+          accessToken: responseData.data.accessToken,
+          refreshToken: responseData.data.refreshToken,
+        }));
 
         // 매장 정보 조회 및 리덕스 업데이트
         try {
+          // 쿠키 디버깅을 위한 로그
+          console.log("전체 쿠키:", document.cookie);
+        
           const userId = document.cookie
             .split("; ")
-            .find((row) => row.startsWith("userId="))
+            .map(cookie => cookie.trim())
+            .find(cookie => cookie.startsWith("userId="))
             ?.split("=")[1];
-
+        
+          console.log("파싱된 userId:", userId);
+        
           if (!userId) {
+            console.log("userId 쿠키를 찾을 수 없음");
             throw new Error("사용자 정보를 찾을 수 없습니다.");
           }
-
-          console.log(userId);
-
+        
           const shopsResponse = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/api/store/select/list?ownerId=${userId}`,
             {
@@ -92,43 +110,53 @@ const LoginPage = () => {
                 Authorization: `Bearer ${responseData.data.accessToken}`,
                 "Content-Type": "application/json",
               },
+              credentials: "include"
             }
           );
-
+        
+          console.log("매장 조회 응답 상태:", shopsResponse.status);
+          
           if (shopsResponse.ok) {
             const shopsData = await shopsResponse.json();
-
-            // 로그인한 사용자의 ID와 일치하는 매장 필터링 및 데이터 변환
+            console.log("매장 데이터:", shopsData);
+        
             if (shopsData.success && shopsData.data.length > 0) {
               const userShops = shopsData.data
-                .filter(
-                  (shop: Shop) => shop.userOwnerId === responseData.data.id
-                )
+                .filter((shop: Shop) => {
+                  console.log("매장 소유자 ID 비교:", {
+                    shopOwnerId: shop.userOwnerId,
+                    userId: parseInt(userId)
+                  });
+                  return shop.userOwnerId === parseInt(userId);
+                })
                 .map((shop: Shop) => ({
                   ...shop,
-                  openingDate: "", // 또는 적절한 기본값
-                  totalCash: 0, // 또는 적절한 기본값
-                  businessRegistrationNumber: "", // 또는 적절한 기본값
+                  openingDate: "",
+                  totalCash: 0,
+                  businessRegistrationNumber: "",
                 }));
-
-              // 모든 매장 설정
-              dispatch(setShops(userShops));
-
-              // 첫 번째 매장을 현재 매장으로 설정
-              dispatch(setCurrentShop(userShops[0]));
-
-              // 확인 페이지로 이동
-              router.replace("/confirm");
+        
+              console.log("필터링된 사용자 매장:", userShops);
+        
+              if (userShops.length > 0) {
+                dispatch(setShops(userShops));
+                dispatch(setCurrentShop(userShops[0]));
+                router.replace("/confirm");
+              } else {
+                console.log("필터링 후 매장이 없음");
+                router.replace("/shop/create");
+              }
             } else {
-              // 매장이 없는 경우 처리 (예: 매장 생성 페이지로 리다이렉트)
+              console.log("매장 데이터가 없음:", shopsData);
               router.replace("/shop/create");
             }
           } else {
-            // 매장 조회 실패 시 에러 처리
-            throw new Error("매장 정보를 불러오는 데 실패했습니다.");
+            const errorData = await shopsResponse.json().catch(() => ({}));
+            console.error("매장 조회 실패 응답:", errorData);
+            throw new Error(errorData.message || "매장 정보를 불러오는 데 실패했습니다.");
           }
         } catch (error) {
-          console.error("매장 정보 조회 중 오류 발생:", error);
+          console.error("매장 정보 조회 중 상세 오류:", error);
           dispatch(
             loginFailure(
               error instanceof Error

@@ -107,6 +107,12 @@ const ConfirmPage = () => {
                 POS 주문
               </Link>
             </Button>
+
+            <Button variant="orangeSquare">
+              <Link href="/chat" className="w-full block">
+                채팅
+              </Link>
+            </Button>
           </>
         )}
 
