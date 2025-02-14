@@ -3,6 +3,7 @@ import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 import { useDispatch } from "react-redux";
 import { addReceivedMessage } from "@/redux/slices/chatSlice";
+import { Message } from "@/features/chat/types/chat";
 
 const SOCKET_URL = `${process.env.NEXT_PUBLIC_API_URL}/ws-chat`; // 백엔드 엔드포인트
 
@@ -19,11 +20,16 @@ export const useWebSocket = (storeId: string) => {
       onConnect: () => {
         console.log("✅ WebSocket 연결 성공!");
         client.subscribe(`/topic/chat/${storeId}`, (message) => {
-          const newMsg = JSON.parse(message.body);
+          const newMsg: Message = JSON.parse(message.body);
           console.log("서버에서 받은 메시지:", newMsg);
-          dispatch(addReceivedMessage(newMsg));
+          // Redux 상태 업데이트: 실시간으로 채팅창 갱신됨
+          dispatch(addReceivedMessage({ storeId: Number(storeId), message: newMsg }));
         });
       },
+      onStompError: (frame) => {
+        console.error("Broker reported error: " + frame.headers['message']);
+        console.error("Additional details: " + frame.body);
+      }
     });
     client.activate();
     setStompClient(client);
