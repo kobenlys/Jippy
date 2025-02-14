@@ -83,6 +83,8 @@ const LoginPage = () => {
             throw new Error("사용자 정보를 찾을 수 없습니다.");
           }
 
+          console.log(userId);
+
           const shopsResponse = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/api/store/select/list?ownerId=${userId}`,
             {

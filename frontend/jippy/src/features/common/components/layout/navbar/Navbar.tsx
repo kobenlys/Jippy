@@ -14,17 +14,20 @@ const Navbar = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const accessToken = useSelector((state: RootState) => state.user.accessToken);
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const user = useSelector((state: RootState) => state.user);
-  const username = user?.profile?.name || '';
+  const username = user?.profile?.name || "";
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsDropdownOpen(false);
       }
     };
@@ -41,13 +44,16 @@ const Navbar = () => {
         throw new Error("로그인 세션이 만료되었습니다.");
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/logout`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/user/logout`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error("로그아웃 실패");
@@ -58,10 +64,13 @@ const Navbar = () => {
       setIsDropdownOpen(false);
       router.push("/");
       alert("성공적으로 로그아웃되었습니다.");
-      
     } catch (error) {
       console.error("로그아웃 중 오류 발생:", error);
-      alert(error instanceof Error ? error.message : "로그아웃 중 오류가 발생했습니다.");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "로그아웃 중 오류가 발생했습니다."
+      );
     }
   };
 
@@ -83,11 +92,11 @@ const Navbar = () => {
               <Link href="/payment" className={styles.navLink}>
                 결제내역
               </Link>
-              <Link href="/management" className={styles.navLink}>
+              <Link href="/owner/dashboard/stock" className={styles.navLink}>
                 관리모드
               </Link>
             </div>
-            
+
             <Link href="/qr" className={styles.qrButton}>
               <Image
                 src="/images/NavbarQR.svg"
@@ -96,23 +105,20 @@ const Navbar = () => {
                 className={styles.qrImage}
               />
             </Link>
-            
+
             {accessToken ? (
               <div className={styles.profileDropdown} ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className={styles.profileButton}
                 >
-                  <span>{username ? `${username} 님` : '사용자'}</span>
+                  <span>{username ? `${username} 님` : "사용자"}</span>
                   <ChevronDown className={styles.dropdownIcon} />
                 </button>
 
                 {isDropdownOpen && (
                   <div className={styles.dropdownContent}>
-                    <Link
-                      href="/update"
-                      className={styles.dropdownItem}
-                    >
+                    <Link href="/update" className={styles.dropdownItem}>
                       마이페이지
                     </Link>
                     <button
@@ -125,10 +131,7 @@ const Navbar = () => {
                 )}
               </div>
             ) : (
-              <Link
-                href="/login"
-                className={styles.loginLink}
-              >
+              <Link href="/login" className={styles.loginLink}>
                 로그인
               </Link>
             )}
