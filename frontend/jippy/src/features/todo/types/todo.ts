@@ -9,4 +9,5 @@ export interface Todo {
 export interface TodoItemProps {
     todo: Todo;
     onToggle: (id: number) => void;
+    onDelete: (id: number) => void;
 }
