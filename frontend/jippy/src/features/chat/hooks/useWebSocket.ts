@@ -4,7 +4,7 @@ import { Client } from "@stomp/stompjs";
 import { useDispatch } from "react-redux";
 import { addReceivedMessage } from "@/redux/slices/chatSlice";
 
-const SOCKET_URL = "http://localhost:8080/ws-chat"; // 백엔드 엔드포인트
+const SOCKET_URL = `${process.env.NEXT_PUBLIC_API_URL}/ws-chat`; // 백엔드 엔드포인트
 
 export const useWebSocket = (storeId: string) => {
   const dispatch = useDispatch();
