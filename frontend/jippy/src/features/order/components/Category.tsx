@@ -1,106 +1,99 @@
-// 파일 이름 변경 때문에 주석 답니다.
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { fetchCategories } from "@/redux/slices/categorySlice";
 import { Modal } from "@/features/common/components/ui/modal/Modal";
 import { Button } from "@/features/common/components/ui/button";
 import { Edit, Trash } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface Category {
-  id: number;
-  categoryName: string;
-}
-
 interface CategoryProps {
   selectedCategory: string;
-  onCategorySelect: (categoryName: string, categoryId: number) => void;  // categoryId 파라미터 추가
-}
-
-interface RootState {
-  shop: {
-    currentShop: {
-      id: number;
-    } | null;
-  };
+  onCategorySelect: (categoryName: string, categoryId: number | -1) => void;
 }
 
 const CreateCategory = ({
   selectedCategory,
   onCategorySelect,
 }: CategoryProps) => {
+  const dispatch = useDispatch<AppDispatch>();
   const currentShopId = useSelector(
     (state: RootState) => state.shop.currentShop?.id
   );
-  const [categories, setCategories] = useState<Category[]>([
-    { id: 0, categoryName: "전체" },
-  ]);
+  const { categories } = useSelector((state: RootState) => state.category);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editingCategory, setEditingCategory] = useState<{ id: number; categoryName: string } | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [updatedCategoryName, setUpdatedCategoryName] = useState("");
+  const [touchStartTime, setTouchStartTime] = useState(0);
 
-  const fetchCategories = useCallback(async () => {
-    if (!currentShopId) return;
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/category/${currentShopId}/select`
-      );
-      if (!response.ok) throw new Error("Failed to fetch categories");
-      const data = await response.json();
-      const categoryData = data.data || [];
-      setCategories([
-        { id: 0, categoryName: "전체" },
-        ...categoryData
-      ]);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      setCategories([{ id: 0, categoryName: "전체" }]);
+  // 터치 시작 시간 기록
+  const handleTouchStart = (category: { id: number; categoryName: string }) => {
+    if (category.id === 0) return;
+    setTouchStartTime(Date.now());
+    handleLongPressStart(category);
+  };
+
+  // 터치 종료 시 시간 체크
+  const handleTouchEnd = () => {
+    const touchDuration = Date.now() - touchStartTime;
+    handleLongPressEnd();
+    
+    // 1초 미만의 터치는 일반 클릭으로 처리
+    if (touchDuration < 1000) {
+      setIsEditMode(false);
+      setIsActionModalOpen(false);
+      setEditingCategory(null);
     }
-  }, [currentShopId]);
-  
-  useEffect(() => {
-    if (currentShopId) fetchCategories();
-  }, [currentShopId, fetchCategories]);
+  };
 
-  const handleLongPressStart = (category: Category) => {
-    if (category.id === 0) return; // "전체" 카테고리는 제외
+  const fetchCategoriesData = useCallback(async () => {
+    if (currentShopId) {
+      await dispatch(fetchCategories(currentShopId));
+    }
+  }, [dispatch, currentShopId]);
+
+  useEffect(() => {
+    fetchCategoriesData();
+  }, [fetchCategoriesData]);
+
+  const handleLongPressStart = (category: { id: number; categoryName: string }) => {
+    if (category.id === 0) return; // 전체 카테고리는 편집 불가
   
     const timer = setTimeout(() => {
-      setIsEditMode(true); // 1초 후 흔들림 모드 활성화
+      setIsEditMode(true);
+      setEditingCategory(category); // 편집할 카테고리 설정
+      setIsActionModalOpen(true); // 모달 열기
     }, 1000);
     setLongPressTimer(timer);
   };
-  
+
   const handleLongPressEnd = () => {
     if (longPressTimer) {
       clearTimeout(longPressTimer);
       setLongPressTimer(null);
     }
   };
-  
-// category.tsx
-// handleCategoryClick 함수 수정
-const handleCategoryClick = (category: Category) => {
-  // 편집 모드일 때는 클릭 이벤트 무시
-  if (isEditMode) {
-    setIsActionModalOpen(true);
-    setEditingCategory(category);
-    return;
-  }
 
-  console.log('=== 선택된 카테고리 정보 ===');
-  console.log('category:', category);
-  console.log('categoryId type:', typeof category.id);
-  
-  // 카테고리 선택 처리
-  onCategorySelect(category.categoryName, category.id);
-};
+  const handleCategoryClick = (category: { id: number; categoryName: string }) => {
+    if (isEditMode) {
+      setIsEditMode(false);
+      setIsActionModalOpen(false);
+      setEditingCategory(null);
+    }
+    // 전체 카테고리 선택 시 -1을 전달
+    if (category.id === 0) {
+      onCategorySelect(category.categoryName, -1);
+    } else {
+      onCategorySelect(category.categoryName, category.id);
+    }
+  };
   
   const handleCreateCategory = async () => {
     if (!currentShopId || !newCategoryName.trim()) return;
@@ -116,20 +109,13 @@ const handleCategoryClick = (category: Category) => {
         }
       );
       if (!response.ok) throw new Error("Failed to create category");
-      await fetchCategories();
+      await fetchCategoriesData();
       setNewCategoryName("");
       setIsCreateMode(false);
     } catch (error) {
       console.error("Error creating category:", error);
     }
   };
-
-  // 편집 모드 종료를 위한 함수 추가
-  // const exitEditMode = () => {
-  //   setIsEditMode(false);
-  //   setEditingCategory(null);
-  //   setLongPressTimer(null);
-  // };
 
   const handleUpdateCategory = async () => {
     if (!currentShopId || !editingCategory || !updatedCategoryName.trim()) return;
@@ -148,7 +134,7 @@ const handleCategoryClick = (category: Category) => {
       
       if (!response.ok) throw new Error("Failed to update category");
       
-      await fetchCategories();
+      await fetchCategoriesData();
       setIsUpdateMode(false);
       setIsActionModalOpen(false);
       setIsEditMode(false);
@@ -167,7 +153,7 @@ const handleCategoryClick = (category: Category) => {
         { method: "DELETE" }
       );
       if (!response.ok) throw new Error("Failed to delete category");
-      await fetchCategories();
+      await fetchCategoriesData();
       setIsActionModalOpen(false);
       setIsEditMode(false);
     } catch (error) {
@@ -175,32 +161,31 @@ const handleCategoryClick = (category: Category) => {
     }
   };
 
+  const allCategories = [
+    { id: 0, categoryName: "전체" },
+    ...categories
+  ];
+
   return (
     <>
       <div className="w-full overflow-x-auto">
         <div className="w-full min-w-0">
           <div className="flex gap-[12px] no-scrollbar">
-            {categories.map((category) => (
+            {allCategories.map((category) => (
               <div
                 key={category.id}
                 className="relative"
                 onMouseDown={() => handleLongPressStart(category)}
-                onMouseUp={() => handleLongPressEnd()}
-                onMouseLeave={() => {
-                  if (longPressTimer) {
-                    clearTimeout(longPressTimer);
-                    setLongPressTimer(null);
-                  }
-                }}
-                onTouchStart={() => handleLongPressStart(category)}
-                onTouchEnd={() => handleLongPressEnd()}
+                onMouseUp={handleLongPressEnd}
+                onMouseLeave={handleLongPressEnd}
+                onTouchStart={() => handleTouchStart(category)}
+                onTouchEnd={handleTouchEnd}
                 onClick={() => handleCategoryClick(category)}
               >
                 <Button
                   variant={selectedCategory === category.categoryName ? "orange" : "orangeBorder"}
                   className={cn(
                     "w-[85px] h-[50px] rounded-[15px] font-semibold text-xl flex-shrink-0 mt-0",
-                    // 편집 모드일 때 전체 카테고리를 제외한 모든 카테고리가 흔들리도록 수정
                     isEditMode && category.id !== 0 && "animate-shake"
                   )}
                 >
@@ -219,7 +204,7 @@ const handleCategoryClick = (category: Category) => {
         </div>
       </div>
 
-      {/* Category Action Modal */}
+      {/* Modals */}
       <Modal
         isOpen={isActionModalOpen}
         onClose={() => {
@@ -257,7 +242,6 @@ const handleCategoryClick = (category: Category) => {
         </div>
       </Modal>
 
-      {/* Create Category Modal */}
       <Modal
         isOpen={isCreateMode}
         onClose={() => {
@@ -291,7 +275,6 @@ const handleCategoryClick = (category: Category) => {
         </div>
       </Modal>
 
-      {/* Update Category Modal */}
       <Modal
         isOpen={isUpdateMode}
         onClose={() => {

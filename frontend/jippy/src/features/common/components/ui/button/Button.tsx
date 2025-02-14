@@ -1,9 +1,9 @@
 import { ButtonVariant, buttonVariants } from "./variants";
 import { cn } from "@/lib/utils";
 
-interface ButtonProps {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant;
   children: React.ReactNode;
-  variant?: ButtonVariant;  // type을 variant로 변경
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
   className?: string;
   disabled?: boolean;
