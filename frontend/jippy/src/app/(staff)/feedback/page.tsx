@@ -6,7 +6,15 @@ import {
     Feedback
 } from "@/features/feedback/types/feedback";
 import { useEffect, useState } from "react";
-import { ChevronUp } from "lucide-react";
+import { ChevronUp, ChevronDown } from "lucide-react";
+
+const CATEGORIES: { value: string; label: string; }[] = [
+    { value: 'ALL', label: '전체' },
+    { value: 'SERVICE', label: '서비스' },
+    { value: 'PRODUCT', label: '상품' },
+    { value: 'LIVE', label: '실시간' },
+    { value: 'ETC', label: '기타' }
+];
 
 const FeedbackPage = () => {
     // redux 구현 시 변경
@@ -15,13 +23,19 @@ const FeedbackPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showScrollTop, setShowScrollTop] = useState(true);
+    const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+    const [isCategoryOpen, setIsCategoryOpen] = useState(false);
 
-    const fetchFeedbacks = async () => {
+    const fetchFeedbacks = async (category: string) => {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/feedback/${storeId}/select`);
 
+            const url = category === 'ALL'
+                ? `${process.env.NEXT_PUBLIC_API_URL}/api/feedback/${storeId}/select`
+                : `${process.env.NEXT_PUBLIC_API_URL}/api/feedback/${storeId}/select/${category}`
+
+            const response = await fetch(url);
             const responseData : ApiResponse<Feedback[]> = await response.json();
 
             if (!responseData.success) {
@@ -40,7 +54,7 @@ const FeedbackPage = () => {
     };
 
     useEffect(() => {
-        fetchFeedbacks();
+        fetchFeedbacks(selectedCategory);
 
         const handleScroll = () => {
             if (typeof window !== 'undefined') {
@@ -53,7 +67,7 @@ const FeedbackPage = () => {
             window.addEventListener('scroll', handleScroll, { passive: true });
             return () => window.removeEventListener('scroll', handleScroll);
         }
-    }, []);
+    }, [selectedCategory]);
 
     const scrollToTop = () => {
         const element = document.getElementById('page-top');
@@ -61,6 +75,13 @@ const FeedbackPage = () => {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     };
+
+    const handleCategoryChange = (category: string) => {
+        setSelectedCategory(category);
+        setIsCategoryOpen(false);
+    }
+
+    const selectedCategoryLabel = CATEGORIES.find(cat => cat.value === selectedCategory)?.label;
 
     if (isLoading) {
         return (
@@ -92,6 +113,32 @@ const FeedbackPage = () => {
                 <div className="p-4">
                     <div className="bg-white rounded-lg shadow p-6">
                         <h1 className="text-[24px] font-bold text-black pb-3">💬 피드백</h1>
+
+                        <div className="relative px-2 pb-4">
+                            <button
+                                onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+                                className="w-full p-3 text-left flex justify-between items-center hover:bg-gray-50 border rounded-lg transition-colors"
+                            >
+                                <span className="px-1">{selectedCategoryLabel}</span>
+                                {isCategoryOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                            </button>
+                            
+                            {isCategoryOpen && (
+                                <div className="absolute top-full left-0 w-full bg-white shadow-lg rounded-lg z-10 mt-1 border">
+                                    {CATEGORIES.map(({ value, label }) => (
+                                        <button
+                                            key={value}
+                                            onClick={() => handleCategoryChange(value)}
+                                            className={`w-full p-4 text-left hover:bg-gray-50 transition-colors
+                                                ${selectedCategory === value ? 'text-[#ff5c00] font-medium' : ''}
+                                            `}
+                                        >
+                                            {label}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
 
                         {isLoading ? (
                             <div className="flex justify-center items-center py-8">로딩중...</div>
