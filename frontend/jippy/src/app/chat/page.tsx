@@ -20,11 +20,12 @@ const ChatPage: React.FC = () => {
   // 실제 로그인된 사용자의 id (여기서는 테스트로 1로 가정)
   const user = useSelector((state: RootState) => state.user);
   const userId: number = typeof user?.profile?.id === 'number' ? user.profile.id : 1;
+  const userType = user?.profile?.userType ? user.profile.userType : 'staff';
   const userName = user?.profile?.name || '';
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [showChatList, setShowChatList] = useState<boolean>(true);
 
-  const { initializeFCM } = useFCM();
+  const { initializeFCM } = useFCM(userId, userType);
 
   useEffect(() => {
     dispatch(fetchChatList(userId));

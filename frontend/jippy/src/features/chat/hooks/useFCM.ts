@@ -1,6 +1,5 @@
+// src/features/chat/hooks/useFCM.ts
 import { useCallback } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage, Messaging } from "firebase/messaging";
 
@@ -14,12 +13,8 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-
-const useFCM = () => {
-  // 백엔드에 FCM 토큰 저장 요청을 하는 함수
-  
-  const user = useSelector((state: RootState) => state.user);
-  const userId: number = typeof user?.profile?.id === 'number' ? user.profile.id : 1;
+const useFCM = (userId: number, userType: string) => {
+  // 백엔드에 FCM 토큰 저장
   const saveTokenToBackend = useCallback(async (token: string) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fcm/token`, {
@@ -27,9 +22,8 @@ const useFCM = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        // 필요시 사용자 정보도 함께 전송
-        // userId: 현재 사용자 ID, userType: "owner" 또는 "staff"
-        body: JSON.stringify({ userId: userId, token, userType: "owner" }),
+        // 원래처럼 userId, token, userType을 함께 전송
+        body: JSON.stringify({ userId, token, userType }),
       });
       if (!response.ok) {
         throw new Error("토큰 저장 실패");
@@ -38,34 +32,28 @@ const useFCM = () => {
     } catch (error) {
       console.error("토큰 저장 중 에러:", error);
     }
-  }, []);
+  }, [userId, userType]);
 
   const initializeFCM = useCallback(async () => {
     try {
-      // 사용자가 알림 허용 여부를 결정하도록 요청 (브라우저에서만 동작)
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
         console.warn("FCM 알림 권한이 거부되었습니다.");
         return;
       }
 
-      // Firebase 앱 초기화
       const app = initializeApp(firebaseConfig);
       const messaging: Messaging = getMessaging(app);
       const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
-      
-      // FCM 토큰 획득
       const token = await getToken(messaging, { vapidKey });
       console.log("FCM 토큰:", token);
       if (token) {
-        // 획득한 토큰을 백엔드에 저장
         await saveTokenToBackend(token);
       }
 
-      // 백그라운드 메시지 수신 시 처리 (예: toast 또는 UI 업데이트)
       onMessage(messaging, (payload) => {
         console.log("FCM 메시지 수신:", payload);
-        // 예: 알림 UI 업데이트
+        // 필요 시, 알림 UI 업데이트 처리
       });
     } catch (error) {
       console.error("FCM 초기화 에러:", error);
