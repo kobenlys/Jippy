@@ -1,7 +1,10 @@
 // src/features/chat/hooks/useFCM.ts
 import { useCallback } from "react";
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import { getMessaging, getToken, onMessage, Messaging } from "firebase/messaging";
+
+// 모듈 레벨 플래그: 전체 애플리케이션에서 한 번만 등록하도록 함
+let isFCMListenerRegistered = false;
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -22,7 +25,6 @@ const useFCM = (userId: number, userType: string) => {
         headers: {
           "Content-Type": "application/json",
         },
-        // 원래처럼 userId, token, userType을 함께 전송
         body: JSON.stringify({ userId, token, userType }),
       });
       if (!response.ok) {
@@ -42,7 +44,13 @@ const useFCM = (userId: number, userType: string) => {
         return;
       }
 
-      const app = initializeApp(firebaseConfig);
+      // Firebase 앱은 한 번만 초기화
+      let app;
+      if (!getApps().length) {
+        app = initializeApp(firebaseConfig);
+      } else {
+        app = getApps()[0];
+      }
       const messaging: Messaging = getMessaging(app);
       const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
       const token = await getToken(messaging, { vapidKey });
@@ -51,14 +59,23 @@ const useFCM = (userId: number, userType: string) => {
         await saveTokenToBackend(token);
       }
 
-      onMessage(messaging, (payload) => {
-        console.log("FCM 메시지 수신:", payload);
-        // 필요 시, 알림 UI 업데이트 처리
-      });
+      // 모듈 레벨 플래그를 사용해 리스너가 이미 등록되어 있는지 확인
+      if (!isFCMListenerRegistered) {
+        onMessage(messaging, (payload) => {
+          console.log("FCM 메시지 수신:", payload);
+          // 예를 들어, payload.data.senderId를 이용해 자신의 메시지면 무시할 수 있습니다.
+          if (payload?.data?.senderId && payload.data.senderId === String(userId)) {
+            console.log("자신이 보낸 메시지이므로 FCM 알림 무시");
+            return;
+          }
+          // 다른 사용자의 메시지에 대해서만 필요한 처리를 진행합니다.
+        });
+        isFCMListenerRegistered = true;
+      }
     } catch (error) {
       console.error("FCM 초기화 에러:", error);
     }
-  }, [saveTokenToBackend]);
+  }, [saveTokenToBackend, userId]);
 
   return { initializeFCM };
 };

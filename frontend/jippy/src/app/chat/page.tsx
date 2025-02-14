@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ChatList from "@/features/chat/components/ChatList";
 import ChatRoom from "@/features/chat/components/ChatRoom";
-import useFCM from "@/features/chat/hooks/useFCM";
 import { fetchChatList, setSelectedChatRoom } from "@/redux/slices/chatSlice";
 import { StoreChat } from "@/features/chat/types/chat";
 import { RootState, AppDispatch } from "@/redux/store";
@@ -20,17 +19,13 @@ const ChatPage: React.FC = () => {
   // 실제 로그인된 사용자의 id (여기서는 테스트로 1로 가정)
   const user = useSelector((state: RootState) => state.user);
   const userId: number = typeof user?.profile?.id === 'number' ? user.profile.id : 1;
-  const userType = user?.profile?.userType ? user.profile.userType : 'staff';
   const userName = user?.profile?.name || '';
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [showChatList, setShowChatList] = useState<boolean>(true);
 
-  const { initializeFCM } = useFCM(userId, userType);
-
   useEffect(() => {
     dispatch(fetchChatList(userId));
-    initializeFCM();
-  }, [userId, dispatch, initializeFCM]);
+  }, [userId, dispatch]);
 
   useEffect(() => {
     // 채팅방 선택 시, ChatRoom 내에서 WebSocket 연결을 관리하므로 별도 connect/ disconnect 호출은 생략합니다.
