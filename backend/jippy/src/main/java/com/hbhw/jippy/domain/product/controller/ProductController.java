@@ -30,8 +30,7 @@ public class ProductController {
                                         @RequestPart("createProduct") CreateProductRequest createProductRequest,
                                         @RequestPart("image") MultipartFile image) {
 
-        createProductRequest.setStoreId(storeId);
-        productService.createProduct(createProductRequest, image);
+        productService.createProduct(createProductRequest, image, storeId);
         return ApiResponse.success(HttpStatus.OK);
     }
 

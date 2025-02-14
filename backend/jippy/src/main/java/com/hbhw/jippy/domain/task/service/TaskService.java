@@ -24,7 +24,6 @@ public class TaskService {
         Task task = Task.builder()
                 .storeId(storeId)
                 .title(request.getTitle())
-                .content(request.getContent())
                 .isComplete(request.isComplete())
                 .createdAt(DateTimeUtils.nowString())
                 .build();
@@ -56,9 +55,8 @@ public class TaskService {
     public void updateTask(Integer storeId, Long todoId, TaskRequest request) {
         Task task = findTaskByStoreAndId(storeId, todoId);
         task.setTitle(request.getTitle());
-        task.setContent(request.getContent());
         task.setIsComplete(request.isComplete());
-
+        taskRepository.save(task);
     }
 
     /**
@@ -86,7 +84,6 @@ public class TaskService {
                 .id(task.getId())
                 .storeId(task.getStoreId())
                 .title(task.getTitle())
-                .content(task.getContent())
                 .createdAt(task.getCreatedAt())
                 .isComplete(task.getIsComplete())
                 .build();

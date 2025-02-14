@@ -277,14 +277,14 @@ public class UserService {
                 .sameSite("Strict")
                 .build();
         ResponseCookie jwtAccesssCookie = ResponseCookie.from("accessToken", accessToken)
-                .httpOnly(true)
+                .httpOnly(false)
                 .secure(true) // HTTPS에서만 전송
                 .path("/")
                 .maxAge(accessTokenExpireTime) // 초 단위
                 .sameSite("Strict")
                 .build();
         ResponseCookie jwtRefreshCookie = ResponseCookie.from("refreshToken", refreshToken)
-                .httpOnly(true)
+                .httpOnly(false)
                 .secure(true) // HTTPS에서만 전송
                 .path("/")
                 .maxAge(refreshTokenExpireTime) // 초 단위

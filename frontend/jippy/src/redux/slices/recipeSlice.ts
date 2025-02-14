@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { Recipe, ApiResponse } from '@/features/product/types/index';
+import { Recipe, ApiResponse } from '@/redux/types/product';
 
 interface RecipeState {
   recipes: Recipe[];
