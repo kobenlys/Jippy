@@ -31,7 +31,7 @@ const NotificationsPage = () => {
 
         const params : NoticeRequest = {
             page: currentPage,
-            pageSize: 3,
+            pageSize: 7,
             sortBy: "createdAt",
             direction: "DESC",
             author: owner_name,
@@ -110,7 +110,7 @@ const NotificationsPage = () => {
             <div>
                 <PageTitle />
                 <div className="p-4">
-                    <div className="bg-white rounded-lg shadow p-6 flex flex-col h-[360px]" ref={listRef}>
+                    <div className="bg-white rounded-lg shadow p-6 flex flex-col h-[640px]" ref={listRef}>
                         <h1 className="text-[24px] font-bold text-black pb-3">📢 공지사항</h1>
                         {notices && notices.content.length > 0 ? (
                         <>
@@ -156,7 +156,7 @@ const NotificationsPage = () => {
         <div>
             <PageTitle />
             <div className="p-4">
-                <div className="bg-white rounded-lg shadow p-6 flex flex-col h-[360px]" ref={listRef}>
+                <div className="bg-white rounded-lg shadow p-6 flex flex-col h-[640px]" ref={listRef}>
                     <h1 className="text-[24px] font-bold text-black pb-3">📢 공지사항</h1>
                     {notices && notices.content.length > 0 ? (
                         <>
