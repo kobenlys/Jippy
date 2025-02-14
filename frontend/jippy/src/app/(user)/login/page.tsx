@@ -29,19 +29,19 @@ const LoginPage = () => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
-  const getCookie = (name: string): string | null => {
-    try {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) {
-        return parts.pop()?.split(';').shift() || null;
-      }
-      return null;
-    } catch (error) {
-      console.error('쿠키 파싱 에러:', error);
-      return null;
-    }
-  };
+  // const getCookie = (name: string): string | null => {
+  //   try {
+  //     const value = `; ${document.cookie}`;
+  //     const parts = value.split(`; ${name}=`);
+  //     if (parts.length === 2) {
+  //       return parts.pop()?.split(';').shift() || null;
+  //     }
+  //     return null;
+  //   } catch (error) {
+  //     console.error('쿠키 파싱 에러:', error);
+  //     return null;
+  //   }
+  // };
   
   const handleLogin = async () => {
     console.log("API URL:", process.env.NEXT_PUBLIC_API_URL);
