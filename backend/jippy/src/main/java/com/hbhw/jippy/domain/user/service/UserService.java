@@ -256,14 +256,14 @@ public class UserService {
         // user 정보 쿠키에 저장
         ResponseCookie userIdCookie = ResponseCookie.from("userId", principal.getId().toString())
                 .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
-                .secure(true) // HTTPS에서만 전송
+                .secure(false) // HTTPS에서만 전송
                 .path("/")
                 .maxAge(refreshTokenExpireTime / 1000) // 초 단위
                 .sameSite("Strict")
                 .build();
         ResponseCookie staffTypeCookie = ResponseCookie.from("staffType", staffType.name())
                 .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
-                .secure(true) // HTTPS에서만 전송
+                .secure(false) // HTTPS에서만 전송
                 .path("/")
                 .maxAge(refreshTokenExpireTime / 1000) // 초 단위
                 .sameSite("Strict")
