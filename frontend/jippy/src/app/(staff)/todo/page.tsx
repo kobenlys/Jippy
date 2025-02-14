@@ -7,14 +7,15 @@ import {
     TodoItemProps
 } from "@/features/todo/types/todo";
 import { useSwipeable } from 'react-swipeable';
+import { ChevronUp } from "lucide-react";
 
 const TodoItem = ({ todo, onToggle, onDelete } : TodoItemProps) => {
     const [isSwipeOpen, setIsSwipeOpen] = useState(false);
 
     const handlers = useSwipeable({
-        onSwipedLeft : () => setIsSwipeOpen(true),
+        onSwipedLeft: () => setIsSwipeOpen(true),
         onSwipedRight: () => setIsSwipeOpen(false),
-        preventScrollOnSwipe : true,
+        preventScrollOnSwipe: true,
         trackMouse: true
     });
 
@@ -23,30 +24,51 @@ const TodoItem = ({ todo, onToggle, onDelete } : TodoItemProps) => {
     };
 
     return (
-        <div className="relative border-b py-3 last:border-b-0">
+        <div className="relative overflow-hidden">
+            {/* 삭제 버튼 */}
+            <div 
+                className={`
+                    absolute right-0 top-0 bottom-0 
+                    flex items-center 
+                    bg-red-500 text-white 
+                    w-[80px]
+                `}
+            >
+                <button 
+                    onClick={handleDeleteClick}
+                    className="w-full h-full flex items-center justify-center"
+                >
+                    삭제
+                </button>
+            </div>
+
+            {/* 메인 컨텐츠 */}
             <div 
                 {...handlers}
                 className={`
-                    cursor-pointer hover:bg-gray-50 transition-colors
-                    transition-transform duration-300
+                    bg-white border-b last:border-b-0
+                    cursor-pointer hover:bg-gray-50 
+                    transition-all duration-300 ease-in-out
                     ${isSwipeOpen ? '-translate-x-[80px]' : 'translate-x-0'}
                 `}
             >
-                <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                        <input
-                            type="checkbox"
-                            checked={todo.complete}
-                            onChange={() => onToggle(todo.id)}
-                            className="h-4 w-4 accent-[#ff5c00]"
-                        />
-                        <span className={`font-medium ${todo.complete ? 'line-through text-gray-400' : ''}`}>
-                            {todo.title}
+                <div className="py-3">
+                    <div className="flex justify-between items-center px-6">
+                        <div className="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                checked={todo.complete}
+                                onChange={() => onToggle(todo.id)}
+                                className="h-4 w-4 accent-[#ff5c00]"
+                            />
+                            <span className={`font-medium ${todo.complete ? 'line-through text-gray-400' : ''}`}>
+                                {todo.title}
+                            </span>
+                        </div>
+                        <span className="text-sm text-gray-600">
+                            {todo.createdAt.split(' ')[0]}
                         </span>
                     </div>
-                    <span className="text-sm text-gray-600">
-                        {todo.createdAt.split(' ')[0]}
-                    </span>
                 </div>
             </div>
             
@@ -80,6 +102,13 @@ const TodoPage = () => {
     const [showInput, setShowInput] = useState(false);
     const [newTodoTitle, setNewTodoTitle] = useState('');
     const [showScrollTop, setShowScrollTop] = useState(true);
+
+    const scrollToTop = () => {
+        const element = document.getElementById('page-top');
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
 
     const handleDelete = async (todoId: number) => {
         try {
@@ -208,16 +237,9 @@ const TodoPage = () => {
 
     }
 
-    const scrollToTop = () => {
-        const element = document.getElementById('page-top');
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    };
-
     if (isLoading) {
         return (
-            <div id="page-top">
+            <div>
                 <PageTitle />
                 <div className="p-4">
                     <div className="bg-white rounded-lg shadow p-6 flex flex-col h-[360px] justify-center items-center">
@@ -230,7 +252,7 @@ const TodoPage = () => {
 
     if (error) {
         return (
-            <div id="page-top">
+            <div>
                 <PageTitle />
                 <div className="p-4">
                     <div className="bg-white rounded-lg shadow p-6 flex flex-col h-[360px] justify-center items-center">
@@ -270,9 +292,11 @@ const TodoPage = () => {
                                 onClick={handleAddTodo}
                                 className="px-4 py-2 bg-[#ff5c00] text-white rounded hover:bg-[#ff4400] transition-colors"
                             >
-                                +
-                            </button> */}
+                                확인
+                            </button>
                         </div>
+                        )}
+                    </div>
 
                     <div>
                         {todos.length > 0 ? (
@@ -293,15 +317,14 @@ const TodoPage = () => {
                         )}
                     </div>
                 </div>
-
-                <button 
-                    onClick={scrollToTop}
-                    className={`fixed bottom-32 right-8 w-12 h-12 bg-[#ff5c00] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#ff7c33] transition-all ${showScrollTop ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
-                    aria-label="맨 위로 스크롤"
-                >
-                    <ChevronUp size={24} />
-                </button>
             </div>
+            <button 
+                onClick={scrollToTop}
+                className={`fixed bottom-32 right-8 w-12 h-12 bg-[#ff5c00] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#ff7c33] transition-all ${showScrollTop ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
+                aria-label="맨 위로 스크롤"
+            >
+                <ChevronUp size={24} />
+            </button>
         </>
     );
 };
