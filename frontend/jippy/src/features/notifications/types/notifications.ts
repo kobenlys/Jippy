@@ -1,4 +1,4 @@
-interface NoticeRequest {
+export interface NoticeRequest {
   page: number;
   pageSize: number;
   sortBy: string;

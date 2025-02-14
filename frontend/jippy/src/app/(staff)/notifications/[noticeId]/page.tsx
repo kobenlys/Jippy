@@ -42,7 +42,9 @@ const NoticeDetailPage = ({
                     responseData.message || "공지사항을 불러오는데 실패했습니다"
                 );
             }
-            setNotice(responseData.data || null);
+
+            const noticeData = responseData.data.content[0];
+            setNotice(noticeData|| null);
         } catch (error) {
             setError("공지사항을 불러오는데 실패했습니다");
 
