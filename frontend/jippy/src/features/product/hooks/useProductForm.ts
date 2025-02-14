@@ -182,7 +182,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   try {
     await dispatch(
       createProduct({
-        formData: form,
+        productData: form,
         storeId: currentShop.id,
       })
     ).unwrap();

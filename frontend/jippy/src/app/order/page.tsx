@@ -1,291 +1,176 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/redux/store";
-import { fetchProducts } from "@/redux/slices/productSlice";
-import CreateCategory from "@/features/order/components/Category";
-import Image from "next/image";
-import { ProductDetailResponse, ProductType } from "@/features/product/types";
-import Button from "@/features/common/components/ui/button/Button";
-import { Plus } from "lucide-react";
-import ProductRegistrationModal from "@/features/order/components/ProductRegistrationModal";
+import React, { useState } from 'react';
+import ProductGrid from '@/features/order/components/ProductGrid';
+import { Card } from '@/features/common/components/ui/card/Card';
+import { Button } from '@/features/common/components/ui/button';
+import { ProductDetailResponse } from "@/redux/types/product";
 
-interface OrderItem {
-  menuItem: ProductDetailResponse;
+// 상품 인터페이스 정의
+export interface Product {
+  id: number;
+  name: string;
+  price: number;
+  category: string;
+  image?: string;
+}
+
+// 주문 항목 인터페이스 정의
+export interface OrderItem extends Product {
   quantity: number;
 }
 
-const POSOrderPage = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const currentShop = useSelector((state: RootState) => state.shop.currentShop);
-  const { loading, error } = useSelector((state: RootState) => state.product);
-  const products = useSelector((state: RootState) => {
-    const productsState = state.product.products;
-    return Array.isArray(productsState) 
-      ? productsState 
-      : (productsState as { data: ProductDetailResponse[] }).data || [];
-  });
-  const [selectedCategory, setSelectedCategory] = useState<string>("전체");
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
-  const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
-  
-  const DEFAULT_IMAGE_PATH = "/images/ProductPlaceholder.png";
-
-  // 이미지 URL 유효성 검사 함수
-  const getValidImageUrl = (url: string): string => {
-    if (!url) return DEFAULT_IMAGE_PATH;
-    return url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/") 
-      ? url 
-      : DEFAULT_IMAGE_PATH;
+// ProductDetailResponse를 Product로 변환하는 함수
+const convertToProduct = (productDetail: ProductDetailResponse): Product => {
+  return {
+    id: productDetail.id,
+    name: productDetail.name,
+    price: productDetail.price,
+    category: productDetail.productCategoryId.toString(),
+    image: productDetail.image
   };
+};
 
-  useEffect(() => {
-    if (currentShop?.id) {
-      dispatch(fetchProducts(currentShop.id));
-    }
-  }, [dispatch, currentShop?.id]);
+const POSPage = () => {
+  const [currentOrder, setCurrentOrder] = useState<OrderItem[]>([]);
 
-  const productList = products && Array.isArray(products)
-  ? products.map(product => ({
-      ...product,
-      storeId: currentShop?.id || 0,
-      productType: Number(product.productType) as ProductType,
-    })) 
-  : [];
-  
-  const filteredProducts = selectedCategory === "전체"
-    ? productList
-    : productList.filter((item) => item.productCategoryId.toString() === selectedCategory);
-
-  const addToOrder = (menuItem: ProductDetailResponse) => {
-    // storeId가 현재 shop의 id와 같다고 가정
-    const itemWithStore = {
-      ...menuItem,
-      storeId: currentShop?.id || 0
-    };
+  const handleAddProduct = (productDetail: ProductDetailResponse) => {
+    const product = convertToProduct(productDetail);
+    const existingItemIndex = currentOrder.findIndex(item => item.id === product.id);
     
-    setOrderItems((prev) => {
-      const existingItem = prev.find(
-        (item) => item.menuItem.id === itemWithStore.id
-      );
-      if (existingItem) {
-        return prev.map((item) =>
-          item.menuItem.id === itemWithStore.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prev, { menuItem: itemWithStore, quantity: 1 }];
-    });
-  };
-
-  const removeFromOrder = (menuItem: ProductDetailResponse) => {
-    setOrderItems((prev) =>
-      prev.filter((item) => item.menuItem.id !== menuItem.id)
-    );
-  };
-
-  const updateQuantity = (menuItem: ProductDetailResponse, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromOrder(menuItem);
-      return;
+    if (existingItemIndex > -1) {
+      const updatedOrder = [...currentOrder];
+      updatedOrder[existingItemIndex].quantity += 1;
+      setCurrentOrder(updatedOrder);
+    } else {
+      setCurrentOrder([...currentOrder, { ...product, quantity: 1 }]);
     }
-
-    setOrderItems((prev) =>
-      prev.map((item) =>
-        item.menuItem.id === menuItem.id ? { ...item, quantity } : item
-      )
-    );
   };
 
-  const totalAmount = orderItems.reduce(
-    (sum, item) => sum + item.menuItem.price * item.quantity,
-    0
-  );
+  const handleQuantityChange = (productId: number, newQuantity: number) => {
+    if (newQuantity === 0) {
+      setCurrentOrder(currentOrder.filter(item => item.id !== productId));
+    } else {
+      const updatedOrder = currentOrder.map(item => 
+        item.id === productId ? { ...item, quantity: newQuantity } : item
+      );
+      setCurrentOrder(updatedOrder);
+    }
+  };
 
-  if (!currentShop) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-gray-500">매장을 선택해주세요.</p>
-      </div>
-    );
-  }
+  const calculateTotal = () => {
+    return currentOrder.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+
+  const handleCancelOrder = () => {
+    setCurrentOrder([]);
+  };
+
+  const handleCompleteOrder = async () => {
+    try {
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: currentOrder,
+          total: calculateTotal(),
+          timestamp: new Date().toISOString()
+        })
+      });
+
+      if (response.ok) {
+        alert('주문이 성공적으로 완료되었습니다.');
+        setCurrentOrder([]);
+      } else {
+        alert('주문 처리 중 오류가 발생했습니다.');
+      }
+    } catch (error) {
+      console.error('주문 처리 중 오류:', error);
+      alert('네트워크 오류가 발생했습니다.');
+    }
+  };
 
   return (
-    <div className="flex h-screen max-h-screen overflow-hidden">
-      {/* 메뉴 영역 */}
-      <div className="flex-1 flex flex-col h-full">
-        {/* 카테고리 영역 */}
-        <div className="p-3 w-full bg-white sticky top-0 border-b border-gray-200">
-          <div className="px-4">
-            <CreateCategory
-              selectedCategory={selectedCategory}
-              onCategorySelect={setSelectedCategory}
-            />
-          </div>
-        </div>
-
-        {/* 메뉴 그리드 영역 */}
-        <div className="flex-1 overflow-auto m-4">
-          {loading ? (
-            <div className="flex justify-center items-center h-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
-            </div>
-          ) : error ? (
-            <div className="flex justify-center items-center h-full text-red-500">
-              {error}
-            </div>
-          ) : (
-            <div className="grid grid-cols-4 gap-4 p-4 mb-8">
-              {filteredProducts.length === 0 ? (
-                <div className="col-span-4 text-center py-8 text-gray-500">
-                  표시할 상품이 없습니다.
-                </div>
-              ) : (
-                <>
-                  {filteredProducts.map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => item.status && addToOrder(item)}
-                      className={`bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow ${
-                        !item.status && "opacity-50"
-                      }`}
-                    >
-                      <div className="relative w-full h-32 bg-gray-200 rounded-lg mb-2">
-                        <Image
-                          src={getValidImageUrl(item.image)}
-                          alt={item.name}
-                          fill
-                          className="object-cover rounded-lg"
-                          onError={(e) => {
-                            const imgElement = e.target as HTMLImageElement;
-                            if (imgElement.src !== DEFAULT_IMAGE_PATH) {
-                              imgElement.src = DEFAULT_IMAGE_PATH;
-                            }
-                          }}
-                        />
-                      </div>
-                      <h3 className="font-semibold">{item.name}</h3>
-                      <p className="text-gray-600">{item.price.toLocaleString()}원</p>
-                      {!item.status && (
-                        <span className="inline-block mt-2 px-2 py-1 text-sm bg-red-100 text-red-800 rounded">
-                          품절
-                        </span>
-                      )}
-                    </div>
-                  ))}
-
-                  {/* 상품 추가 버튼 추가 */}
-                  <div 
-                    onClick={() => setIsRegistrationModalOpen(true)}
-                    className="bg-white rounded-lg shadow-md p-4 flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
-                  >
-                    <Plus className="w-12 h-12 text-gray-500" />
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* 주문 영역 */}
-      <div className="w-[420px] bg-gray-100 flex flex-col h-full">
-        {/* 주문 내역 헤더 */}
-        <div className="p-6 bg-white border-b border-gray-200 w-full sticky top-0">
-          <h2 className="text-xl font-bold">주문 내역</h2>
-        </div>
-        
-        {/* 주문 목록 - 스크롤 가능 영역 */}
-        <div className="flex-1 overflow-auto p-4">
-          {orderItems.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              주문 내역이 없습니다.
-            </div>
-          ) : (
-            orderItems.map((item) => (
-              <div
-                key={item.menuItem.id}
-                className="bg-white p-4 rounded-lg mb-2 shadow-sm"
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-semibold">{item.menuItem.name}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeFromOrder(item.menuItem);
-                    }}
-                    className="text-red-500 hover:text-red-600"
-                  >
-                    삭제
-                  </button>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        updateQuantity(item.menuItem, item.quantity - 1);
-                      }}
-                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                    >
-                      -
-                    </button>
-                    <span>{item.quantity}</span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        updateQuantity(item.menuItem, item.quantity + 1);
-                      }}
-                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <span>
-                    {(item.menuItem.price * item.quantity).toLocaleString()}원
-                  </span>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* 결제 영역 - 고정 높이 */}
-        <div className="min-h-[320px] border-t border-gray-200 p-8 bg-white rounded-xl">
-          {/* 총 금액 표시 */}
-          <div className="mb-4">
-            <div className="flex justify-between items-center">
-              <span className="font-bold text-gray-800 text-xl">총 금액</span>
-              <span className="font-bold text-3xl text-gray-800">
-                {totalAmount.toLocaleString()}원
-              </span>
-            </div>
-          </div>
-
-          {/* 결제 버튼 */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <button className="w-full py-6 bg-gray-500 text-white text-xl font-medium rounded-lg hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">
-              현금
-            </button>
-            <button className="w-full py-6 bg-pink-500 text-white text-xl font-medium rounded-lg hover:bg-pink-600 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-opacity-50">
-              QR
-            </button>
-          </div>
-
-          <div className="mb-8">
-            <Button variant="brownSquare" className="w-full">결제하기</Button>
-          </div>
-        </div>
-      </div>
-      {/* 상품 등록 모달 */}
-      <ProductRegistrationModal 
-        isOpen={isRegistrationModalOpen}
-        onClose={() => setIsRegistrationModalOpen(false)}
+    <div className="flex h-screen">
+      <div className="w-4/6 overflow-y-auto pb-8">
+      <ProductGrid
+        onAddProduct={handleAddProduct}
       />
+      </div>
+
+      <div className="w-2/6 bg-white p4 flex flex-col">
+        <Card className="flex-grow overflow-y-auto mb-4">
+          <div className="p-4">
+            <h2 className="text-xl font-bold mb-4">현재 주문</h2>
+            {currentOrder.length === 0 ? (
+              <p className="text-gray-500">주문 항목이 없습니다.</p>
+            ) : (
+              <ul>
+                {currentOrder.map(item => (
+                  <li 
+                    key={item.id} 
+                    className="flex justify-between items-center mb-2 pb-2 border-b"
+                  >
+                    <div>
+                      <span>{item.name}</span>
+                      <span className="text-gray-500 ml-2">
+                        {item.price.toLocaleString()}원
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <Button 
+                        variant="default" 
+                        onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                        className="mr-2 sm"
+                      >
+                        -
+                      </Button>
+                      <span>{item.quantity}</span>
+                      <Button 
+                        variant="default" 
+                        onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                        className="ml-2 sm"
+                      >
+                        +
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </Card>
+
+        <div className="bg-gray-100 p-4 rounded">
+          <div className="flex justify-between mb-4">
+            <span className="font-bold">총 합계:</span>
+            <span className="font-bold text-xl">
+              {calculateTotal().toLocaleString()}원
+            </span>
+          </div>
+          <div className="flex space-x-2">
+            <Button 
+              variant="default" 
+              className="w-1/2"
+              onClick={handleCancelOrder}
+            >
+              주문 취소
+            </Button>
+            <Button 
+              variant="default" 
+              className="w-1/2"
+              onClick={handleCompleteOrder}
+              disabled={currentOrder.length === 0}
+            >
+              주문 완료
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default POSOrderPage;
+export default POSPage;

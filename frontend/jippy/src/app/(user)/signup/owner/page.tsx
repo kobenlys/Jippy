@@ -35,7 +35,10 @@ const SignupOwner = () => {
           userType: "OWNER",
         }),
       });
-
+      console.log('요청 데이터:', {
+        ...formData,
+        userType: "OWNER",
+      });
       if (response.ok) {
         await response.json(); // 응답 확인용으로만 사용
         router.push("/login");

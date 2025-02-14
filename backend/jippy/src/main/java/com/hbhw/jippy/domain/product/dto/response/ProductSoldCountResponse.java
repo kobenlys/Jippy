@@ -1,12 +1,12 @@
 package com.hbhw.jippy.domain.product.dto.response;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ProductSoldCountResponse {
     private Long productId;
     private String productName;

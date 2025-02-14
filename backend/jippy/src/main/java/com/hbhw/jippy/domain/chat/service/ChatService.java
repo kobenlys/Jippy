@@ -73,6 +73,7 @@ public class ChatService {
         return chatRepository.save(chat);
     }
 
+
     // 채팅방 퇴장
     public void leaveChat(Integer storeId, String receiverId) {
         StoreChat storeChat = chatRepository.findByStoreId(storeId)
@@ -114,4 +115,6 @@ public class ChatService {
                 .timestamp(message.getTimestamp())
                 .build();
     }
+
+
 }

@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.4.1'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco' // JaCoCo 플러그인 추가
 }
 
 group = 'com.hbhw'
@@ -10,6 +11,35 @@ version = '0.0.1-SNAPSHOT'
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+jacoco {
+	toolVersion = "0.8.10"
+	reportsDirectory = file("build/reports/jacoco")
+}
+
+/** Jacoco start **/
+test {
+	useJUnitPlatform()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	reports {
+		xml {
+			enabled true
+		}
+		csv {
+			enabled true
+		}
+		html {
+			enabled true
+		}
+
+		xml.destination file(project.layout.buildDirectory.dir("jacoco/index.xml")) as File
+		csv.destination file(project.layout.buildDirectory.dir("jacoco/index.csv")) as File
+		html.destination file(project.layout.buildDirectory.dir("jacoco/index.html")) as File
 	}
 }
 
@@ -51,6 +81,7 @@ dependencies {
 	implementation group: 'com.google.firebase', name: 'firebase-admin', version: '9.4.3'
 	implementation 'io.awspring.cloud:spring-cloud-aws-s3:3.0.2'
 	testImplementation group: 'software.amazon.awssdk', name: 's3', version: '2.30.17'
+	testImplementation group: 'org.mockito', name: 'mockito-inline', version: '5.2.0'
 }
 
 tasks.named('test') {
