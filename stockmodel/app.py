@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import joblib
@@ -17,6 +18,25 @@ app = FastAPI(
     title = "판매 재고 예측 API",
     description = "판매 재고 예측 API"
 )
+
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:8080",
+    "http://52.79.170.206",
+    "http://52.79.170.206:5173",
+    "http://52.79.170.206:3000",
+    "https://jippy.duckdns.org",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,         # 허용할 오리진 리스트
+    allow_credentials=True,        # 쿠키 등 인증 정보 허용
+    allow_methods=["*"],           # 모든 HTTP 메서드 허용
+    allow_headers=["*"],           # 모든 헤더 허용
+)
+
 
 MONGODB_URL = os.getenv("MONGODB_URL")
 client = AsyncIOMotorClient(MONGODB_URL)

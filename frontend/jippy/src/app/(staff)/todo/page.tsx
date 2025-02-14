@@ -71,8 +71,26 @@ const TodoItem = ({ todo, onToggle, onDelete } : TodoItemProps) => {
                     </div>
                 </div>
             </div>
+            
+            <div 
+                className={`
+                    absolute right-0 top-0 bottom-0 
+                    flex items-center 
+                    bg-red-500 text-white 
+                    w-[80px] 
+                    transition-opacity duration-300
+                    ${isSwipeOpen ? 'opacity-100' : 'opacity-0'}
+                `}
+            >
+                <button 
+                    onClick={handleDeleteClick}
+                    className="w-full h-full flex items-center justify-center"
+                >
+                    삭제
+                </button>
+            </div>
         </div>
-    );
+     );
 };
 
 
