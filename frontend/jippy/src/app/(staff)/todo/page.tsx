@@ -6,12 +6,32 @@ import {
     Todo,
     TodoItemProps
 } from "@/features/todo/types/todo";
-import { ChevronUp } from "lucide-react";
+import { useSwipeable } from 'react-swipeable';
 
-const TodoItem = ({ todo, onToggle } : TodoItemProps) => {
+const TodoItem = ({ todo, onToggle, onDelete } : TodoItemProps) => {
+    const [isSwipeOpen, setIsSwipeOpen] = useState(false);
+
+    const handlers = useSwipeable({
+        onSwipedLeft : () => setIsSwipeOpen(true),
+        onSwipedRight: () => setIsSwipeOpen(false),
+        preventScrollOnSwipe : true,
+        trackMouse: true
+    });
+
+    const handleDeleteClick = () => {
+        onDelete(todo.id);
+    };
+
     return (
-        <div className="border-b py-3 last:border-b-0">
-            <div className="cursor-pointer hover:bg-gray-50 transition-colors">
+        <div className="relative border-b py-3 last:border-b-0">
+            <div 
+                {...handlers}
+                className={`
+                    cursor-pointer hover:bg-gray-50 transition-colors
+                    transition-transform duration-300
+                    ${isSwipeOpen ? '-translate-x-[80px]' : 'translate-x-0'}
+                `}
+            >
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <input
@@ -29,8 +49,26 @@ const TodoItem = ({ todo, onToggle } : TodoItemProps) => {
                     </span>
                 </div>
             </div>
+            
+            <div 
+                className={`
+                    absolute right-0 top-0 bottom-0 
+                    flex items-center 
+                    bg-red-500 text-white 
+                    w-[80px] 
+                    transition-opacity duration-300
+                    ${isSwipeOpen ? 'opacity-100' : 'opacity-0'}
+                `}
+            >
+                <button 
+                    onClick={handleDeleteClick}
+                    className="w-full h-full flex items-center justify-center"
+                >
+                    삭제
+                </button>
+            </div>
         </div>
-    );
+     );
 };
 
 
@@ -42,6 +80,25 @@ const TodoPage = () => {
     const [showInput, setShowInput] = useState(false);
     const [newTodoTitle, setNewTodoTitle] = useState('');
     const [showScrollTop, setShowScrollTop] = useState(true);
+
+    const handleDelete = async (todoId: number) => {
+        try {
+            // redux 구현 시 변경
+            const storeId = 1;
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/todo/${storeId}/delete/${todoId}`, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) {
+                throw new Error('할 일 삭제에 실패했습니다');
+            }
+
+            setTodos(prevTodos => prevTodos.filter(todo => todo.id !== todoId));
+        } catch(error:unknown) {
+            console.error('할 일 삭제 실패 : ', error);
+            alert('할 일 삭제에 실패했습니다. 다시 시도해주세요.');
+        }
+    }
 
     const fetchTodos = async () => {
         try {
@@ -133,7 +190,7 @@ const TodoPage = () => {
                 },
                 body : JSON.stringify({
                     title : newTodoTitle.trim(),
-                    complete: false
+                    isComplete: false
                 }),
             });
 
@@ -186,57 +243,54 @@ const TodoPage = () => {
 
     return (
         <>
-            <div id="page-top">
-                <PageTitle />
-                <div className="p-4">
-                    <div className="bg-white rounded-lg shadow p-6 flex flex-col">
-                        <div className="flex justify-between items-center pb-3">
-                            <h1 className="text-[24px] font-bold text-black">📝 투두리스트</h1>
-                            {/* <button 
-                                onClick={() => setShowInput(!showInput)}
-                                className="w-8 h-8 flex items-center justify-center text-[24px] text-[#ff5c00] font-bold rounded hover:bg-orange-50 transition-colors"
+            <PageTitle />
+            <div className="p-4">
+                <div className="bg-white rounded-lg shadow p-6 flex flex-col">
+                    <div className="flex justify-between items-center pb-3">
+                        <h1 className="text-[24px] font-bold text-black">📝 투두리스트</h1>
+                        <button 
+                            onClick={() => setShowInput(!showInput)}
+                            className="w-8 h-8 flex items-center justify-center text-[24px] text-[#ff5c00] font-bold rounded hover:bg-orange-50 transition-colors"
+                        >
+                            +
+                        </button>
+                    </div>
+
+                    <div>
+                        {showInput && (
+                            <div className="mb-4 flex gap-2">
+                            <input
+                                type="text"
+                                value={newTodoTitle}
+                                onChange={(e) => setNewTodoTitle(e.target.value)}
+                                placeholder="할 일을 입력하세요"
+                                className="flex-1 p-2 border border-gray-300 rounded focus:outline-none focus:border-[#ff5c00]"
+                            />
+                            <button 
+                                onClick={handleAddTodo}
+                                className="px-4 py-2 bg-[#ff5c00] text-white rounded hover:bg-[#ff4400] transition-colors"
                             >
                                 +
                             </button> */}
                         </div>
 
-                        <div>
-                            {showInput && (
-                                <div className="mb-4 flex gap-2">
-                                <input
-                                    type="text"
-                                    value={newTodoTitle}
-                                    onChange={(e) => setNewTodoTitle(e.target.value)}
-                                    placeholder="할 일을 입력하세요"
-                                    className="flex-1 p-2 border border-gray-300 rounded focus:outline-none focus:border-[#ff5c00]"
-                                />
-                                <button 
-                                    onClick={handleAddTodo}
-                                    className="px-4 py-2 bg-[#ff5c00] text-white rounded hover:bg-[#ff4400] transition-colors"
-                                >
-                                    확인
-                                </button>
-                            </div>
-                            )}
-                        </div>
-
-                        <div>
-                            {todos.length > 0 ? (
-                                <>
-                                    <div className="scrollbar-custom overflow-y-auto flex-grow">
-                                        {todos.map(todo => (
-                                            <TodoItem
-                                                key={todo.id}
-                                                todo={todo}
-                                                onToggle={handleToggle}
-                                            />
-                                        ))}
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="text-center">등록된 할 일이 없습니다.</div>
-                            )}
-                        </div>
+                    <div>
+                        {todos.length > 0 ? (
+                            <>
+                                <div className="scrollbar-custom overflow-y-auto flex-grow">
+                                    {todos.map(todo => (
+                                        <TodoItem
+                                            key={todo.id}
+                                            todo={todo}
+                                            onToggle={handleToggle}
+                                            onDelete={handleDelete}
+                                        />
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-center">등록된 할 일이 없습니다.</div>
+                        )}
                     </div>
                 </div>
 

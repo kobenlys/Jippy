@@ -2,6 +2,7 @@
 import os
 import torch
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
@@ -76,6 +77,25 @@ CATEGORY_MAPPING = {
 
 # FastAPI 애플리케이션 생성
 app = FastAPI(title="Customer Feedback Sentiment API")
+
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:8080",
+    "http://52.79.170.206",
+    "http://52.79.170.206:5173",
+    "http://52.79.170.206:3000",
+    "https://jippy.duckdns.org",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,         # 허용할 오리진 리스트
+    allow_credentials=True,        # 쿠키 등 인증 정보 허용
+    allow_methods=["*"],           # 모든 HTTP 메서드 허용
+    allow_headers=["*"],           # 모든 헤더 허용
+)
+
 
 @app.get("/predictions/{store_id}")
 def get_predictions(store_id: int):
