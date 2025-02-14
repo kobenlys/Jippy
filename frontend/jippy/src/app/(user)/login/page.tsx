@@ -58,6 +58,8 @@ const LoginPage = () => {
           credentials: "include",
         }
       );
+      console.log("로그인 응답 상태:", response.status);
+      console.log("로그인 응답:", response);
 
       // 응답 데이터 확인을 위한 로그 추가
       const responseData = await response.json();
