@@ -7,6 +7,5 @@ import lombok.Setter;
 @Setter
 public class TaskRequest {
     private String title;         // 할 일 제목
-    private String content;       // 할 일 내용
     private boolean isComplete;   // 완료 여부
 }
