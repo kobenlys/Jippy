@@ -7,17 +7,20 @@ import { StoreChat } from "@/features/chat/types/chat";
 import { AppDispatch } from "@/redux/store";
 import useChatMemberCount from "@/features/chat/hooks/useChatMemberCount";
 import styles from "@/features/chat/styles/ChatRoom.module.css";
-import { userInfo } from "os";
+import { useWebSocket } from "@/features/chat/hooks/useWebSocket";
 
 interface ChatRoomProps {
   chatRoom: StoreChat;
   userId: number;
-  userName : string;
+  userName: string;
 }
 
-const ChatRoom: React.FC<ChatRoomProps> = ({ chatRoom, userId, userName}) => {
+const ChatRoom: React.FC<ChatRoomProps> = ({ chatRoom, userId, userName }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { memberCount, loading, error } = useChatMemberCount(chatRoom.storeId);
+  
+  // WebSocket hook: sendMessage 함수를 여기서 받아서 MessageInput에 전달
+  const { sendMessage } = useWebSocket(chatRoom.storeId.toString());
 
   useEffect(() => {
     dispatch(fetchMessages({ userId, storeId: chatRoom.storeId }));
@@ -39,7 +42,11 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ chatRoom, userId, userName}) => {
         <MessageList storeId={chatRoom.storeId} />
       </div>
       <div className={styles.footer}>
-        <MessageInput storeId={chatRoom.storeId} userName={userName} />
+        <MessageInput 
+          storeId={chatRoom.storeId} 
+          userName={userName} 
+          sendMessage={sendMessage} 
+        />
       </div>
     </div>
   );

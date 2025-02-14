@@ -1,16 +1,26 @@
-// src/features/chat/chatSlice.ts
+// src/redux/slices/chatSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { StoreChat, Message } from "@/features/chat/types/chat";
+
+export interface ChatState {
+  chatList: StoreChat[];
+  messages: { [storeId: number]: Message[] };
+  selectedChatRoom: StoreChat | null;
+}
+
+const initialState: ChatState = {
+  chatList: [],
+  messages: {},
+  selectedChatRoom: null,
+};
 
 // 채팅방 목록 불러오기
 export const fetchChatList = createAsyncThunk<StoreChat[], number>(
   "chat/fetchChatList",
   async (userId: number) => {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/chat/${userId}`
-    );
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/chat/${userId}`);
     if (!response.ok) {
-      throw new Error("채팅창 불러오기 실패패");
+      throw new Error("채팅방 목록을 불러오는데 실패했습니다.");
     }
     const data = await response.json();
     return data.data as StoreChat[];
@@ -28,24 +38,12 @@ export const fetchMessages = createAsyncThunk<
       `${process.env.NEXT_PUBLIC_API_URL}/api/chat/${userId}/select/${storeId}`
     );
     if (!response.ok) {
-      throw new Error("메시지를 불러오기 실패했습니다");
+      throw new Error("메시지 목록을 불러오는데 실패했습니다.");
     }
     const data = await response.json();
     return { storeId, messages: data.data as Message[] };
   }
 );
-
-export interface ChatState {
-  chatList: StoreChat[];
-  messages: { [storeId: number]: Message[] };
-  selectedChatRoom: StoreChat | null;
-}
-
-const initialState: ChatState = {
-  chatList: [],
-  messages: {},
-  selectedChatRoom: null,
-};
 
 const chatSlice = createSlice({
   name: "chat",
@@ -54,11 +52,8 @@ const chatSlice = createSlice({
     setSelectedChatRoom(state, action: PayloadAction<StoreChat>) {
       state.selectedChatRoom = action.payload;
     },
-    // WebSocket을 통해 수신한 메시지를 추가하는 액션
-    receiveMessage(
-      state,
-      action: PayloadAction<{ storeId: number; message: Message }>
-    ) {
+    // WebSocket 등을 통해 새 메시지를 수신했을 때 상태에 추가하는 리듀서
+    addReceivedMessage(state, action: PayloadAction<{ storeId: number; message: Message }>) {
       const { storeId, message } = action.payload;
       if (!state.messages[storeId]) {
         state.messages[storeId] = [];
@@ -67,18 +62,12 @@ const chatSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(
-      fetchChatList.fulfilled,
-      (state, action: PayloadAction<StoreChat[]>) => {
-        state.chatList = action.payload;
-      }
-    );
+    builder.addCase(fetchChatList.fulfilled, (state, action: PayloadAction<StoreChat[]>) => {
+      state.chatList = action.payload;
+    });
     builder.addCase(
       fetchMessages.fulfilled,
-      (
-        state,
-        action: PayloadAction<{ storeId: number; messages: Message[] }>
-      ) => {
+      (state, action: PayloadAction<{ storeId: number; messages: Message[] }>) => {
         const { storeId, messages } = action.payload;
         state.messages[storeId] = messages;
       }
@@ -86,5 +75,5 @@ const chatSlice = createSlice({
   },
 });
 
-export const { setSelectedChatRoom, receiveMessage } = chatSlice.actions;
+export const { setSelectedChatRoom, addReceivedMessage } = chatSlice.actions;
 export default chatSlice.reducer;

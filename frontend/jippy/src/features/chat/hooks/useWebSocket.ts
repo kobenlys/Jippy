@@ -1,57 +1,57 @@
-// src/features/chat/hooks/useWebSocket.ts
-import { useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import SockJS from "sockjs-client";
-import { Client, IMessage } from "@stomp/stompjs";
+import { Client } from "@stomp/stompjs";
 import { useDispatch } from "react-redux";
-import { receiveMessage } from "@/redux/slices/chatSlice";
-import { Message } from "@/features/chat/types/chat";
+import { addReceivedMessage } from "@/redux/slices/chatSlice";
 
-const useWebSocket = (storeId?: number) => {
-  // stompClient 타입은 Stomp Client 또는 null
-  const stompClient = useRef<Client | null>(null);
+const SOCKET_URL = "http://localhost:8080/ws-chat"; // 백엔드 엔드포인트
+
+export const useWebSocket = (storeId: string) => {
   const dispatch = useDispatch();
+  const [stompClient, setStompClient] = useState<Client | null>(null);
 
-  // WebSocket 연결 함수
-
-  const connect = useCallback((): void => {
+  useEffect(() => {
     if (!storeId) return;
-    // @stomp/stompjs와 함께 SockJS 사용
-    const socket = new SockJS("http://localhost:8080/ws-chat");
-    stompClient.current = new Client({
-      webSocketFactory: () => socket as WebSocket,
-      debug: (str) => console.log(str),
+    const socket = new SockJS(SOCKET_URL);
+    const client = new Client({
+      webSocketFactory: () => socket,
       reconnectDelay: 5000,
       onConnect: () => {
-        stompClient.current?.subscribe(`/topic/chat/${storeId}`, (msg: IMessage) => {
-          const message: Message = JSON.parse(msg.body);
-          dispatch(receiveMessage({ storeId, message }));
+        console.log("✅ WebSocket 연결 성공!");
+        client.subscribe(`/topic/chat/${storeId}`, (message) => {
+          const newMsg = JSON.parse(message.body);
+          console.log("서버에서 받은 메시지:", newMsg);
+          dispatch(addReceivedMessage(newMsg));
         });
       },
     });
-    stompClient.current.activate();
+    client.activate();
+    setStompClient(client);
+
+    return () => {
+      client.deactivate();
+    };
   }, [storeId, dispatch]);
 
-  // WebSocket 연결 종료 함수
-  const disconnect = useCallback((): void => {
-    if (stompClient.current) {
-      stompClient.current.deactivate();
-    }
-  }, []);
-
-  // WebSocket을 통한 메시지 전송 함수
   const sendMessage = useCallback(
-    (storeId: number, message: Message): void => {
-      if (stompClient.current && stompClient.current.connected) {
-        stompClient.current.publish({
+    (message: string, senderId: string) => {
+      console.log("sendMessage 호출됨. 연결 상태:", stompClient?.active);
+      if (stompClient && stompClient.active) {
+        console.log("WebSocket 연결 상태: 전송 진행", message);
+        stompClient.publish({
           destination: `/app/chat/${storeId}/send`,
-          body: JSON.stringify(message),
+          body: JSON.stringify({
+            senderId,
+            messageContent: message,
+            messageType: "TEXT",
+          }),
         });
+      } else {
+        console.warn("WebSocket이 연결되어 있지 않습니다.");
       }
     },
-    []
+    [stompClient, storeId]
   );
 
-  return { connect, disconnect, sendMessage };
+  return { sendMessage };
 };
-
-export default useWebSocket;

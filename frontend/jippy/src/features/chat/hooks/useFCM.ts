@@ -1,5 +1,6 @@
-// src/features/chat/hooks/useFCM.ts
 import { useCallback } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage, Messaging } from "firebase/messaging";
 
@@ -13,8 +14,12 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
+
 const useFCM = () => {
-  // 백엔드에 FCM 토큰 저장 요청을 하는 함수 (예: POST /api/fcm/token)
+  // 백엔드에 FCM 토큰 저장 요청을 하는 함수
+  
+  const user = useSelector((state: RootState) => state.user);
+  const userId: number = typeof user?.profile?.id === 'number' ? user.profile.id : 1;
   const saveTokenToBackend = useCallback(async (token: string) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fcm/token`, {
@@ -24,7 +29,7 @@ const useFCM = () => {
         },
         // 필요시 사용자 정보도 함께 전송
         // userId: 현재 사용자 ID, userType: "owner" 또는 "staff"
-        body: JSON.stringify({ userId: 1, token, userType: "owner" }),
+        body: JSON.stringify({ userId: userId, token, userType: "owner" }),
       });
       if (!response.ok) {
         throw new Error("토큰 저장 실패");

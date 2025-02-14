@@ -1,20 +1,22 @@
-// src/features/chat/components/MessageInput.tsx
 import React, { useState } from "react";
-import useWebSocket from "../hooks/useWebSocket";
+import { useDispatch } from "react-redux";
+import { addReceivedMessage } from "@/redux/slices/chatSlice";
 import styles from "@/features/chat/styles/MessageInput.module.css";
 
 interface MessageInputProps {
   storeId: number;
   userName: string;
+  sendMessage: (message: string, senderId: string) => void;
 }
 
-const MessageInput: React.FC<MessageInputProps> = ({ storeId, userName }) => {
+const MessageInput: React.FC<MessageInputProps> = ({ storeId, userName, sendMessage }) => {
   const [message, setMessage] = useState("");
-  const { sendMessage } = useWebSocket(storeId);
+  const dispatch = useDispatch();
 
   const handleSend = () => {
     if (message.trim() === "") return;
 
+    console.log("전송 버튼 클릭됨:", message);
     const chatMessage = {
       senderId: userName,
       messageContent: message,
@@ -22,7 +24,11 @@ const MessageInput: React.FC<MessageInputProps> = ({ storeId, userName }) => {
       messageType: "text",
     };
 
-    sendMessage(storeId, chatMessage);
+    // Optimistic Update: 내가 보낸 메시지를 바로 채팅창에 추가
+    dispatch(addReceivedMessage({ storeId, message: chatMessage }));
+
+    // WebSocket을 통해 메시지 전송 (백엔드도 FCM 알림 전송)
+    sendMessage(message, userName);
     setMessage("");
   };
 
