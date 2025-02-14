@@ -50,7 +50,7 @@ const NotificationsPage = () => {
                 body: JSON.stringify(params),
             });
 
-            const responseData: ApiResponse = await response.json();
+            const responseData: ApiResponse<NoticeResponse> = await response.json();
 
             if (!responseData.success) {
                 if (responseData.code === "C-006") {
