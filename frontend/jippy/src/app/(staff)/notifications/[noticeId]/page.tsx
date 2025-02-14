@@ -35,14 +35,16 @@ const NoticeDetailPage = ({
                 }
             );
 
-            const responseData : ApiResponse = await response.json();
+            const responseData : ApiResponse<Notice> = await response.json();
 
             if (!responseData.success) {
                 throw new Error(
                     responseData.message || "공지사항을 불러오는데 실패했습니다"
                 );
             }
-            setNotice(responseData.data || null);
+
+            const noticeData = responseData.data;
+            setNotice(noticeData || null);
         } catch (error) {
             setError("공지사항을 불러오는데 실패했습니다");
 

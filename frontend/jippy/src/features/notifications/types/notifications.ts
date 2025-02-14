@@ -1,4 +1,4 @@
-interface NoticeRequest {
+export interface NoticeRequest {
   page: number;
   pageSize: number;
   sortBy: string;
@@ -30,12 +30,12 @@ export interface NoticeResponse {
   isLast: boolean;
 }
 
-export type ApiResponse = ApiSuccessResponse | ApiErrorResponse;
+export type ApiResponse<T = unknown> = ApiSuccessResponse<T> | ApiErrorResponse;
 
-export interface ApiSuccessResponse {
+export interface ApiSuccessResponse<T = unknown> {
   code: number;
   success: true;
-  data: NoticeResponse;
+  data: T;
 }
 
 export interface ApiErrorResponse {
