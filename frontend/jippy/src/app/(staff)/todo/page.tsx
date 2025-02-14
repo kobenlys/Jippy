@@ -79,6 +79,7 @@ const TodoPage = () => {
     const [error, setError] = useState<string | null>(null);
     const [showInput, setShowInput] = useState(false);
     const [newTodoTitle, setNewTodoTitle] = useState('');
+    const [showScrollTop, setShowScrollTop] = useState(true);
 
     const handleDelete = async (todoId: number) => {
         try {
@@ -124,6 +125,18 @@ const TodoPage = () => {
 
     useEffect(() => {
         fetchTodos();
+
+        const handleScroll = () => {
+            if (typeof window !== 'undefined') {
+                const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                setShowScrollTop(scrollY > 200);
+            }
+        };
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('scroll', handleScroll, { passive: true });
+            return () => window.removeEventListener('scroll', handleScroll);
+        }
     }, []);
 
     const handleToggle = async (todoId: number) => {
@@ -195,9 +208,16 @@ const TodoPage = () => {
 
     }
 
+    const scrollToTop = () => {
+        const element = document.getElementById('page-top');
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
     if (isLoading) {
         return (
-            <div>
+            <div id="page-top">
                 <PageTitle />
                 <div className="p-4">
                     <div className="bg-white rounded-lg shadow p-6 flex flex-col h-[360px] justify-center items-center">
@@ -210,7 +230,7 @@ const TodoPage = () => {
 
     if (error) {
         return (
-            <div>
+            <div id="page-top">
                 <PageTitle />
                 <div className="p-4">
                     <div className="bg-white rounded-lg shadow p-6 flex flex-col h-[360px] justify-center items-center">
@@ -250,11 +270,9 @@ const TodoPage = () => {
                                 onClick={handleAddTodo}
                                 className="px-4 py-2 bg-[#ff5c00] text-white rounded hover:bg-[#ff4400] transition-colors"
                             >
-                                확인
-                            </button>
+                                +
+                            </button> */}
                         </div>
-                        )}
-                    </div>
 
                     <div>
                         {todos.length > 0 ? (
@@ -275,6 +293,14 @@ const TodoPage = () => {
                         )}
                     </div>
                 </div>
+
+                <button 
+                    onClick={scrollToTop}
+                    className={`fixed bottom-32 right-8 w-12 h-12 bg-[#ff5c00] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#ff7c33] transition-all ${showScrollTop ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
+                    aria-label="맨 위로 스크롤"
+                >
+                    <ChevronUp size={24} />
+                </button>
             </div>
         </>
     );
