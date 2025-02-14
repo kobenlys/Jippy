@@ -38,7 +38,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -53,6 +56,7 @@ public class UserService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final StoreStaffRepository storeStaffRepository;
     private final StoreRepository storeRepository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${jwt.refresh.expiration}")
     private Long refreshTokenExpireTime;
@@ -129,10 +133,29 @@ public class UserService {
                 .orElse(null);
         log.info("Redis에 저장된 값: " + savedToken);
 
+        // storeId list 가져오기
+        List<Integer> storeIdList = new ArrayList<>();
+        if (StaffType.OWNER.name().equals(staffType.name())) {
+            Optional<List<Store>> storeList = storeRepository.findByUserOwnerId(principal.getId());
+            if (storeList.isPresent()) {
+                for (Store store : storeList.get()) {
+                    System.out.println(store.getId() + " " + store.getName());
+                    storeIdList.add(store.getId());
+                }
+            }
+        } else if (StaffType.STAFF.name().equals(staffType.name()) || StaffType.MANAGER.name().equals(staffType.name())) {
+            System.out.println("staff");
+            Optional<List<StoreUserStaff>> storeUserStaffOptional = storeStaffRepository.findAllByUserStaffId(principal.getId());
+            if (storeUserStaffOptional.isPresent()) {
+                for (StoreUserStaff storeUserStaff : storeUserStaffOptional.get()) {
+                    System.out.println(storeUserStaff.getStore().getId());
+                    storeIdList.add(storeUserStaff.getStore().getId());
+                }
+            }
+        }
 
         // JWT 토큰과 사용자 정보를 쿠키에 저장
-        setCookie(response, accessToken, refreshToken, principal, staffType);
-        System.out.println();
+        setCookie(response, accessToken, refreshToken, principal, staffType, storeIdList);
         return LoginResponse.of(user, staffType, accessToken, refreshToken);
     }
 
@@ -252,7 +275,27 @@ public class UserService {
         return new String(password);
     }
 
-    private void setCookie(HttpServletResponse response, String accessToken, String refreshToken, UserPrincipal principal, StaffType staffType) {
+    private void setCookie(HttpServletResponse response, String accessToken, String refreshToken, UserPrincipal principal, StaffType staffType, List<Integer> storeIdList) {
+        System.out.println(storeIdList);
+        try {
+            // 리스트를 JSON 문자열로 변환
+            String jsonList = objectMapper.writeValueAsString(storeIdList);
+            String encodedList = URLEncoder.encode(jsonList, StandardCharsets.UTF_8);
+            // ResponseCookie 생성
+            ResponseCookie storeIdListCookie = ResponseCookie.from("storeIdList", encodedList)
+                    .httpOnly(false)  // 클라이언트에서 접근 가능
+                    .secure(false)    // HTTPS에서만 전송할지 여부
+                    .path("/")        // 모든 경로에서 접근 가능
+                    .maxAge(refreshTokenExpireTime / 1000)
+                    .sameSite("Strict")
+                    .build();
+
+            response.addHeader("Set-Cookie", storeIdListCookie.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "리스트 JSON 매핑 뱐환 오류");
+        }
+
         // user 정보 쿠키에 저장
         ResponseCookie userIdCookie = ResponseCookie.from("userId", principal.getId().toString())
                 .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
@@ -280,14 +323,14 @@ public class UserService {
                 .httpOnly(false)
                 .secure(false) // HTTPS에서만 전송
                 .path("/")
-                .maxAge(accessTokenExpireTime) // 초 단위
+                .maxAge(accessTokenExpireTime / 1000) // 초 단위
                 .sameSite("Strict")
                 .build();
         ResponseCookie jwtRefreshCookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(false)
                 .secure(false) // HTTPS에서만 전송
                 .path("/")
-                .maxAge(refreshTokenExpireTime) // 초 단위
+                .maxAge(refreshTokenExpireTime / 1000) // 초 단위
                 .sameSite("Strict")
                 .build();
         // 응답 헤더에 쿠키 추가
