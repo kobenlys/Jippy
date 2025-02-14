@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import useFeedbacks, { Feedback } from '@/features/dashboard/customer/hooks/useFeedbacks';
+import useFeedbacks from '@/features/dashboard/customer/hooks/useFeedbacks';
+import { Feedback } from '@/features/dashboard/customer/types/customer';
 
 interface FeedbackListProps {
   storeId: number;
