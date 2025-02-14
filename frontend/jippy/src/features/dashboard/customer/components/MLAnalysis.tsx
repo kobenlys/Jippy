@@ -1,6 +1,12 @@
 import React from 'react';
 import usePrediction from '@/features/dashboard/customer/hooks/usePrediction';
-import styles from '@/features/dashboard/customer/styles/MLAnalysis.module.css';
+
+const categoryMapping: { [key: string]: string } = {
+  "1": "서비스",
+  "2": "실시간 서비스",
+  "3": "제품관련",
+  "4": "기타",
+};
 
 interface MLAnalysisProps {
   storeId: number;
@@ -9,58 +15,86 @@ interface MLAnalysisProps {
 const MLAnalysis: React.FC<MLAnalysisProps> = ({ storeId }) => {
   const { data, loading, error } = usePrediction(storeId);
 
-  if (loading) return <p>분석 데이터를 불러오는 중...</p>;
-  if (error) return <p>오류: {error}</p>;
+  if (loading) return <div className="p-4">분석 데이터를 불러오는 중...</div>;
+  if (error) return <div className="p-4 text-red-500">오류: {error}</div>;
   if (!data) return null;
 
   return (
-    <div className={styles.mlAnalysis}>
-      <div className={styles.counts}>
-        <p>긍정 피드백: {data.positive_count}</p>
-        <p>부정 피드백: {data.negative_count}</p>
+    <div className="p-6">
+      {/* 피드백 총계 */}
+      <div className="mb-6 flex flex-col md:flex-row gap-4">
+        <div className="flex-1 bg-[#F27B39] text-white p-4 rounded shadow">
+          <h3 className="text-xl font-semibold">긍정 피드백</h3>
+          <p className="text-3xl font-bold">{data.positive_count}</p>
+        </div>
+        <div className="flex-1 bg-gray-200 p-4 rounded shadow">
+          <h3 className="text-xl font-semibold text-gray-700">부정 피드백</h3>
+          <p className="text-3xl font-bold text-gray-800">{data.negative_count}</p>
+        </div>
       </div>
 
-      <div className={styles.samples}>
-        <h3>긍정 샘플</h3>
-        <ul>
-          {data.positive_samples.map((sample, idx) => (
-            <li key={idx}>
-              <p>
-                <strong>카테고리:</strong> {sample.category}
-              </p>
-              <p>{sample.content}</p>
-              <p>{sample.created_at}</p>
-            </li>
-          ))}
-        </ul>
+      {/* 긍정 / 부정 샘플 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* 긍정 샘플 */}
+        <div>
+          <h4 className="text-2xl font-semibold mb-4">긍정 샘플</h4>
+          <div className="space-y-4">
+            {data.positive_samples.map((sample, idx) => (
+              <div
+                key={idx}
+                className="border-l-4 border-green-500 bg-green-50 p-4 rounded shadow"
+              >
+                <p className="text-sm text-gray-500">{sample.created_at}</p>
+                <p className="font-medium text-lg">
+                  {categoryMapping[sample.category] || sample.category}
+                </p>
+                <p>{sample.content}</p>
+              </div>
+            ))}
+          </div>
+        </div>
 
-        <h3>부정 샘플</h3>
-        <ul>
-          {data.negative_samples.map((sample, idx) => (
-            <li key={idx}>
-              <p>
-                <strong>카테고리:</strong> {sample.category}
-              </p>
-              <p>{sample.content}</p>
-              <p>{sample.created_at}</p>
-            </li>
-          ))}
-        </ul>
+        {/* 부정 샘플 */}
+        <div>
+          <h4 className="text-2xl font-semibold mb-4">부정 샘플</h4>
+          <div className="space-y-4">
+            {data.negative_samples.map((sample, idx) => (
+              <div
+                key={idx}
+                className="border-l-4 border-red-500 bg-red-50 p-4 rounded shadow"
+              >
+                <p className="text-sm text-gray-500">{sample.created_at}</p>
+                <p className="font-medium text-lg">
+                  {categoryMapping[sample.category] || sample.category}
+                </p>
+                <p>{sample.content}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      <div className={styles.keywords}>
-        <h3>긍정 키워드</h3>
-        <ul>
+      {/* 키워드 영역 */}
+      <div className="mt-6">
+        <h4 className="text-2xl font-semibold mb-2">키워드</h4>
+        <div className="flex flex-wrap gap-2">
           {data.positive_keywords.map((kw, idx) => (
-            <li key={idx}>{kw}</li>
+            <span
+              key={idx}
+              className="bg-[#F27B39] text-white px-3 py-1 rounded-full text-sm"
+            >
+              {kw}
+            </span>
           ))}
-        </ul>
-        <h3>부정 키워드</h3>
-        <ul>
           {data.negative_keywords.map((kw, idx) => (
-            <li key={idx}>{kw}</li>
+            <span
+              key={idx}
+              className="bg-gray-300 text-gray-800 px-3 py-1 rounded-full text-sm"
+            >
+              {kw}
+            </span>
           ))}
-        </ul>
+        </div>
       </div>
     </div>
   );
