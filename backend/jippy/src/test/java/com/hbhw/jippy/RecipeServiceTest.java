@@ -1,12 +1,15 @@
 package com.hbhw.jippy;
 
+import com.hbhw.jippy.domain.product.dto.request.RecipeRequest;
+import com.hbhw.jippy.domain.product.dto.request.SearchRecipeRequest;
 import com.hbhw.jippy.domain.product.entity.Ingredient;
+import com.hbhw.jippy.domain.product.entity.Product;
 import com.hbhw.jippy.domain.product.entity.Recipe;
 import com.hbhw.jippy.domain.product.repository.RecipeCustomRepository;
 import com.hbhw.jippy.domain.product.repository.RecipeRepository;
 import com.hbhw.jippy.domain.product.service.ProductService;
 import com.hbhw.jippy.domain.product.service.RecipeService;
-import com.hbhw.jippy.domain.store.entity.Store;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,9 +20,12 @@ import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.junit.jupiter.api.Assertions.*;
 
 @MockitoSettings(strictness = Strictness.LENIENT)
 @ExtendWith(MockitoExtension.class)
@@ -34,17 +40,61 @@ public class RecipeServiceTest {
     @Mock
     private ProductService productService;
 
-    @Test
-    void createRecipeTest_Success(){
-        Recipe mockRecipe = getMockRecipe();
+    private RecipeRequest mockRequestRecipe;
 
-        when()
-
-
+    @BeforeEach
+    void setUp() {
+        Ingredient mockIngredient1 = new Ingredient("원두", 10, "g");
+        Ingredient mockIngredient2 = new Ingredient("바닐라시럽", 20, "ml");
+        List<Ingredient> mockIngredientList = Arrays.asList(mockIngredient1, mockIngredient2);
+        mockRequestRecipe = new RecipeRequest(1L, "2024-01-15", mockIngredientList);
     }
 
+    @Test
+    void createRecipeTest_Success() {
+        // given
+        // when
+        recipeService.createRecipe(mockRequestRecipe);
+        // then
+        verify(recipeRepository, times(1)).save(any(Recipe.class));
+    }
 
-    public Recipe getMockRecipe(){
+    @Test
+    void deleteRecipe_Success(){
+        //given
+        Product mockProduct = new Product();
+        SearchRecipeRequest mockSearchRecipeRequest = new SearchRecipeRequest(1L, 1);
+        Recipe mockRecipe = new Recipe();
+        when(productService.getProduct(anyInt(), anyLong())).thenReturn(mockProduct);
+        when(recipeRepository.findByProductId(anyLong())).thenReturn(Optional.of(mockRecipe));
+
+        // when
+        recipeService.deleteRecipe(mockSearchRecipeRequest);
+
+        // then
+        verify(productService, times(1)).getProduct(1, 1L);
+        verify(recipeRepository, times(1)).findByProductId(1L);
+        verify(recipeRepository, times(1)).delete(mockRecipe);
+    }
+
+    @Test
+    void modifyRecipe_Success(){
+        Recipe mockData = getMockRecipe();
+        Recipe mockRecipe = Recipe.builder()
+                .productId(1L)
+                .ingredient(mockData.getIngredient())
+                .updatedAt("1999-01-15")
+                .build();
+        when(recipeRepository.findByProductId(anyLong())).thenReturn(Optional.ofNullable(mockRecipe));
+
+        recipeService.modifyRecipe(mockRequestRecipe);
+
+        assert mockRecipe != null;
+        assertEquals("1999-01-15", mockRecipe.getUpdatedAt());
+        verify(recipeCustomRepository, times(1)).updateRecipe(mockRequestRecipe);
+    }
+
+    public Recipe getMockRecipe() {
         Ingredient mockIngredient1 = mock(Ingredient.class);
         when(mockIngredient1.getName()).thenReturn("원두");
         when(mockIngredient1.getAmount()).thenReturn(10);

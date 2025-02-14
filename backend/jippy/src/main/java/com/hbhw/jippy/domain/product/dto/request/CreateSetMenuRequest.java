@@ -6,7 +6,6 @@ import lombok.ToString;
 
 import java.util.List;
 
-@ToString
 @Getter
 @AllArgsConstructor
 public class CreateSetMenuRequest {

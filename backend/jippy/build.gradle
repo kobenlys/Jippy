@@ -15,26 +15,31 @@ java {
 }
 
 jacoco {
-	toolVersion = '0.8.7'  // 원하는 JaCoCo 버전
+	toolVersion = "0.8.10"
+	reportsDirectory = file("build/reports/jacoco")
 }
 
+/** Jacoco start **/
 test {
-	useJUnitPlatform()  // JUnit 5를 사용하는 경우
-	finalizedBy jacocoTestReport // 테스트 실행 후 리포트 생성
+	useJUnitPlatform()
+	finalizedBy jacocoTestReport
 }
 
 jacocoTestReport {
-	dependsOn test  // 테스트 완료 후 리포트 생성
 	reports {
 		xml {
-			enabled true  // XML 리포트 활성화
-		}
-		html {
-			enabled true  // HTML 리포트 활성화
+			enabled true
 		}
 		csv {
-			enabled false  // CSV 리포트 비활성화
+			enabled true
 		}
+		html {
+			enabled true
+		}
+
+		xml.destination file(project.layout.buildDirectory.dir("jacoco/index.xml")) as File
+		csv.destination file(project.layout.buildDirectory.dir("jacoco/index.csv")) as File
+		html.destination file(project.layout.buildDirectory.dir("jacoco/index.html")) as File
 	}
 }
 

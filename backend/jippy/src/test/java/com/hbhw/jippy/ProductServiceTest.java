@@ -1,9 +1,12 @@
 package com.hbhw.jippy;
 
+import com.hbhw.jippy.domain.payment.service.PaymentHistoryService;
 import com.hbhw.jippy.domain.product.dto.request.CreateProductRequest;
 import com.hbhw.jippy.domain.product.dto.request.ProductUpdateRequest;
 import com.hbhw.jippy.domain.product.dto.response.ProductDetailResponse;
 import com.hbhw.jippy.domain.product.dto.response.ProductListResponse;
+import com.hbhw.jippy.domain.product.dto.response.ProductMonthSoldResponse;
+import com.hbhw.jippy.domain.product.dto.response.ProductSoldCountResponse;
 import com.hbhw.jippy.domain.product.entity.Product;
 import com.hbhw.jippy.domain.product.entity.ProductCategory;
 import com.hbhw.jippy.domain.product.enums.ProductSize;
@@ -27,12 +30,11 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.S3Client;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -55,6 +57,9 @@ public class ProductServiceTest {
     private ProductCategoryService productCategoryService;
 
     @Mock
+    private PaymentHistoryService paymentHistoryService;
+
+    @Mock
     private S3Client s3Client;
 
     @Mock
@@ -75,13 +80,13 @@ public class ProductServiceTest {
     void testCreateProduct() throws Exception {
         // Given
         CreateProductRequest request = new CreateProductRequest();
-        request.setName("커피");
-        request.setPrice(4000);
-        request.setStoreId(1);
-        request.setProductCategoryId(1);
-        request.setStatus(true);
-        request.setProductType(ProductType.ICE);
-        request.setProductSize(ProductSize.M);
+        ReflectionTestUtils.setField(request, "productCategoryId", 2);
+        ReflectionTestUtils.setField(request, "storeId", 2);
+        ReflectionTestUtils.setField(request, "name", "아메리카노");
+        ReflectionTestUtils.setField(request, "price", 4500);
+        ReflectionTestUtils.setField(request, "status", true);
+        ReflectionTestUtils.setField(request, "productType", ProductType.ICE);
+        ReflectionTestUtils.setField(request, "productSize", ProductSize.M);
 
         MockMultipartFile mockFile = new MockMultipartFile("image", "coffee.jpg", "image/jpeg", new byte[0]);
         Store store = new Store();
@@ -90,7 +95,7 @@ public class ProductServiceTest {
         when(uuidProvider.generateUUID()).thenReturn("12345");
 
         // When
-        productService.createProduct(request, mockFile);
+        productService.createProduct(request, mockFile, anyInt());
         // Then
         verify(productRepository, times(1)).save(any(Product.class));
     }
@@ -156,12 +161,12 @@ public class ProductServiceTest {
                 .build();
 
         List<Product> mockProductList = Arrays.asList(
-               product1, product2
+                product1, product2
         );
 
         List<ProductListResponse> mockResponseList = Arrays.asList(
                 new ProductListResponse(1L, 2, "아메리카노", 4500, true, "https://example.com/images/americano.jpg"),
-                new ProductListResponse(2L, 2,"카페라떼", 3500, true, "https://example.com/images/americano.jpg")
+                new ProductListResponse(2L, 2, "카페라떼", 3500, true, "https://example.com/images/americano.jpg")
         );
 
 
@@ -251,7 +256,7 @@ public class ProductServiceTest {
 
     @Test
     @DisplayName("상품 정보 수정 - 정상 케이스")
-    void testDeleteProduct_success(){
+    void testDeleteProduct_success() {
         //given
         Product productEntity = getMockProduct();
         Integer storeId = 1;
@@ -263,6 +268,121 @@ public class ProductServiceTest {
 
         // then
         verify(productRepository, times(1)).deleteByIdAndStoreId(storeId, productId);
+    }
+
+    @Test
+    void fetchAllProductInfo_Success() {
+        UserOwner mockUserOwner1 = new UserOwner("owner1@example.com", "password1", "김싸피", "1999-01-15", StaffType.OWNER, "fcmToken1");
+        // UserOwner mockUserOwner2 = new UserOwner("owner2@example.com", "password2", "이싸피", "1900-01-15", StaffType.OWNER, "fcmToken2");
+
+        Store mockStore = Store.builder()
+                .id(1)  // 매장 ID
+                .userOwner(mockUserOwner1)  // 점주 정보
+                .name("테스트 매장")
+                .address("서울특별시 강남구 테헤란로 123")
+                .openingDate("2024-01-01")
+                .totalCash(1000000)
+                .businessRegistrationNumber("123-45-67890")
+                .build();
+
+
+        Product product1 = Product.builder()
+                .id(1L)
+                .store(mockStore)
+                .name("아메리카노")
+                .price(4500)
+                .status(true)
+                .image("americano.jpg")
+                .productType(ProductType.ICE) // 가정: ProductType Enum 값
+                .productSize(ProductSize.L) // 가정: ProductSize Enum 값
+                .store(Store.builder()
+                        .id(1)
+                        .name("카페 하루")
+                        .build()
+                )
+                .productCategory(ProductCategory.builder()
+                        .id(2)
+                        .productCategoryName("커피")
+                        .build()
+                )
+                .build();
+
+        Product product2 = Product.builder()
+                .id(2L)
+                .store(mockStore)
+                .name("카페라떼")
+                .price(3500)
+                .status(true)
+                .image("caffelatte.jpg")
+                .productType(ProductType.ICE) // 가정: ProductType Enum 값
+                .productSize(ProductSize.L) // 가정: ProductSize Enum 값
+                .store(Store.builder()
+                        .id(1)
+                        .name("카페 하루")
+                        .build()
+                )
+                .productCategory(ProductCategory.builder()
+                        .id(2)
+                        .productCategoryName("커피")
+                        .build()
+                )
+                .build();
+
+        List<Product> productList = Arrays.asList(product1, product2);
+        Map<Long, Integer> soldInfo = new HashMap<>();
+        soldInfo.put(1L, 50);
+        soldInfo.put(2L, 40);
+
+        ProductDetailResponse response1 = new ProductDetailResponse(1L, 2, 1, "아메리카노",
+                4500, true, 50, "americano.jpg", ProductType.ICE, ProductSize.L);
+        ProductDetailResponse response2 = new ProductDetailResponse(2L, 2, 1, "카페라떼",
+                3500, true, 40, "caffelatte.jpg", ProductType.ICE, ProductSize.L);
+
+        try (MockedStatic<ProductMapper> mockedStatic = mockStatic(ProductMapper.class)) {
+
+            mockedStatic.when(() ->ProductMapper.convertProductFetchResponse(product1, 50))
+                    .thenReturn(response1);
+            mockedStatic.when(() ->ProductMapper.convertProductFetchResponse(product2, 40))
+                    .thenReturn(response2);
+
+            when(productRepository.findByStoreId(anyInt())).thenReturn(productList);
+            when(paymentHistoryService.getTotalSoldByProduct(anyInt(), anyString(), anyString())).thenReturn(soldInfo);
+
+            // when
+            List<ProductDetailResponse> result = productService.fetchAllProductInfo(1, "1999-01", "2024-01");
+
+            assertNotNull(result);
+            assertEquals(2, result.size());
+            assertEquals(response1.getImage(), result.get(0).getImage());
+            assertEquals(response1.getName(), result.get(0).getName());
+            assertEquals(response1.getPrice(), result.get(0).getPrice());
+            assertEquals(response1.getTotalSold(), result.get(0).getTotalSold());
+            assertEquals(response2.getImage(), result.get(1).getImage());
+            assertEquals(response2.getName(), result.get(1).getName());
+            assertEquals(response2.getPrice(), result.get(1).getPrice());
+            assertEquals(response2.getTotalSold(), result.get(1).getTotalSold());
+        }
+    }
+
+    @Test
+    void fetchMonthProductInfo_Success(){
+        List<ProductSoldCountResponse> mockJan = List.of(new ProductSoldCountResponse(1L, "아메리카노", 50));
+        List<ProductSoldCountResponse> mockFeb = List.of(new ProductSoldCountResponse(2L, "카페라떼", 40));
+
+        when(paymentHistoryService.getMonthSoldByStoreId(anyInt(), anyString(), anyString())).thenReturn(mockJan);
+        when(paymentHistoryService.getMonthSoldByStoreId(anyInt(), anyString(), anyString())).thenReturn(mockFeb);
+
+        ProductMonthSoldResponse response = productService.fetchMonthProductInfo(1, "2024-01");
+
+        assertNotNull(response);
+        assertNotNull(2, String.valueOf(response.getProductMonthlySold().size()));
+        assertNotNull("아메리카노", response.getProductMonthlySold().get("jan").get(0).getProductName());
+        assertNotNull(50, String.valueOf(response.getProductMonthlySold().get("jan").get(0).getSoldCount()));
+
+        assertNotNull(response);
+        assertNotNull(2, String.valueOf(response.getProductMonthlySold().size()));
+        assertNotNull("카페라떼", response.getProductMonthlySold().get("feb").get(0).getProductName());
+        assertNotNull(40, String.valueOf(response.getProductMonthlySold().get("feb").get(0).getSoldCount()));
     }
 
 
@@ -296,7 +416,6 @@ public class ProductServiceTest {
 
         return mockProduct;
     }
-
 
 
 }

@@ -51,8 +51,8 @@ public class ProductService {
      * 상품 등록 + S3
      */
     @Transactional
-    public void createProduct(CreateProductRequest createProductRequest, MultipartFile image) {
-        Store storeEntity = storeService.getStoreEntity(createProductRequest.getStoreId());
+    public void createProduct(CreateProductRequest createProductRequest, MultipartFile image, Integer storeId) {
+        Store storeEntity = storeService.getStoreEntity(storeId);
         ProductCategory productCategoryEntity = productCategoryService
                 .getProductCategoryEntity(createProductRequest.getStoreId(), createProductRequest.getProductCategoryId());
 
