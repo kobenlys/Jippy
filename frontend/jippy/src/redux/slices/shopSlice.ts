@@ -78,11 +78,12 @@ export const fetchShop = createAsyncThunk(
         throw new Error("인증 토큰이 없습니다.");
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/store/select`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/list?ownerId=${userId}`, {
         headers: {
           "Authorization": `Bearer ${accessToken}`,
           "Content-Type": "application/json"
-        }
+        },
+        credentials: "include"
       });
       
       if (!response.ok) {
