@@ -1,9 +1,7 @@
-import Navigation from "@/features/common/components/Navigation";
 import StockTable from "./StockTable";
 import StockChart from "./StockChart";
 import { StoreProvider } from "@/redux/StoreProvider";
 import StockBarChart from "./StockBarChart";
-
 
 async function getStockData(storeId: string) {
   const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/stock/${storeId}/select`;
@@ -21,30 +19,26 @@ async function getStockData(storeId: string) {
   }
 }
 
-
 export default async function StockPage() {
   const storeId: string = "1";
   const stockData = await getStockData(storeId);
   console.log(stockData);
   return (
-    <StoreProvider  preloadedState={stockData}>
+    <StoreProvider preloadedState={stockData}>
       <div className="min-h-screen">
-        <Navigation />
         <div className="bg-white pt-0 p-4 rounded-lg shadow-md">
           <StockTable />
         </div>
         <div className="bg-white rounded-lg shadow-md flex ">
           <div className="p-4 w-1/2">
-          <StockChart />
+            <StockChart />
           </div>
           <div className="p-4 w-1/2">
-          <StockBarChart />
+            <StockBarChart />
           </div>
           {/* <PieChart /> */}
         </div>
       </div>
-    </StoreProvider >
+    </StoreProvider>
   );
-
-
 }

@@ -1,5 +1,6 @@
 package com.hbhw.jippy.domain.storeuser.service.staff;
 
+import com.hbhw.jippy.domain.store.entity.Store;
 import com.hbhw.jippy.domain.store.repository.StoreRepository;
 import com.hbhw.jippy.domain.storeuser.dto.request.staff.UpdateStaffRequest;
 import com.hbhw.jippy.domain.storeuser.dto.response.staff.StaffResponse;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -86,5 +89,28 @@ public class StoreStaffService {
         if (request.getStaffSalaryType() != null) {
             staff.updateStaffSalaryType(request.getStaffSalaryType());
         }
+    }
+
+    /**
+     * 그룹 채팅 멤버들에게 알림 전송을 위한 FCM 토큰 목록을 조회
+     * 여기서는 매장 소속 직원과 매장 사장님(UserOwner)의 fcmToken을 모두 포함
+     */
+    public List<String> getAllChatMemberFcmTokens(Integer storeId) {
+        // 1. 직원의 fcmToken 조회
+        List<String> fcmTokens = storeStaffRepository.findByStoreId(storeId).stream()
+                .map(staff -> staff.getUserStaff().getFcmToken())
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        // 2. 매장 사장님 fcmToken 조회
+        Optional<Store> storeOpt = storeRepository.findById(storeId);
+        if (storeOpt.isPresent() && storeOpt.get().getUserOwner() != null) {
+            String ownerToken = storeOpt.get().getUserOwner().getFcmToken();
+            if (ownerToken != null && !ownerToken.isEmpty()) {
+                fcmTokens.add(ownerToken);
+            }
+        }
+
+        return fcmTokens;
     }
 }
