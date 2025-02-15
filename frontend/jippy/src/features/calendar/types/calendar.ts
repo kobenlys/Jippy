@@ -12,10 +12,10 @@ export interface StaffScheduleData {
   schedules: Schedule[];
 }
 
-export interface ApiSuccessResponse {
+export interface ApiSuccessResponse<T> {
   code: number;
   success: true;
-  data: StaffScheduleData;
+  data: T;
 }
 
 export interface ApiErrorResponse {
@@ -26,7 +26,7 @@ export interface ApiErrorResponse {
   errors: Array<{ reason: string }>;
 }
 
-export type ApiResponse = ApiSuccessResponse | ApiErrorResponse;
+export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 // 캘린더 그리드용 타입
 export interface TimeSlot {
@@ -44,3 +44,5 @@ export interface ScheduleEvent {
   height: number;
   top: number;
 }
+
+export const DAYS_OF_WEEK = ["일", "월", "화", "수", "목", "금", "토"] as const;

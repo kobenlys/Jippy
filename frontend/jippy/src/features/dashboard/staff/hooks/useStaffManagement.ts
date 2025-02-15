@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import staffApi from "./staffApi";
 import { StaffInfo } from "../types/staff";
 
@@ -14,12 +14,21 @@ const useStaffList = (storeId: number): StaffListState => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchStaffList = async () => {
+  const fetchStaffList = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await staffApi.getStaffList(storeId);
       if (response.success) {
-        setData(response.data);
+        const filteredStaff = response.data
+          .filter((staff) => staff.staffType !== "OWNER")
+          .sort((a, b) => {
+            if (a.staffType === "MANAGER" && b.staffType !== "MANAGER")
+              return -1;
+            if (a.staffType !== "MANAGER" && b.staffType === "MANAGER")
+              return 1;
+            return 0;
+          });
+        setData(filteredStaff);
       } else {
         // API 에러 응답 처리
         throw new Error(
@@ -34,7 +43,7 @@ const useStaffList = (storeId: number): StaffListState => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [storeId]);
 
   useEffect(() => {
     fetchStaffList();

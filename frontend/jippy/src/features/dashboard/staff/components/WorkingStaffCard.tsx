@@ -1,3 +1,5 @@
+"use client";
+
 import { useWorkingStaff } from "../hooks/useStaffStatistic";
 import LoadingSpinner from "@/features/common/components/ui/LoadingSpinner";
 import { Users } from "lucide-react";
@@ -10,7 +12,7 @@ const WorkingStaffCard = ({ storeId }: WorkingStaffCardProps) => {
   const { data, isLoading, error } = useWorkingStaff(storeId);
 
   if (isLoading) return <LoadingSpinner />;
-  if (error) return null; // 대시보드의 한 부분이므로 에러시 숨김
+  if (error) return null;
   if (!data) return null;
 
   return (

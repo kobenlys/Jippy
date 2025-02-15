@@ -1,3 +1,5 @@
+"use client";
+
 import useStaffList from "@/features/dashboard/staff/hooks/useStaffManagement";
 import LoadingSpinner from "@/features/common/components/ui/LoadingSpinner";
 import { Users } from "lucide-react";

@@ -1,7 +1,7 @@
-import { ScheduleEvent } from "../types/calendar";
+import { ScheduleEvent as ScheduleEventType } from "../types/calendar";
 
 interface ScheduleEventProps {
-  event: ScheduleEvent;
+  event: ScheduleEventType;
 }
 
 const ScheduleEventComponent = ({ event }: ScheduleEventProps) => {
