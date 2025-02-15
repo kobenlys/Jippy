@@ -27,25 +27,25 @@ ChartJS.register(
   Legend
 );
 
-async function fetchSalesByDay(
-  storeId: string,
-  startDate: string,
-  endDate: string
-) {
-  const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/sales/day?storeId=${storeId}&startDate=${startDate}&endDate=${endDate}`;
-  console.log(API_URL);
+// async function fetchSalesByDay(
+//   storeId: string,
+//   startDate: string,
+//   endDate: string
+// ) {
+//   const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/sales/day?storeId=${storeId}&startDate=${startDate}&endDate=${endDate}`;
+//   console.log(API_URL);
 
-  try {
-    const response = await fetch(API_URL, { cache: "no-store" });
-    if (!response.ok) throw new Error("데이터를 불러오는데 실패했습니다.");
-    const data = await response.json();
-    console.log(data);
-    return data || [];
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
-}
+//   try {
+//     const response = await fetch(API_URL, { cache: "no-store" });
+//     if (!response.ok) throw new Error("데이터를 불러오는데 실패했습니다.");
+//     const data = await response.json();
+//     console.log(data);
+//     return data || [];
+//   } catch (error) {
+//     console.error(error);
+//     return [];
+//   }
+// }
 
 async function fetchSalesByMonth(
   storeId: string,
@@ -87,24 +87,42 @@ async function fetchProductSalesInfo(
   }
 }
 
-async function fetchProductSalesNowInfo(
-  storeId: string,
-  startDate: string,
-  endDate: string
-) {
-  const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/sales/month?storeId=${storeId}&startDate=${startDate}&endDate=${endDate}`;
-  console.log(API_URL);
+// async function fetchProductSalesNowInfo(
+//   storeId: string,
+//   startDate: string,
+//   endDate: string
+// ) {
+//   const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/sales/month?storeId=${storeId}&startDate=${startDate}&endDate=${endDate}`;
+//   console.log(API_URL);
 
-  try {
-    const response = await fetch(API_URL, { cache: "no-store" });
-    if (!response.ok) throw new Error("데이터를 불러오는데 실패했습니다.");
-    const data = await response.json();
-    console.log(data);
-    return data || [];
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
+//   try {
+//     const response = await fetch(API_URL, { cache: "no-store" });
+//     if (!response.ok) throw new Error("데이터를 불러오는데 실패했습니다.");
+//     const data = await response.json();
+//     console.log(data);
+//     return data || [];
+//   } catch (error) {
+//     console.error(error);
+//     return [];
+//   }
+// }
+interface SalesMonthData {
+  date: string; // "2025-01" 형태의 문자열
+  totalSales: number; // 매출
+  orderCount: number; // 주문 수
+}
+
+interface ProductSalesInfo {
+  productId: number;
+  productCategoryId: number;
+  storeId: number;
+  name: string; // 제품명
+  price: number; // 가격
+  status: boolean; // 상태
+  totalSold: number; // 판매된 수량
+  image: string; // 이미지 링크
+  productType: string; // 예: "ICE"
+  productSize: string; // 예: "M"
 }
 
 const Card = ({
@@ -132,21 +150,33 @@ const CardContent = ({
 }) => <div className={`p-2 ${className || ""}`}>{children}</div>;
 
 const Dashboard = () => {
-  const [storeId, setStoreId] = useState<string>("1");
-  const [startDate, setStartDate] = useState<string>("2024-01-01");
-  const [endDate, setEndDate] = useState<string>("2024-12-31");
-  const [startNowDate, setStartNowDate] = useState<string>("2025-01-01");
-  const [endNowDate, setEndNowDate] = useState<string>("2025-12-31");
-  const [startMonthDate, setStartMonthDay] = useState<string>("2024-01");
-  const [endMonthDate, setMonthDate] = useState<string>("2024-12");
-  const [startMonthNowDate, setStartMonthNowDay] = useState<string>("2025-01");
-  const [endMonthNowDate, setMonthNowDate] = useState<string>("2025-12");
-  const [salesDayData, setSalesDayData] = useState<any[]>([]);
-  const [salesMonthData, setSalesMonthData] = useState<any[]>([]);
-  const [productSalesInfo, setProductSalesInfo] = useState<any[]>([]);
+  const storeId = "1";
+  const startDate = "2024-01-01";
+  const endDate = "2024-12-31";
+  const startMonthDate = "2024-01";
+  const endMonthDate = "2024-12";
+  const startMonthNowDate = "2025-01";
+  const endMonthNowDate = "2025-12";
 
-  const [productSalesNowInfo, setProductSalesNowInfo] = useState<any[]>([]);
-  const [salesMonthNowData, setSalesMonthNowData] = useState<any[]>([]);
+  // const [storeId, setStoreId] = useState<string>("1");
+  // const [startDate, setStartDate] = useState<string>("2024-01-01");
+  // const [endDate, setEndDate] = useState<string>("2024-12-31");
+  // const [startMonthDate, setStartMonthDay] = useState<string>("2024-01");
+  // const [endMonthDate, setMonthDate] = useState<string>("2024-12");
+  // const [startMonthNowDate, setStartMonthNowDay] = useState<string>("2025-01");
+  // const [endMonthNowDate, setMonthNowDate] = useState<string>("2025-12");
+  // const [salesDayData, setSalesDayData] = useState<any[]>([]);
+  const [salesMonthData, setSalesMonthData] = useState<SalesMonthData[]>([]);
+  const [productSalesInfo, setProductSalesInfo] = useState<ProductSalesInfo[]>(
+    []
+  );
+
+  const [productSalesNowInfo, setProductSalesNowInfo] = useState<
+    ProductSalesInfo[]
+  >([]);
+  const [salesMonthNowData, setSalesMonthNowData] = useState<SalesMonthData[]>(
+    []
+  );
   const [topN, setTopN] = useState<number>(10);
 
   const monthNames = [
@@ -165,9 +195,8 @@ const Dashboard = () => {
   ];
 
   const currentMonth = new Date().getMonth(); // 현재 월 (0~11)
-
   // 데이터를 12개월 기준으로 정리하는 함수
-  const fillMissingMonths = (data: any[]) => {
+  const fillMissingMonths = (data: SalesMonthData[]) => {
     const monthMap = new Map(
       data.map((sale) => [sale.date.split("-")[1], sale.totalSales])
     );
@@ -177,7 +206,7 @@ const Dashboard = () => {
   };
 
   const fillMissingBarMonths = (
-    data: any[],
+    data: SalesMonthData[],
     key: "totalSales" | "orderCount"
   ) => {
     const monthMap = new Map(
@@ -189,51 +218,59 @@ const Dashboard = () => {
     );
   };
 
-  const getSalesDayData = async () => {
-    const data = await fetchSalesByDay(storeId, startDate, endDate);
-    setSalesDayData(data?.data?.salesByDay || []);
-  };
-
-  const getSalesMonthData = async () => {
-    const data = await fetchSalesByMonth(storeId, startMonthDate, endMonthDate);
-    setSalesMonthData(data?.data?.salesByMonth || []);
-  };
-
-  const getProductSalesInfo = async () => {
-    const data = await fetchProductSalesInfo(
-      storeId,
-      startMonthDate,
-      endMonthDate
-    );
-    setProductSalesInfo(data?.data?.productSoldInfo || []);
-  };
-
-  const getProductSalesNowInfo = async () => {
-    const data = await fetchProductSalesInfo(
-      storeId,
-      startMonthNowDate,
-      endMonthNowDate
-    );
-    setProductSalesNowInfo(data?.data?.productSoldInfo || []);
-  };
-
-  const getSalesMonthNowData = async () => {
-    const data = await fetchProductSalesNowInfo(
-      storeId,
-      startNowDate,
-      endNowDate
-    );
-    console.log(data);
-    setSalesMonthNowData(data?.data?.salesByMonth || []);
-  };
-
+  // 비동기 데이터 호출 함수들
   useEffect(() => {
-    getSalesDayData();
+    // const getSalesDayData = async () => {
+    //   const data = await fetchSalesByDay(storeId, startDate, endDate);
+    //   setSalesDayData(data?.data?.salesByDay || []);
+    // };
+
+    const getSalesMonthData = async () => {
+      const data = await fetchSalesByMonth(
+        storeId,
+        startMonthDate,
+        endMonthDate
+      );
+      setSalesMonthData(data?.data?.salesByMonth || []);
+    };
+
+    const getProductSalesInfo = async () => {
+      const data = await fetchProductSalesInfo(
+        storeId,
+        startMonthDate,
+        endMonthDate
+      );
+      setProductSalesInfo(data?.data?.productSoldInfo || []);
+    };
+
+    const getProductSalesNowInfo = async () => {
+      const data = await fetchProductSalesInfo(
+        storeId,
+        startMonthNowDate,
+        endMonthNowDate
+      );
+      setProductSalesNowInfo(data?.data?.productSoldInfo || []);
+    };
+
+    const getSalesMonthNowData = async () => {
+      const data = await fetchSalesByMonth(storeId, "2025-01", "2025-12");
+      console.log(data);
+      setSalesMonthNowData(data?.data?.salesByMonth || []);
+    };
+
     getSalesMonthData();
     getSalesMonthNowData();
     getProductSalesInfo();
     getProductSalesNowInfo();
-  }, []);
+  }, [
+    storeId,
+    startDate,
+    endDate,
+    startMonthDate,
+    endMonthDate,
+    startMonthNowDate,
+    endMonthNowDate,
+  ]); // 의존성 배열 추가
 
   return (
     <div className="grid grid-cols-2 gap-4 p-4 h-screen overflow-y-auto">
