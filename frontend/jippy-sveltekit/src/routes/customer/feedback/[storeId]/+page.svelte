@@ -1,16 +1,22 @@
-<script>
+<script lang="ts">
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { format } from "date-fns";
   
     import "../../../../app.css";
-    export let data;
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   
-    let complaintCategory = "SERVICE";
-    let complaintContent = "";
-    let isLoading = false;
-    let customerId = "";
+    export let data: { storeId: number };
+  
+    const apiBaseUrl: string = import.meta.env.VITE_API_BASE_URL;
+  
+    let complaintCategory: "SERVICE" | "PRODUCT" | "LIVE" | "ETC" = "SERVICE";
+    let complaintContent: string = "";
+    let isLoading: boolean = false;
+    let customerId: string = "";
+  
+    let latitude: number | null = null;
+    let longitude: number | null = null;
+    let error: string | null = null;
   
     // 브라우저에서 customerId 설정
     onMount(() => {
@@ -22,17 +28,19 @@
       customerId = storedId;
     });
   
-    async function submitFeedback() {
+    async function submitFeedback(): Promise<void> {
       if (!complaintContent.trim()) {
         alert("불편 사항을 입력해주세요!");
         return;
       }
-  
+      await getLocation();
+      console.log(longitude);
+      console.log(latitude);
       isLoading = true;
   
       try {
         const response = await fetch(
-          apiBaseUrl + "/api/feedback/" + data.storeId + "/create",
+          `${apiBaseUrl}/api/feedback/${data.storeId}/create`,
           {
             method: "POST",
             headers: {
@@ -43,7 +51,9 @@
               customerId: customerId,
               category: complaintCategory,
               content: complaintContent,
-              timestamp: format(new Date(), "yyyy-MM-dd hh:ss:mm"),
+              latitude: latitude,
+              longitude: longitude,
+              timestamp: format(new Date(), "yyyy-MM-dd HH:mm:ss"), // 시, 분, 초 순서 수정
             }),
           }
         );
@@ -52,7 +62,6 @@
           throw new Error("서버 오류가 발생했습니다.");
         }
   
-        const result = await response.json();
         alert("불편 사항이 성공적으로 접수되었습니다!");
         goto("/customer/feedback/success");
       } catch (error) {
@@ -61,6 +70,29 @@
         isLoading = false;
       }
     }
+  
+    function getLocation(): Promise<void> {
+        //동기적 처리를 위한 Promise 반환
+        return new Promise((resolve, reject) => {
+        if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            (position: GeolocationPosition) => {
+            latitude = position.coords.latitude;
+            longitude = position.coords.longitude;
+            resolve(); // ✅ 위치 정보를 가져온 후 resolve 호출
+            },
+            (err: GeolocationPositionError) => {
+            error = `위치 정보를 가져올 수 없습니다: ${err.message}`;
+            reject(error);
+            }
+        );
+        } else {
+        error = "Geolocation이 지원되지 않는 브라우저입니다.";
+        reject("Geolocation이 지원되지 않는 브라우저입니다.");
+        }
+    });
+}
+
   </script>
   
   <div class="flex justify-center items-center min-h-screen bg-gray-100">
@@ -80,9 +112,9 @@
             class="w-full border p-4 rounded appearance-none bg-white"
           >
             <option value="SERVICE">서비스 의견 제공</option>
-            <option Value="PRODUCT">제품 의견 제공</option>
+            <option value="PRODUCT">제품 의견 제공</option>
             <option value="LIVE">실시간 매장 의견 사항</option>
-            <option Value="ETC">기타</option>
+            <option value="ETC">기타</option>
           </select>
           <!-- 아이콘 (SVG 직접 추가) -->
           <svg
