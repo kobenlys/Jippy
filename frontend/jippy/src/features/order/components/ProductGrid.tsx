@@ -17,10 +17,10 @@ interface ProductGridProps {
   showAddButton?: boolean;
 }
 
-const ProductGrid = ({ 
-  onProductSelect, 
+const ProductGrid = ({
+  onProductSelect,
   onAddProduct,
-  showAddButton = true 
+  showAddButton = true
 }: ProductGridProps) => {
   const dispatch = useDispatch<AppDispatch>();
   const [selectedProduct, setSelectedProduct] = useState<ProductDetailResponse[] | null>(null);
@@ -29,7 +29,7 @@ const ProductGrid = ({
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | -1>(-1);
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
   const DEFAULT_IMAGE_PATH = "/images/ProductPlaceholder.png";
-  
+
   const currentShop = useSelector((state: RootState) => state.shop.currentShop);
   const { products, loading, error } = useSelector((state: RootState) => state.product);
 
@@ -67,8 +67,8 @@ const ProductGrid = ({
     : productsData.filter(product => product.productCategoryId === selectedCategoryId);
 
   return (
-    <div className="flex-1 flex flex-col h-full">
-      <div className="bg-white p-4 w-full sticky top-0 border-b border-t">
+    <div className="h-full flex flex-col">
+      <div className="flex-none bg-white p-4 border-b border-t">
         <div className="px-4">
           <CreateCategory
             selectedCategory={selectedCategory}
@@ -77,8 +77,8 @@ const ProductGrid = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto m-4">
-        <div className="grid grid-cols-4 gap-4 p-4 mb-8">
+      <div className="flex-1 overflow-y-auto">
+        <div className="grid grid-cols-4 gap-4 p-4">
           {filteredProducts.map((item) => (
             <div
               key={item.id}
@@ -86,22 +86,22 @@ const ProductGrid = ({
               className="bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow"
             >
               <div className="relative w-full h-32 bg-gray-200 rounded-lg mb-2">
-                <Image 
+                <Image
                   src={
-                    item.image && 
-                    (item.image.startsWith('http') || item.image.startsWith('/')) 
-                      ? item.image 
+                    item.image &&
+                      (item.image.startsWith('http') || item.image.startsWith('/'))
+                      ? item.image
                       : DEFAULT_IMAGE_PATH
-                  } 
-                  alt={item.name} 
-                  fill 
+                  }
+                  alt={item.name}
+                  fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  className="object-cover rounded-lg" 
-                  onError={(e) => { 
-                    const target = e.target as HTMLImageElement; 
+                  className="object-cover rounded-lg"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
                     target.onerror = null;
-                    target.src = DEFAULT_IMAGE_PATH; 
-                  }} 
+                    target.src = DEFAULT_IMAGE_PATH;
+                  }}
                 />
               </div>
               <h3 className="font-semibold">{item.name}</h3>
