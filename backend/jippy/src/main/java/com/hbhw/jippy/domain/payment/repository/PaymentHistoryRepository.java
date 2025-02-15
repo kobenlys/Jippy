@@ -24,6 +24,15 @@ public interface PaymentHistoryRepository extends MongoRepository<PaymentHistory
 
     @Aggregation(pipeline = {
             "{ $match: { store_id: ?0, updated_at: { $gte: ?1, $lt: ?2 } } }",
+            "{ $group: { _id: { $dateToString: { format: '%Y-%m-%d %H', date: { $toDate: '$updated_at' } } }," +
+                    " totalSales: { $sum: { $convert: { input: '$total_cost', to: 'double', onError: 0, onNull: 0 } } } } }",
+            "{ $project: { date: '$_id', totalSales: '$totalSales', _id: 0 } }",
+            "{ $sort: { date: 1 } }"
+    })
+    Optional<List<SalesResponse>> getTimeSales(Integer storeId, String startDate, String endDate);
+
+    @Aggregation(pipeline = {
+            "{ $match: { store_id: ?0, updated_at: { $gte: ?1, $lt: ?2 } } }",
             "{ $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: { $toDate: '$updated_at' } } }," +
                     " totalSales: { $sum: { $convert: { input: '$total_cost', to: 'double', onError: 0, onNull: 0 } } } } }",
             "{ $project: { date: '$_id', totalSales: '$totalSales', _id: 0 } }",

@@ -66,11 +66,11 @@ public class StoreService {
         Store saved = storeRepository.save(store);
 
         // mongoDB에 coordinates 저장
-        double[] coordinates = getCoordinates(request.getAddress());
+//        double[] coordinates = getCoordinates(request.getAddress());
         StoreCoordinates storeCoordinates = StoreCoordinates.builder()
                 .storeId(saved.getId())
-                .longitude(coordinates[0])
-                .latitude(coordinates[1])
+                .longitude(Double.parseDouble(request.getLongitude()))
+                .latitude(Double.parseDouble(request.getLatitude()))
                 .build();
         storeCoordinatesRepository.save(storeCoordinates);
 

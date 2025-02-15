@@ -9,7 +9,6 @@ import { Button } from "@/features/common/components/ui/button";
 import { ProductDetailResponse } from "@/redux/types/product";
 import { setOrderData } from "@/redux/slices/paymentSlice";
 
-// 상품 인터페이스 정의
 export interface Product {
   id: number;
   name: string;
@@ -18,7 +17,6 @@ export interface Product {
   image?: string;
 }
 
-// 주문 항목 인터페이스 정의
 export interface OrderItem extends Product {
   quantity: number;
 }
@@ -73,6 +71,7 @@ const POSPage = () => {
 
   const handleCancelOrder = () => {
     setCurrentOrder([]);
+    setPaymentMethod(null);
   };
 
   const handleCompleteOrder = async () => {
@@ -125,48 +124,46 @@ const POSPage = () => {
       />
       </div>
 
-      <div className="w-2/6 bg-white p4 flex flex-col">
-        <Card className="flex-grow overflow-y-auto mb-4">
-          <div className="p-4">
-            <h2 className="text-xl font-bold mb-4">현재 주문</h2>
-            {currentOrder.length === 0 ? (
-              <p className="text-gray-500">주문 항목이 없습니다.</p>
-            ) : (
-              <ul>
-                {currentOrder.map(item => (
-                  <li 
-                    key={item.id} 
-                    className="flex justify-between items-center mb-2 pb-2 border-b"
-                  >
-                    <div>
-                      <span>{item.name}</span>
-                      <span className="text-gray-500 ml-2">
-                        {item.price.toLocaleString()}원
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <Button 
-                        variant="default" 
-                        onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                        className="mr-2 sm"
-                      >
-                        -
-                      </Button>
-                      <span>{item.quantity}</span>
-                      <Button 
-                        variant="default" 
-                        onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                        className="ml-2 sm"
-                      >
-                        +
-                      </Button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </Card>
+      <div className="w-2/6 h-full bg-white p-4 flex flex-col">
+        <h2 className="text-xl font-bold mb-4">현재 주문</h2>
+        <div className="flex-1 overflow-hidden flex flex-col">
+          <Card className="flex-1 overflow-y-auto mb-4">
+            <div className="p-4">
+              {currentOrder.length === 0 ? (
+                <p className="text-gray-500">주문 항목이 없습니다.</p>
+              ) : (
+                <ul>
+                  {currentOrder.map(item => (
+                    <li key={item.id} className="flex justify-between items-center mb-2 pb-2 border-b">
+                      <div>
+                        <span>{item.name}</span>
+                        <span className="text-gray-500 ml-2">
+                          {item.price.toLocaleString()}원
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <Button
+                          variant="default"
+                          onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                          className="mr-2 sm"
+                        >
+                          -
+                        </Button>
+                        <span>{item.quantity}</span>
+                        <Button
+                          variant="default"
+                          onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                          className="ml-2 sm"
+                        >
+                          +
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </Card>
 
         <div className="bg-gray-100 p-4 rounded">
           <div className="flex justify-between mb-4">

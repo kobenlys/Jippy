@@ -1,8 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { createShop } from "@/redux/slices/shopSlice";
-import type { FormData, FormErrors, OCRResponse } from "@/features/shop/types/shops";
+import type {
+  FormData,
+  FormErrors,
+  OCRResponse,
+} from "@/features/shop/types/shops";
 import type { RootState, AppDispatch } from "@/redux/store";
 
 export const useShopForm = () => {
@@ -18,25 +22,56 @@ export const useShopForm = () => {
     openingDate: "",
     businessRegistrationNumber: "",
     representativeName: "",
+    latitude: "",
+    longitude: "",
   });
-  
+
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isProcessingImage, setIsProcessingImage] = useState(false);
 
+  // 페이지가 처음 로드될 때 현재 위치 가져오기
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          console.log(latitude);
+          console.log(longitude);
+          setFormData((prev) => ({
+            ...prev,
+            latitude: latitude.toString(),
+            longitude: longitude.toString(),
+          }));
+        },
+        (error) => {
+          console.error("위치 정보를 가져오는 데 실패했습니다.", error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 30000,
+          maximumAge: 0,
+        }
+      );
+    } else {
+      console.error("이 브라우저에서는 위치 정보를 지원하지 않습니다.");
+    }
+  }, []);
+
   const validateForm = () => {
     const newErrors: FormErrors = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = "매장 이름은 필수입니다.";
     }
-    
+
     if (!formData.address.trim()) {
       newErrors.address = "주소는 필수입니다.";
     }
-    
+
     const businessNumberPattern = /^\d{3}-\d{2}-\d{5}$/;
     if (!businessNumberPattern.test(formData.businessRegistrationNumber)) {
-      newErrors.businessRegistrationNumber = "올바른 사업자등록번호 형식이 아닙니다.";
+      newErrors.businessRegistrationNumber =
+        "올바른 사업자등록번호 형식이 아닙니다.";
     }
 
     if (!formData.representativeName.trim()) {
@@ -49,18 +84,18 @@ export const useShopForm = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
+
     if (name === "businessRegistrationNumber") {
       const formattedValue = value
         .replace(/[^\d]/g, "")
         .replace(/(\d{3})(\d{2})(\d{5})/, "$1-$2-$3");
-      setFormData(prev => ({ ...prev, [name]: formattedValue }));
+      setFormData((prev) => ({ ...prev, [name]: formattedValue }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
 
     if (formErrors[name as keyof FormErrors]) {
-      setFormErrors(prev => ({ ...prev, [name]: undefined }));
+      setFormErrors((prev) => ({ ...prev, [name]: undefined }));
     }
   };
 
@@ -76,11 +111,13 @@ export const useShopForm = () => {
     if (!validateForm()) return;
 
     try {
-      await dispatch(createShop({
-        ...formData,
-        userOwnerId: Number(user.id)
-      })).unwrap();
-      
+      await dispatch(
+        createShop({
+          ...formData,
+          userOwnerId: Number(user.id),
+        })
+      ).unwrap();
+
       alert("매장이 성공적으로 등록되었습니다");
       router.push("/shop");
     } catch (error) {
@@ -92,10 +129,13 @@ export const useShopForm = () => {
 
   const handleOCRSuccess = (ocrResponse: OCRResponse) => {
     const { data } = ocrResponse;
-    const formattedBusinessNumber = data.businessNumber.replace(/(\d{3})(\d{2})(\d{5})/, "$1-$2-$3");
+    const formattedBusinessNumber = data.businessNumber.replace(
+      /(\d{3})(\d{2})(\d{5})/,
+      "$1-$2-$3"
+    );
     const formattedDate = data.openDate.split(" ")[0];
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       name: data.corporateName,
       businessRegistrationNumber: formattedBusinessNumber,
