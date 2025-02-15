@@ -1,27 +1,39 @@
 package com.hbhw.jippy.domain.storeuser.service.staff;
 
+import com.hbhw.jippy.domain.payment.dto.response.SalesByDayResponse;
+import com.hbhw.jippy.domain.payment.dto.response.SalesResponse;
+import com.hbhw.jippy.domain.payment.service.PaymentHistoryService;
 import com.hbhw.jippy.domain.store.entity.Store;
 import com.hbhw.jippy.domain.store.repository.StoreRepository;
 import com.hbhw.jippy.domain.storeuser.dto.request.staff.UpdateStaffRequest;
+import com.hbhw.jippy.domain.storeuser.dto.response.staff.StaffEarnSalesResponse;
 import com.hbhw.jippy.domain.storeuser.dto.response.staff.StaffResponse;
+import com.hbhw.jippy.domain.storeuser.entity.attendance.AttendanceStatus;
+import com.hbhw.jippy.domain.storeuser.entity.attendance.EmploymentStatus;
 import com.hbhw.jippy.domain.storeuser.entity.staff.StoreUserStaff;
+import com.hbhw.jippy.domain.storeuser.repository.attendance.EmploymentStatusRepository;
 import com.hbhw.jippy.domain.storeuser.repository.staff.StoreStaffRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class StoreStaffService {
     private final StoreStaffRepository storeStaffRepository;
+    private final EmploymentStatusRepository employmentStatusRepository;
     private final StoreRepository storeRepository;
+    private final PaymentHistoryService paymentHistoryService;
 
     @Transactional(readOnly = true)
     public List<StaffResponse> getStaffList(Integer storeId) {
@@ -51,6 +63,34 @@ public class StoreStaffService {
         StoreUserStaff staff = findStoreStaff(storeId, staffId);
         storeStaffRepository.delete(staff);
     }
+
+    public List<StaffEarnSalesResponse> fetchStaffEarnSales(Integer storeId) {
+        List<StoreUserStaff> storeUserStaffList = storeStaffRepository.findByStoreId(storeId);
+        log.info("Fetching earnings for storeId: {}", storeId);
+
+        List<StaffEarnSalesResponse> staffEarnList = new ArrayList<>();
+
+        for (StoreUserStaff staff : storeUserStaffList) {
+            List<EmploymentStatus> attendanceStatusList = employmentStatusRepository.findByStoreUserStaff(staff);
+
+            Integer sumTotalCost = attendanceStatusList.stream()
+                    .mapToInt(saleInfo -> {
+                        SalesByDayResponse list = paymentHistoryService.fetchSalesByTime(storeId, saleInfo.getStartDate(), saleInfo.getEndDate());
+                        return list.getSalesByDay().stream()
+                                .mapToInt(SalesResponse::getTotalSales)
+                                .sum();
+                    })
+                    .sum();
+            staffEarnList.add(StaffEarnSalesResponse.builder()
+                    .earnSales(sumTotalCost)
+                    .staffId(staff.getId())
+                    .staffName(staff.getUserStaff().getName())
+                    .build());
+        }
+
+        return staffEarnList;
+    }
+
 
     /**
      * 매장 존재 여부 확인 메서드

@@ -123,6 +123,16 @@ public class PaymentHistoryService {
     }
 
     /**
+     * 시간별 매출 조회
+     */
+    public SalesByDayResponse fetchSalesByTime(Integer storeId, String startDate, String endDate){
+        List<SalesResponse> salesByDayResponseList = paymentHistoryRepository.getTimeSales(storeId, startDate, endDate)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "조회된 매출이 없습니다"));
+        return SalesByDayResponse.builder()
+                .salesByDay(salesByDayResponseList).build();
+    }
+
+    /**
      * 일간 매출 조회
      */
     public SalesByDayResponse fetchSalesByDay(Integer storeId, String startDate, String endDate){
