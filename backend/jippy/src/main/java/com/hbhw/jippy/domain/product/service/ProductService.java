@@ -133,16 +133,47 @@ public class ProductService {
      * 매장별 상품 수정
      */
     @Transactional
-    public void modifyProduct(Integer storeId, Long productId, ProductUpdateRequest productUpdateRequest) {
+    public void modifyProduct(Integer storeId, Long productId, ProductUpdateRequest productUpdateRequest, MultipartFile image) {
+        // 기존 상품 조회
         Product productEntity = getProduct(storeId, productId);
 
-        productEntity.getProductCategory().setId(productUpdateRequest.getProductCategoryId());
+        // 새로운 상품 카테고리 엔티티 조회
+        ProductCategory productCategoryEntity = productCategoryService.getProductCategoryEntity(storeId, productUpdateRequest.getProductCategoryId());
+
+        // 기존 상품 엔티티의 필드를 업데이트
+        productEntity.setProductCategory(productCategoryEntity);
         productEntity.setStatus(productUpdateRequest.isStatus());
-        productEntity.setImage(productUpdateRequest.getImage());
         productEntity.setName(productUpdateRequest.getName());
         productEntity.setPrice(productUpdateRequest.getPrice());
         productEntity.setProductType(productUpdateRequest.getProductType());
         productEntity.setProductSize(productUpdateRequest.getProductSize());
+
+        // 이미지가 전달되었다면 S3에 업로드 후 URL 업데이트
+        if (image != null && !image.isEmpty()) {
+            String imageName = uuidProvider.generateUUID() + "-" + image.getOriginalFilename();
+            try {
+                PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                        .bucket(s3BucketName)
+                        .key(imageName)
+                        .contentType(image.getContentType())
+                        .contentLength(image.getSize())
+                        .build();
+
+                s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(image.getInputStream(), image.getSize()));
+                String imageUrl = s3Client.utilities()
+                        .getUrl(builder -> builder.bucket(s3BucketName).key(imageName))
+                        .toExternalForm();
+                productEntity.setImage(imageUrl);
+            } catch (IOException e) {
+                throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "이미지 업로드를 실패했습니다");
+            } catch (Exception e) {
+                s3Client.deleteObject(DeleteObjectRequest.builder().bucket(s3BucketName).key(imageName).build());
+                throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "상품 수정에 실패했습니다.");
+            }
+        }
+
+        // 업데이트된 상품 엔티티 저장
+        productRepository.save(productEntity);
     }
 
     /**
@@ -150,7 +181,7 @@ public class ProductService {
      */
     public void deleteProduct(Integer storeId, Long productId) {
         Product productEntity = getProduct(storeId, productId);
-        productRepository.deleteByIdAndStoreId(storeId, productId);
+        productRepository.deleteByStoreIdAndId(storeId, productId);
     }
 
     /**

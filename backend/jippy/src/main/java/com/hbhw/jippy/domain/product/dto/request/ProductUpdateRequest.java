@@ -10,7 +10,6 @@ public class ProductUpdateRequest {
     private String name;
     private Integer price;
     private boolean status;
-    private String image;
     private ProductType productType;
     private ProductSize productSize;
 }

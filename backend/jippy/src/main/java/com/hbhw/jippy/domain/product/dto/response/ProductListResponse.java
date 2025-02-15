@@ -8,6 +8,7 @@ import lombok.Getter;
 @Getter
 public class ProductListResponse {
     private Long id;
+    private Integer storeId;
     private Integer productCategoryId;
     private String name;
     private Integer price;
