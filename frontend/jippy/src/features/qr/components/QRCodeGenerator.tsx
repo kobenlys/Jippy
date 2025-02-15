@@ -2,19 +2,87 @@
 
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { Printer } from "lucide-react";
+import { Printer, QrCode, Loader2, Plus } from "lucide-react";
 import { Button } from "@/features/common/components/ui/button";
 import { Card, CardContent } from "@/features/common/components/ui/card/Card";
 import { RootState } from "@/redux/store";
 import { QR_PAGES } from "@/features/qr/constants/pages";
-import Image from "next/image";
+import { 
+  QRConfig,
+  QRData
+ } from "../types/qr";
+
+const QR_CONFIGS : QRConfig[] = [
+  {
+    name: "피드백",
+    explain: "FEEDBACKQR",
+    url: "https://jippy.duckdns.org/svt/customer/feedback/{storeId}"
+  },
+
+  // 다른 메뉴 추가 시 url 추가하고 해당 메뉴 주석 해제
+  // {
+  //   name: "회원가입",
+  //   explain: "USERQR",
+  //   url: ""
+  // },
+  // {
+  //   name: "직원 출퇴근",
+  //   explain: "ATTENDANCEQR",
+  //   url: ""
+  // }
+];
 
 const QRCodeCRUD: React.FC = () => {
   const [selectedQR, setSelectedQR] = useState<string | null>(null);
   const [qrImage, setQrImage] = useState<string | null>(null);
+  const [qrImageBase64, setQrImageBase64] = useState<string | null>(null);
   const [imageDimensions, setImageDimensions] = useState({ width: 200, height: 200 });
+  const [isLoading, setIsLoading] = useState(false);
+  const [qrExists, setQrExists] = useState<boolean | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [qrList, setQrList] = useState<QRData[]>([]);
+
   const accessToken = useSelector((state: RootState) => state.user.accessToken);
   const storeId = useSelector((state: RootState) => state.shop.currentShop?.id);
+
+  useEffect(() => {
+    return () => {
+      if (qrImage) {
+        URL.revokeObjectURL(qrImage);
+      }
+    };
+  }, [qrImage]);
+
+  const fetchQRList = async () => {
+    if (!storeId) return;
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/qr/${storeId}/select`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('QR 코드 목록 조회 실패');
+      }
+
+      const result = await response.json();
+      const data = result.data || [];
+
+      setQrList(data);
+    } catch (error) {
+      console.error("QR 코드 목록 조회 실패:", error);
+      setQrList([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchQRList();
+  }, [storeId, accessToken]);
 
   useEffect(() => {
     if (qrImage) {
@@ -29,14 +97,114 @@ const QRCodeCRUD: React.FC = () => {
     }
   }, [qrImage]);
 
-  const handleQRGenerate = async (name: string, url: string) => {
+  const checkQRExists = async (qrName: string) => {
+    if (!storeId) {
+      setError("매장 정보가 없습니다.");
+      return false;
+    }
+
+    setQrImage(null);
+    setQrImageBase64(null);
+    setImageDimensions({ width: 200, height: 200 });
+    
+    const qrConfig = QR_CONFIGS.find(config => config.name === qrName);
+    
+    if (!qrConfig) {
+      setQrExists(false);
+      return false;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const existingQR = qrList.find(qr => 
+        qr?.explain?.toUpperCase() === qrConfig.explain.toUpperCase()
+      );
+
+      if (existingQR) {
+        
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/qr/${storeId}/select/${existingQR.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        
+        if (response.ok) {
+          const qrInfo = await response.json();
+
+          if (qrInfo.success && qrInfo.data) {
+            const formattedUrl = qrConfig.url.replace("{storeId}", storeId.toString());
+            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(formattedUrl)}&size=200x200`;
+            
+            const response = await fetch(qrImageUrl);
+            const blob = await response.blob();
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = () => {
+              setQrImageBase64(reader.result as string);
+            };
+
+            setQrImage(qrImageUrl);
+            setQrExists(true);
+          }else {
+            throw new Error('QR 코드 정보가 올바르지 않습니다');
+          }
+
+          
+          return true;
+        } else {
+          throw new Error(`status : ${response.status}`);
+        }
+      } else {
+        setQrExists(false);
+        setQrImage(null);
+        setQrImageBase64(null);
+        return false;
+      }
+    } catch (error) {
+      setError("QR CODE를 조회하는데 실패했습니다.");
+      setQrExists(false);
+      setQrImage(null);
+      setQrImageBase64(null);
+
+      if (process.env.NODE_ENV === "development") {
+          console.error("QR CODE 로딩 실패: ", error);
+      }
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleQRGenerate = async (qrName: string) => {
     if (!storeId) {
       alert("매장 정보가 없습니다.");
       return;
     }
+
+    const qrConfig = QR_CONFIGS.find(config => config.name === qrName);
+    
+    if (!qrConfig) return;
+
     try {
-      setSelectedQR(name);
-      setQrImage(null);
+      setIsLoading(true);
+      setError(null);
+
+      const existingQR = qrList.find(qr => 
+        qr?.explain?.toLowerCase() === qrConfig.explain.toLowerCase()
+      );
+
+      if (existingQR) {
+        alert("이미 해당 메뉴의 QR 코드가 존재합니다.");
+        await checkQRExists(qrName);
+        return;
+      }
+
+      const formattedUrl = qrConfig.url.replace("{storeId}", storeId.toString());
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/qr/${storeId}/create`, {
         method: "POST",
@@ -44,34 +212,122 @@ const QRCodeCRUD: React.FC = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ explain: `${name} QR 코드`, url }),
+        body: JSON.stringify({
+          explain: qrConfig.explain,
+          url: formattedUrl
+        }),
       });
-      
-      if (!response.ok) throw new Error("QR 코드 생성 실패");
-      const blob = await response.blob();
-      setQrImage(URL.createObjectURL(blob));
+
+      if (!response.ok) {
+        throw new Error("QR 코드 생성에 실패했습니다");
+      }
+
+      await fetchQRList();
+      await checkQRExists(qrName);
     } catch (error) {
-      console.error("QR 코드 생성 오류:", error);
-      alert("QR 코드 생성 중 오류가 발생했습니다. 다시 시도해주세요.");
+        console.error("QR 코드 생성 오류:", error);
+        setError("QR 코드 생성에 실패했습니다");
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const handleQRButtonClick = async (qrName: string) => {
+    setSelectedQR(qrName);
+    setError(null);
+    await checkQRExists(qrName);
+  };
+
   const handlePrint = () => {
-    if (!qrImage) return;
+    if (!qrImageBase64) return;
 
     const printWindow = window.open("", "_blank");
-    printWindow?.document.write(`
+
+    if (!printWindow) {
+      alert("팝업이 차단되었습니다 팝업 차단을 해제해 주세요");
+      return;
+    }
+
+    printWindow.document.write(`
       <html>
         <head>
+          <title>${selectedQR} QR 코드</title>
           <style>
-            body { text-align: center; padding: 20px; }
-            img { width: 200px; height: 200px; }
+            body { 
+              text-align: center; 
+              padding: 40px 20px;
+              margin: 0;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              background-color: #f8fafc;
+              font-family: 'Noto Sans KR', sans-serif;
+            }
+            .container {
+              background: white;
+              padding: 48px;
+              border-radius: 16px;
+              box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+              max-width: 400px;
+              width: 100%;
+            }
+            .header {
+              margin-bottom: 32px;
+              padding-top: 16px;
+            }
+            .title {
+              font-size: 24px;
+              font-weight: 700;
+              color: #1e293b;
+              margin: 0 0 8px 0;
+            }
+            .subtitle {
+              font-size: 14px;
+              color: #64748b;
+              margin: 0;
+            }
+            .qr-container {
+              background: white;
+              padding: 24px;
+              border: 1px solid #e2e8f0;
+              border-radius: 12px;
+              margin: 24px 0;
+            }
+            img { 
+              width: 280px; 
+              height: 280px;
+              object-fit: contain;
+            }
+            @media print {
+              body {
+                background: white;
+                padding: 0;
+              }
+              .container {
+                box-shadow: none;
+                padding: 20px;
+              }
+            }
           </style>
         </head>
         <body>
-          <h3>${selectedQR} QR 코드</h3>
-          <img src="${qrImage}" alt="QR Code" />
-          <script>window.print();</script>
+          <div class="container">
+            <div class="header">
+              <h1 class="title">${selectedQR} QR 코드</h1>
+            </div>
+            <div class="qr-container">
+              <img src="${qrImageBase64}" alt="QR Code" />
+            </div>
+          </div>
+          <script>
+            window.onload = () => {
+              setTimeout(() => {
+                window.print();
+              }, 500);
+            };
+          </script>
         </body>
       </html>
     `);
@@ -79,49 +335,87 @@ const QRCodeCRUD: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen">
-      <div className="flex w-full max-w-4xl gap-8">
-        <div className="flex flex-col gap-4 w-48">
-          {QR_PAGES.map((page) => (
-            <Button
-              key={page.path}
-              onClick={() => handleQRGenerate(page.name, page.path)}
-              variant={selectedQR === page.name ? "orangeBorder" : "orange"}
-              className="w-full"
-            >
-              {page.name} QR
-            </Button>
-          ))}
-        </div>
-        
-        <div className="flex-1 flex justify-center items-center">
-          {qrImage && imageDimensions.width > 0 ? (
-            <Card className="w-full max-w-sm">
-              <CardContent className="flex flex-col items-center gap-4 p-6">
-                <h2 className="text-xl font-bold mb-4">{selectedQR} QR 코드</h2>
-                <Image
-                  src={qrImage}
-                  alt="QR Code"
-                  width={imageDimensions.width}
-                  height={imageDimensions.height}
-                  className="border p-4 rounded-lg bg-white mb-4"
-                />
-                <Button 
-                  variant="brown" 
-                  onClick={handlePrint}
-                  className="w-full"
+    <div className="flex justify-center items-center p-8">
+      <Card className="w-full max-w-4xl">
+        <CardContent className="p-6">
+          <div className="flex gap-8 items-center">
+            <div className="flex flex-col gap-3 w-48 shrink-0">
+              {QR_PAGES.map((config) => (
+                <Button
+                  key={config.name}
+                  onClick={() => handleQRButtonClick(config.name)}
+                  variant={selectedQR === config.name ? "default" : "default"}
+                  className={`w-full justify-start h-11 border ${
+                    selectedQR === config.name 
+                      ? 'border-gray-400 bg-gray-400 text-white hover:bg-gray-400' 
+                      : 'border-gray-200 hover:border-gray-500 hover:text-gray-600'
+                  }`}
                 >
-                  <Printer className="w-4 h-4 mr-2" /> 출력하기
+                  <QrCode className="w-4 h-4 mr-2 opacity-70" />
+                  <span className="text-sm">{config.name}</span>
                 </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="flex items-center justify-center text-gray-500">
-              QR 코드를 생성하려면 버튼을 클릭하세요
+              ))}
             </div>
-          )}
-        </div>
-      </div>
+  
+            <div className="flex-1 flex justify-center">
+              <div className="w-[320px]">
+                <div className="flex flex-col items-center">
+                  <div className="h-[500px] w-full flex items-center justify-center">
+                    <div className="flex flex-col items-center w-full relative mt-10 mb-10">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-6">
+                        {selectedQR ? `${selectedQR} QR 코드` : 'QR 코드'}
+                      </h3>
+                      <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6 w-[280px] h-[280px] flex items-center justify-center">
+                        {isLoading ? (
+                          <div className="flex flex-col items-center justify-center">
+                            <Loader2 className="w-8 h-8 animate-spin opacity-70 mb-4" />
+                            <p className="text-sm text-gray-500">QR 코드 {qrExists ? '생성' : '조회'} 중...</p>
+                          </div>
+                        ) : error ? (
+                          <div className="flex flex-col items-center justify-center text-red-500">
+                            <p className="text-sm text-center">{error}</p>
+                          </div>
+                        ) : selectedQR && qrExists === false ? (
+                          <div className="flex flex-col items-center justify-center">
+                            <Button
+                              onClick={() => handleQRGenerate(selectedQR)}
+                              className="mb-2"
+                            >
+                              <Plus className="w-4 h-4 mr-2" />
+                              {selectedQR} QR 코드 생성하기
+                            </Button>
+                          </div>
+                        ) : qrImage && imageDimensions.width > 0 ? (
+                          <img
+                            src={qrImage}
+                            alt="QR Code"
+                            className="w-[200px] h-[200px] object-contain"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-gray-500">
+                            <QrCode className="w-16 h-16 mb-4 opacity-40" />
+                            <p className="text-sm">QR 코드를 생성하려면 버튼을 클릭하세요</p>
+                          </div>
+                        )}
+                      </div>
+                      {qrImage && !error && (
+                        <Button 
+                          onClick={handlePrint}
+                          variant="orange"
+                          className="w-full h-11"
+                        >
+                          <Printer className="w-4 h-4 mr-2" />
+                          QR 코드 출력하기
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
