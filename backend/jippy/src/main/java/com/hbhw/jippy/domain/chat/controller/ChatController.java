@@ -87,16 +87,17 @@ public class ChatController {
         ChatMessageResponse chatMessageResponse = chatService.saveMessage(storeId, chatMessage);
         messagingTemplate.convertAndSend("/topic/chat/" + storeId, chatMessageResponse);
 
-        // 2. 해당 채팅방 멤버(직원 + 사장님)의 FCM 토큰을 조회
+        // 2. 해당 채팅방 멤버(직원 + 사장님)의 FCM 토큰 조회
         List<String> fcmTokens = storeStaffService.getAllChatMemberFcmTokens(storeId);
 
-        // 클라이언트에서 필터링하도록 할 수 있습니다.
+        // 3. 전달할 데이터 구성 (추가 정보가 필요하면 여기서 확장)
         Map<String, String> data = new HashMap<>();
-        data.put("messageId", chatMessage.getMessageId());  // 여기서는 senderId를 senderName으로 사용
+        data.put("messageId", chatMessage.getMessageId());
+        data.put("senderId", chatMessage.getSenderId());
 
-        // 4. FCM 알림 전송 (대상은 그룹 채팅 멤버 중 보낸 사람을 제외한 경우)
+        // 4. FCM 알림 전송 (데이터 메시지 전송)
         if (!fcmTokens.isEmpty()) {
-            fcmService.sendGroupChatNotification(fcmTokens, "새 메시지 도착", chatMessage.getMessageContent(), data);
+            fcmService.sendGroupChatNotification(fcmTokens, "JIPPY Alert", chatMessage.getMessageContent(), data);
         }
     }
 

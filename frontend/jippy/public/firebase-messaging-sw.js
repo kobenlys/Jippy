@@ -16,7 +16,8 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
   
-  const notif = payload.notification || {};
+  // payload.data로 접근하도록 수정
+  const notif = payload.data || {};
   const title = notif.title || "새 메시지 도착";
   const body = notif.body || "";
   const icon = notif.image || '/icons/pwa.png';

@@ -29,7 +29,7 @@ const ChatPage: React.FC = () => {
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [showChatList, setShowChatList] = useState<boolean>(true);
 
-  const { initializeFCM } = useFCM(userId, userName, staffType);
+  const { initializeFCM } = useFCM(userId, staffType);
 
   useEffect(() => {
     dispatch(fetchChatList(userId));

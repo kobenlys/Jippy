@@ -1,11 +1,10 @@
 package com.hbhw.jippy.global.fcm;
 
-// FCMService.java
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
-import com.google.firebase.messaging.Notification;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,26 +12,23 @@ import java.util.Map;
 public class FCMService {
 
     /**
-     * 그룹 채팅 멤버들에게 알림 전송 (데이터 payload 포함)
+     * 그룹 채팅 멤버들에게 알림 전송 (데이터 payload만 전송)
      */
     public void sendGroupChatNotification(List<String> fcmTokens, String title, String body, Map<String, String> data) {
         for (String token : fcmTokens) {
             if (token != null && !token.isEmpty()) {
-                Notification notification = Notification.builder()
-                        .setTitle(title)
-                        .setBody(body)
-                        .build();
-
-                Message.Builder messageBuilder = Message.builder()
-                        .setToken(token)
-                        .setNotification(notification);
-
-                // 데이터가 있다면 추가
+                // notification 필드 없이 데이터 payload에 title, body 포함
+                Map<String, String> payloadData = new HashMap<>();
                 if (data != null) {
-                    messageBuilder.putAllData(data);
+                    payloadData.putAll(data);
                 }
+                payloadData.put("title", title);
+                payloadData.put("body", body);
 
-                Message message = messageBuilder.build();
+                Message message = Message.builder()
+                        .setToken(token)
+                        .putAllData(payloadData)
+                        .build();
 
                 try {
                     String response = FirebaseMessaging.getInstance().send(message);
@@ -44,5 +40,3 @@ public class FCMService {
         }
     }
 }
-
-
