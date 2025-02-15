@@ -1,5 +1,9 @@
-import { useEffect, useState } from "react";
-import { StaffMonthlyStatus, WorkingStaffData } from "../types/staff";
+import { useCallback, useEffect, useState } from "react";
+import {
+  StaffMonthlyStatus,
+  StaffTotalStatus,
+  WorkingStaffData,
+} from "../types/staff";
 import staffApi from "./staffApi";
 
 interface WorkingStaffState {
@@ -14,12 +18,18 @@ interface StaffMonthlyStatusState {
   error: Error | null;
 }
 
+interface StaffTotalStatusState {
+  data: StaffTotalStatus | null;
+  isLoading: boolean;
+  error: Error | null;
+}
+
 const useWorkingStaff = (storeId: number): WorkingStaffState => {
   const [data, setData] = useState<WorkingStaffData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchWorkingStaff = async () => {
+  const fetchWorkingStaff = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await staffApi.getWorkingStaff(storeId);
@@ -36,11 +46,11 @@ const useWorkingStaff = (storeId: number): WorkingStaffState => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [storeId]);
 
   useEffect(() => {
     fetchWorkingStaff();
-  }, [storeId]);
+  }, [fetchWorkingStaff]);
 
   return { data, isLoading, error };
 };
@@ -58,23 +68,12 @@ const useStaffMonthlyStatus = (
     const fetchStatus = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/staff/${storeId}/status/${staffId}?date=${date}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-          }
-        );
+        const response = await staffApi.getStaffStatus(storeId, staffId, date);
 
-        if (!response.ok) throw new Error("Failed to fetch status");
-
-        const result = await response.json();
-        if (result.success) {
-          setData(result.data);
+        if (response.success) {
+          setData(response.data);
         } else {
-          throw new Error(result.message || "데이터 조회 실패");
+          throw new Error(response.message || "데이터 조회 실패");
         }
       } catch (err) {
         setError(
@@ -93,4 +92,53 @@ const useStaffMonthlyStatus = (
   return { data, isLoading, error };
 };
 
-export { useWorkingStaff, useStaffMonthlyStatus };
+const useStaffTotalStatus = (
+  storeId: number,
+  staffId: number
+): StaffTotalStatusState => {
+  const [data, setData] = useState<StaffTotalStatus | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const fetchTotalStats = async () => {
+      try {
+        setIsLoading(true);
+        const response = await staffApi.getStaffTotalStatus(storeId, staffId);
+
+        if (response.success) {
+          setData(response.data);
+        } else {
+          throw new Error(response.message || "데이터 조회 실패");
+        }
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err
+            : new Error("알 수 없는 에러가 발생했습니다")
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTotalStats();
+  }, [storeId, staffId]);
+
+  return { data, isLoading, error };
+};
+
+const useStaffStatus = (storeId: number, staffId: number) => {
+  const currentDate = new Date().toISOString().slice(0, 7);
+  const monthlyStats = useStaffMonthlyStatus(storeId, staffId, currentDate);
+  const totalStats = useStaffTotalStatus(storeId, staffId);
+
+  return { monthlyStats, totalStats };
+};
+
+export {
+  useWorkingStaff,
+  useStaffMonthlyStatus,
+  useStaffTotalStatus,
+  useStaffStatus,
+};

@@ -41,7 +41,8 @@ const CalendarPage = () => {
           }
         );
 
-        const responseData: ApiResponse = await response.json();
+        const responseData: ApiResponse<StaffScheduleData> =
+          await response.json();
 
         if (!responseData.success) {
           if (responseData.code === "C-006") {
@@ -53,10 +54,10 @@ const CalendarPage = () => {
           );
         }
 
-        setScheduleData(responseData.data);
+        setScheduleData(responseData.data as StaffScheduleData);
 
         // 시간 범위 계산
-        const schedules = responseData.data.schedules;
+        const schedules = (responseData.data as StaffScheduleData).schedules;
         let minHour = Math.min(
           ...schedules.map((s) => parseInt(s.startTime.split(":")[0]))
         );
@@ -126,7 +127,7 @@ const CalendarPage = () => {
   return (
     <div className="flex flex-col h-full">
       <PageTitle />
-      <CalendarHeader days={days} />
+      <CalendarHeader />
       <CalendarGrid
         days={days}
         timeSlots={timeSlots}
