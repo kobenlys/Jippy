@@ -49,18 +49,16 @@ public class ChatController {
     @GetMapping("/{userId}/select/{storeId}")
     public ApiResponse<List<ChatMessageResponse>> getMessages(
             @PathVariable Integer userId,
-            @PathVariable Integer storeId,
-            @RequestParam(required = false, defaultValue = "20") int limit,
-            @RequestParam(required = false) String before
+            @PathVariable Integer storeId
     ) {
-        List<ChatMessageResponse> messages = chatService.getMessages(storeId, limit, before);
+        List<ChatMessageResponse> messages = chatService.getMessages(storeId);
         return ApiResponse.success(messages);
     }
 
     @Operation(summary = "가장 최근 메시지 조회", description = "채팅창 미리보기를 위핸 최근 메시지 조회")
     @GetMapping("/select/recent/{storeId}")
     public ApiResponse<ChatMessageResponse> getRecentMessage(@PathVariable Integer storeId) {
-        ChatMessageResponse message = chatService.getMessages(storeId, 20, null).getLast();
+        ChatMessageResponse message = chatService.getMessages(storeId).getLast();
         return ApiResponse.success(message);
     }
 
