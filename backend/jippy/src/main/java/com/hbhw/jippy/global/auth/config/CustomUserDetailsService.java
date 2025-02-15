@@ -1,7 +1,5 @@
 package com.hbhw.jippy.global.auth.config;
 
-import com.hbhw.jippy.domain.storeuser.entity.staff.StoreUserStaff;
-import com.hbhw.jippy.domain.storeuser.repository.staff.StoreStaffRepository;
 import com.hbhw.jippy.domain.user.entity.UserOwner;
 import com.hbhw.jippy.domain.user.entity.UserStaff;
 import com.hbhw.jippy.domain.user.enums.StaffType;
@@ -25,7 +23,6 @@ import java.util.Optional;
 public class CustomUserDetailsService implements UserDetailsService {
     private final UserOwnerRepository userOwnerRepository;
     private final UserStaffRepository userStaffRepository;
-    private final StoreStaffRepository storeStaffRepository;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -46,9 +43,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         /**
          * 직원 권한 찾기
          */
-        StoreUserStaff storeStaff = storeStaffRepository.findByUserStaff(staff)
-                .orElseThrow(() -> new RuntimeException("매장 정보를 찾을 수 없습니다."));
-
-        return new UserPrincipal(staff, storeStaff.getStaffType());
+        return new UserPrincipal(staff, StaffType.STAFF);
     }
 }

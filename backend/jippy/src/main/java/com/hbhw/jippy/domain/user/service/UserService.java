@@ -102,14 +102,13 @@ public class UserService {
 
     @Transactional
     public LoginResponse login(LoginRequest request, HttpServletResponse response) {
-        BaseUser user = findUser(request.getEmail(), request.getUserType());
 
+        BaseUser user = findUser(request.getEmail(), request.getUserType());
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BusinessException(CommonErrorCode.INVALID_INPUT_VALUE, "비밀번호가 일치하지 않습니다.");
         }
 
         StaffType staffType = getStaffType(user);
-
         UserPrincipal principal = new UserPrincipal(user, staffType);
         Authentication authentication = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -144,7 +143,7 @@ public class UserService {
                 }
             }
         } else if (StaffType.STAFF.name().equals(staffType.name()) || StaffType.MANAGER.name().equals(staffType.name())) {
-            System.out.println("staff");
+            log.info("staff");
             Optional<List<StoreUserStaff>> storeUserStaffOptional = storeStaffRepository.findAllByUserStaffId(principal.getId());
             if (storeUserStaffOptional.isPresent()) {
                 for (StoreUserStaff storeUserStaff : storeUserStaffOptional.get()) {
@@ -241,15 +240,11 @@ public class UserService {
     /**
      * 사용자 유형 조회 메서드
      */
-    private StaffType getStaffType(BaseUser user) {
+    public StaffType getStaffType(BaseUser user) {
         if (user instanceof UserOwner owner) {
             return owner.getStaffType();
         }
-
-        UserStaff staff = (UserStaff) user;
-        StoreUserStaff storeStaff = storeStaffRepository.findByUserStaff(staff)
-                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "매장 정보를 찾을 수 없습니다."));
-        return storeStaff.getStaffType();
+        return StaffType.STAFF;
     }
 
     private String generateTempPassword() {
