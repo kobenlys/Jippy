@@ -18,6 +18,7 @@ export default function PaymentHistoryList({
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedPaymentDetail, setSelectedPaymentDetail] = useState<PaymentHistoryDetail | null>(null);
   const itemsPerPage = 10;
 
   const storeId = 1;
@@ -92,9 +93,6 @@ export default function PaymentHistoryList({
 
       setPayments(result.data);
 
-      if (result.data.length > 0 && currentPage === 1) {
-        await fetchPaymentDetail(result.data[0].uuid);
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
       console.error(err);
@@ -107,23 +105,22 @@ export default function PaymentHistoryList({
     fetchPayments();
   }, [fetchPayments]);
 
-  // 날짜 필터링 및 페이지네이션 처리된 데이터
   const filteredAndPaginatedPayments = useMemo(() => {
     let filtered = [...payments];
 
-    // 날짜 필터링
+    filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
     if (startDate || endDate) {
       filtered = filtered.filter(payment => {
         const paymentDate = new Date(payment.createdAt);
         const start = startDate ? new Date(startDate) : new Date(0);
         const end = endDate ? new Date(endDate) : new Date();
-        end.setHours(23, 59, 59, 999); // 종료일은 해당 일자의 마지막 시간으로 설정
+        end.setHours(23, 59, 59, 999); 
         
         return paymentDate >= start && paymentDate <= end;
       });
     }
 
-    // 페이지네이션
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filtered.slice(startIndex, startIndex + itemsPerPage);
   }, [payments, startDate, endDate, currentPage]);
@@ -144,48 +141,61 @@ export default function PaymentHistoryList({
   }, [payments, startDate, endDate]);
 
   const handlePaymentSelect = async (payment: PaymentHistoryItem) => {
-    await fetchPaymentDetail(payment.uuid);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/detail`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          storeId: 1,
+          paymentUUID: payment.uuid
+        })
+      });
+  
+      if (!response.ok) {
+        throw new Error(`결제 상세 정보를 불러오는 데 실패했습니다. 상태 코드: ${response.status}`);
+      }
+  
+      const result = await response.json();
+
+      if (result.success) {
+        setSelectedPaymentDetail(result.data);
+        onSelectPayment(result.data);
+      }
+    } catch (error) {
+      console.error('결제 상세 정보 조회 실패:', error);
+    }
   };
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
   };
 
-  const handleDateFilter = () => {
-    setCurrentPage(1); // 필터 적용 시 첫 페이지로 이동
-  };
-
   return (
-    <div className="bg-white shadow rounded-lg">
-      {/* 날짜 필터 */}
+    <div className="bg-white shadow rounded-lg w-full max-w-6xl mx-auto">
       <div className="p-4 border-b">
-        <div className="flex gap-4 items-center">
-          <div className="flex items-center gap-2">
-            <label htmlFor="startDate">시작일:</label>
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+            <label htmlFor="startDate" className="text-gray-600 whitespace-nowrap">시작일:</label>
             <input
               type="date"
               id="startDate"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="border rounded px-2 py-1"
+              className="border rounded px-2 py-1 w-full sm:w-auto"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <label htmlFor="endDate">종료일:</label>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+            <label htmlFor="endDate" className="text-gray-600 whitespace-nowrap">종료일:</label>
             <input
               type="date"
               id="endDate"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="border rounded px-2 py-1"
+              className="border rounded px-2 py-1 w-full sm:w-auto"
             />
           </div>
-          <button
-            onClick={handleDateFilter}
-            className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600"
-          >
-            조회
-          </button>
         </div>
       </div>
 
@@ -196,77 +206,85 @@ export default function PaymentHistoryList({
       ) : filteredAndPaginatedPayments.length === 0 ? (
         <div className="text-center py-4 text-gray-500">결제 내역이 없습니다.</div>
       ) : (
-        <>
-          <table className="w-full">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-2 text-left">결제일시</th>
-                <th className="px-4 py-2 text-right">결제금액</th>
-                <th className="px-4 py-2 text-center">결제수단</th>
-                <th className="px-4 py-2 text-center">상태</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredAndPaginatedPayments.map((payment) => (
-                <tr 
-                  key={payment.uuid}
-                  onClick={() => handlePaymentSelect(payment)}
-                  className="hover:bg-gray-50 cursor-pointer border-b"
-                >
-                  <td className="px-4 py-2">
-                    {new Date(payment.createdAt).toLocaleString()}
-                  </td>
-                  <td className="px-4 py-2 text-right">
-                    {payment.totalCost.toLocaleString()}원
-                  </td>
-                  <td className="px-4 py-2 text-center">
-                    {payment.paymentType}
-                  </td>
-                  <td className="px-4 py-2 text-center">
-                    {payment.paymentStatus}
-                  </td>
+        <div className="overflow-hidden">
+          <div className="min-w-full overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-4 py-2 text-left whitespace-nowrap">결제일시</th>
+                  <th className="px-4 py-2 text-right whitespace-nowrap">결제금액</th>
+                  <th className="px-4 py-2 text-center whitespace-nowrap">결제수단</th>
+                  <th className="px-4 py-2 text-center whitespace-nowrap">상태</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredAndPaginatedPayments.map((payment) => (
+                  <tr 
+                    key={payment.uuid}
+                    onClick={() => handlePaymentSelect(payment)}
+                    className={`hover:bg-orange-50 cursor-pointer border-b ${
+                      selectedPaymentDetail?.uuid === payment.uuid ? 'bg-orange-100' : ''
+                    }`}
+                  >
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      {new Date(payment.createdAt).toLocaleString()}
+                    </td>
+                    <td className="px-4 py-2 text-right text-orange-600 font-medium whitespace-nowrap">
+                      {payment.totalCost.toLocaleString()}원
+                    </td>
+                    <td className="px-4 py-2 text-center whitespace-nowrap">
+                      {payment.paymentType}
+                    </td>
+                    <td className="px-4 py-2 text-center whitespace-nowrap">
+                      <span className={`px-2 py-1 rounded-full text-sm
+                        ${payment.paymentStatus === '완료' ? 'bg-green-100 text-green-800' : 
+                          payment.paymentStatus === '취소' ? 'bg-red-100 text-red-800' : 
+                          'bg-gray-100 text-gray-800'}`}>
+                        {payment.paymentStatus}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-          {/* 페이지네이션 */}
-          <div className="flex justify-center items-center gap-2 p-4">
+          <div className="flex justify-center items-center gap-1 sm:gap-2 p-4 flex-wrap">
             <button
               onClick={() => handlePageChange(1)}
               disabled={currentPage === 1}
-              className="px-3 py-1 rounded border disabled:opacity-50"
+              className="px-2 sm:px-3 py-1 rounded border disabled:opacity-50 text-sm sm:text-base"
             >
               {'<<'}
             </button>
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-1 rounded border disabled:opacity-50"
+              className="px-2 sm:px-3 py-1 rounded border disabled:opacity-50 text-sm sm:text-base"
             >
               {'<'}
             </button>
             
-            <span className="mx-4">
+            <span className="mx-2 sm:mx-4 text-sm sm:text-base">
               {currentPage} / {totalPages}
             </span>
 
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded border disabled:opacity-50"
+              className="px-2 sm:px-3 py-1 rounded border disabled:opacity-50 text-sm sm:text-base"
             >
               {'>'}
             </button>
             <button
               onClick={() => handlePageChange(totalPages)}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded border disabled:opacity-50"
+              className="px-2 sm:px-3 py-1 rounded border disabled:opacity-50 text-sm sm:text-base"
             >
               {'>>'}
             </button>
           </div>
-        </>
+        </div>
       )}
     </div>
   );
