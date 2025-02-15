@@ -9,7 +9,7 @@ const Home = () => {
   const userName = useUserName();
 
   // 실제 사용자와 매장 정보 가져온 후 수정
-  const storeId = 1;
+  const storeId = 19;
   const staffId = 4;
 
   return (

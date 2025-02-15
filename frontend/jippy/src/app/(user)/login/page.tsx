@@ -26,27 +26,20 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userType, setUserType] = useState("OWNER");
+  const [isPos, setIsPos] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
-  // const getCookie = (name: string): string | null => {
-  //   try {
-  //     const value = `; ${document.cookie}`;
-  //     const parts = value.split(`; ${name}=`);
-  //     if (parts.length === 2) {
-  //       return parts.pop()?.split(';').shift() || null;
-  //     }
-  //     return null;
-  //   } catch (error) {
-  //     console.error('쿠키 파싱 에러:', error);
-  //     return null;
-  //   }
-  // };
-
   const handleLogin = async () => {
     console.log("API URL:", process.env.NEXT_PUBLIC_API_URL);
+
     dispatch(loginStart());
     try {
+      let adjustUserType: string = userType;
+      if (userType === "POS") {
+        adjustUserType = "OWNER";
+      }
+      console.log(userType);
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/user/login`,
         {
@@ -54,7 +47,7 @@ const LoginPage = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ email, password, userType }),
+          body: JSON.stringify({ email, password, userType: adjustUserType }),
           credentials: "include",
         }
       );
@@ -143,7 +136,13 @@ const LoginPage = () => {
               if (userShops.length > 0) {
                 dispatch(setShops(userShops));
                 dispatch(setCurrentShop(userShops[0]));
-                router.replace("/confirm");
+                if (isPos) {
+                  router.replace("/order");
+                } else if (userType == "OWNER") {
+                  router.replace("/confirm");
+                } else if (userType == "STAFF") {
+                  router.replace("/attendance");
+                }
               } else {
                 console.log("필터링 후 매장이 없음");
                 router.replace("/shop/create");
@@ -185,6 +184,7 @@ const LoginPage = () => {
   };
 
   const handleSubmit = (e: React.FormEvent) => {
+    handleLogin();
     e.preventDefault(); // 기본 폼 제출 동작 방지
   };
 
@@ -201,7 +201,10 @@ const LoginPage = () => {
             type="radio"
             value="OWNER"
             checked={userType === "OWNER"}
-            onChange={(e) => setUserType(e.target.value)}
+            onChange={(e) => {
+              setUserType(e.target.value);
+              setIsPos(false);
+            }}
             className="form-radio appearance-none relative h-5 w-5 border border-gray-300 rounded-full 
              before:absolute before:inset-0 before:w-full before:h-full before:rounded-full before:border before:border-gray-300 
              checked:before:border-[#F27B39] checked:after:absolute checked:after:inset-[4px] checked:after:bg-[#F27B39] 
@@ -214,13 +217,32 @@ const LoginPage = () => {
             type="radio"
             value="STAFF"
             checked={userType === "STAFF"}
-            onChange={(e) => setUserType(e.target.value)}
+            onChange={(e) => {
+              setUserType(e.target.value);
+              setIsPos(false);
+            }}
             className="form-radio appearance-none relative h-5 w-5 border border-gray-300 rounded-full 
              before:absolute before:inset-0 before:w-full before:h-full before:rounded-full before:border before:border-gray-300 
              checked:before:border-[#F27B39] checked:after:absolute checked:after:inset-[4px] checked:after:bg-[#F27B39] 
              checked:after:rounded-full"
           />
           <span>직원</span>
+        </label>
+        <label className="flex items-center space-x-2 cursor-pointer">
+          <input
+            type="radio"
+            value="POS"
+            checked={userType === "POS"}
+            onChange={(e) => {
+              setUserType(e.target.value);
+              setIsPos(true);
+            }}
+            className="form-radio appearance-none relative h-5 w-5 border border-gray-300 rounded-full 
+             before:absolute before:inset-0 before:w-full before:h-full before:rounded-full before:border before:border-gray-300 
+             checked:before:border-[#F27B39] checked:after:absolute checked:after:inset-[4px] checked:after:bg-[#F27B39] 
+             checked:after:rounded-full"
+          />
+          <span>POS</span>
         </label>
       </div>
 
@@ -239,9 +261,7 @@ const LoginPage = () => {
         className="border p-2 m-2 w-64 rounded"
       />
 
-      <Button variant="orange" onClick={handleLogin}>
-        로그인
-      </Button>
+      <Button variant="orange">로그인</Button>
 
       <div className="w-64 h-px bg-gray-300 my-6"></div>
 
