@@ -15,6 +15,7 @@ import com.hbhw.jippy.domain.storeuser.repository.calendar.CalendarRepository;
 import com.hbhw.jippy.domain.storeuser.repository.staff.StoreStaffRepository;
 import com.hbhw.jippy.domain.storeuser.repository.attendance.AttendanceStatusRepository;
 import com.hbhw.jippy.domain.storeuser.repository.attendance.EmploymentStatusRepository;
+import com.hbhw.jippy.domain.user.entity.UserStaff;
 import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
 import com.hbhw.jippy.utils.DateTimeUtils;
