@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import ProductGrid from '@/features/order/components/ProductGrid';
-import { Card } from '@/features/common/components/ui/card/Card';
-import { Button } from '@/features/common/components/ui/button';
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/redux/hooks";
+import ProductGrid from "@/features/order/components/ProductGrid";
+import { Card } from "@/features/common/components/ui/card/Card";
+import { Button } from "@/features/common/components/ui/button";
 import { ProductDetailResponse } from "@/redux/types/product";
-// import { useAppDispatch } from '@/redux/hooks';
-// import { setOrderData } from '@/redux/slices/paymentSlice';
+import { setOrderData } from "@/redux/slices/paymentSlice";
 
 export interface Product {
   id: number;
@@ -21,8 +21,9 @@ export interface OrderItem extends Product {
   quantity: number;
 }
 
-type PaymentMethod = 'cash' | 'qr';
+type PaymentMethod = "cash" | "qr";
 
+// ProductDetailResponse를 Product로 변환하는 함수
 const convertToProduct = (productDetail: ProductDetailResponse): Product => {
   return {
     id: productDetail.id,
@@ -35,7 +36,8 @@ const convertToProduct = (productDetail: ProductDetailResponse): Product => {
 
 const POSPage = () => {
   const router = useRouter();
-  // const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
+
   const [currentOrder, setCurrentOrder] = useState<OrderItem[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
 
@@ -74,11 +76,11 @@ const POSPage = () => {
 
   const handleCompleteOrder = async () => {
     if (!paymentMethod) {
-      alert('결제 방법을 선택해주세요.');
+      alert("결제 방법을 선택해주세요.");
       return;
     }
 
-    if (paymentMethod === 'qr') {
+    if (paymentMethod === "qr") {
       const orderData = {
         totalAmount: calculateTotal(),
         orderName: `주문 ${new Date().toLocaleString()}`,
@@ -90,36 +92,36 @@ const POSPage = () => {
         }))
       };
       
-      console.log('Creating order data:', orderData);
+      console.log("Creating order data:", orderData);
 
       try {
         // Redux store에 주문 데이터 저장
-        // dispatch(setOrderData(orderData));
+        dispatch(setOrderData(orderData));
         
         // localStorage에 백업
-        localStorage.setItem('orderData', JSON.stringify(orderData));
+        localStorage.setItem("orderData", JSON.stringify(orderData));
         
-        console.log('Order data saved successfully');
+        console.log("Order data saved successfully");
         
         // 결제 페이지로 이동
-        router.push('/payment/request');
+        router.push("/payment/request");
       } catch (error) {
-        console.error('Error saving order data:', error);
-        alert('주문 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+        console.error("Error saving order data:", error);
+        alert("주문 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
       }
       return;
     }
 
     // 현금 결제 로직은 추후 구현
-    alert('현금 결제는 아직 구현되지 않았습니다.');
+    alert("현금 결제는 아직 구현되지 않았습니다.");
   };
 
   return (
     <div className="flex h-full">
-      <div className="w-4/6 h-full">
-        <div className="h-full overflow-y-auto">
-          <ProductGrid onAddProduct={handleAddProduct} />
-        </div>
+      <div className="w-4/6 overflow-y-auto pb-8">
+      <ProductGrid
+        onAddProduct={handleAddProduct}
+      />
       </div>
 
       <div className="w-2/6 h-full bg-white p-4 flex flex-col">
@@ -163,48 +165,46 @@ const POSPage = () => {
             </div>
           </Card>
 
-          <div className="bg-gray-100 p-4 rounded mb-4">
-            <div className="flex justify-between mb-4">
-              <span className="font-bold">총 합계:</span>
-              <span className="font-bold text-xl">
-                {calculateTotal().toLocaleString()}원
-              </span>
-            </div>
-            
-            <div className="flex space-x-2 mb-4">
-              <Button 
-                variant={paymentMethod === 'cash' ? 'primary' : 'default'}
-                className="w-1/2"
-                onClick={() => setPaymentMethod('cash')}
-              >
-                현금
-              </Button>
-              <Button 
-                variant={paymentMethod === 'qr' ? 'primary' : 'default'}
-                className="w-1/2"
-                onClick={() => setPaymentMethod('qr')}
-              >
-                QR
-              </Button>
-            </div>
-            
-            <div className="flex space-x-2">
-              <Button 
-                variant="default" 
-                className="w-1/2"
-                onClick={handleCancelOrder}
-              >
-                주문 취소
-              </Button>
-              <Button 
-                variant="default" 
-                className="w-1/2"
-                onClick={handleCompleteOrder}
-                disabled={currentOrder.length === 0 || !paymentMethod}
-              >
-                결제하기
-              </Button>
-            </div>
+        <div className="bg-gray-100 p-4 rounded">
+          <div className="flex justify-between mb-4">
+            <span className="font-bold">총 합계:</span>
+            <span className="font-bold text-xl">
+              {calculateTotal().toLocaleString()}원
+            </span>
+          </div>
+          <div className="flex space-x-2 mb-4">
+            <Button 
+              variant={paymentMethod === "cash" ? "primary" : "default"}
+              className="w-1/2"
+              onClick={() => setPaymentMethod("cash")}
+            >
+              현금
+            </Button>
+            <Button 
+              variant={paymentMethod === "qr" ? "primary" : "default"}
+              className="w-1/2"
+              onClick={() => setPaymentMethod("qr")}
+            >
+              QR
+            </Button>
+          </div>
+          
+          <div className="flex space-x-2">
+            <Button 
+              variant="default" 
+              className="w-1/2"
+              onClick={handleCancelOrder}
+            >
+              주문 취소
+            </Button>
+            <Button 
+              variant="default" 
+              className="w-1/2"
+              onClick={handleCompleteOrder}
+              disabled={currentOrder.length === 0 || !paymentMethod}
+            >
+              결제하기
+            </Button>
           </div>
         </div>
       </div>
