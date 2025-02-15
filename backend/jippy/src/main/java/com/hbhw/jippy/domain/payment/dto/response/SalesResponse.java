@@ -10,4 +10,5 @@ import lombok.Setter;
 public class SalesResponse {
     private String date;
     private Integer totalSales;
+    private Integer orderCount;
 }
