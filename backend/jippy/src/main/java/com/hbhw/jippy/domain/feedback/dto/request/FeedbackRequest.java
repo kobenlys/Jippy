@@ -15,4 +15,6 @@ public class FeedbackRequest {
     private String content;     // 피드백 내용
     private String createdAt; // 생성날짜
     private String requestId;   // 프론트에서 생성한 UUID
+    private String longitude;
+    private String latitude;
 }
