@@ -1,36 +1,50 @@
 package com.hbhw.jippy.domain.store.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hbhw.jippy.domain.store.dto.request.StoreCreateRequest;
 import com.hbhw.jippy.domain.store.dto.request.StoreUpdateRequest;
 import com.hbhw.jippy.domain.store.dto.response.StoreResponse;
 import com.hbhw.jippy.domain.store.entity.Store;
+import com.hbhw.jippy.domain.store.entity.StoreCoordinates;
+import com.hbhw.jippy.domain.store.repository.StoreCoordinatesRepository;
 import com.hbhw.jippy.domain.store.repository.StoreRepository;
 import com.hbhw.jippy.domain.user.entity.UserOwner;
 import com.hbhw.jippy.domain.user.repository.UserOwnerRepository; // 예시
 import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
-import com.hbhw.jippy.global.response.ApiResponse;
-import io.swagger.v3.oas.annotations.Operation;
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClient;
 
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class StoreService {
 
+    private final StoreCoordinatesRepository storeCoordinatesRepository;
+    @Value("${kakao.api.key}")
+    private String kakaoApiKey;
+    @Value("${kakao.api.url}")
+    private String kakaoApiUrl;
     private final StoreRepository storeRepository;
     private final UserOwnerRepository userOwnerRepository; // 점주 조회용 (예시)
+    private final RestClient restClient;
 
     @Builder
-    public StoreService(StoreRepository storeRepository, UserOwnerRepository userOwnerRepository) {
+    public StoreService(StoreRepository storeRepository, UserOwnerRepository userOwnerRepository, StoreCoordinatesRepository storeCoordinatesRepository) {
         this.storeRepository = storeRepository;
         this.userOwnerRepository = userOwnerRepository;
+        this.restClient = RestClient.create();
+        this.storeCoordinatesRepository = storeCoordinatesRepository;
     }
 
     @Transactional
@@ -48,9 +62,18 @@ public class StoreService {
                 .totalCash(request.getTotalCash())
                 .businessRegistrationNumber(request.getBusinessRegistrationNumber())
                 .build();
-
         // 저장
         Store saved = storeRepository.save(store);
+
+        // mongoDB에 coordinates 저장
+        double[] coordinates = getCoordinates(request.getAddress());
+        StoreCoordinates storeCoordinates = StoreCoordinates.builder()
+                .storeId(saved.getId())
+                .longitude(coordinates[0])
+                .latitude(coordinates[1])
+                .build();
+        storeCoordinatesRepository.save(storeCoordinates);
+
         return toResponse(saved);
     }
 
@@ -122,4 +145,40 @@ public class StoreService {
                 .businessRegistrationNumber(store.getBusinessRegistrationNumber())
                 .build();
     }
+
+    private double[] getCoordinates(String address) {
+        double[] coordinates = new double[2];
+        String apiUrl = kakaoApiUrl + "/v2/local/search/address.json?query=" + address;
+
+        log.info("Kakao API 호출 URL: " + apiUrl);
+
+        try {
+            ResponseEntity<String> response = restClient.get()
+                    .uri(apiUrl)
+                    .header("Authorization", "KakaoAK " + kakaoApiKey.trim()) // 공백 제거
+                    .retrieve()
+                    .toEntity(String.class);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode root = objectMapper.readTree(response.getBody());
+            if (root.get("documents").size() > 0) {
+                JsonNode location = root.get("documents").get(0);
+                coordinates[0] = location.get("x").asDouble();  // 경도 (longitude)
+                coordinates[1] = location.get("y").asDouble();  // 위도 (latitude)
+            } else {
+                throw new Exception("🚨 주소 정보를 찾을 수 없음");
+            }
+
+        } catch (HttpClientErrorException e) {
+            log.error("🚨 HTTP 오류 발생: " + e.getStatusCode());
+            log.error("🚨 오류 본문: " + e.getResponseBodyAsString());
+            throw new BusinessException(CommonErrorCode.NOT_FOUND, "API 요청 실패: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("🚨 예외 발생: " + e.getMessage());
+            throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "API 호출 중 오류 발생: " + e.getMessage());
+        }
+
+        return coordinates;
+    }
+
 }

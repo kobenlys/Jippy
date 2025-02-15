@@ -1,5 +1,6 @@
 package com.hbhw.jippy.domain.storeuser.controller.attendance;
 
+import com.hbhw.jippy.domain.storeuser.dto.request.attendance.AttendanceRequest;
 import com.hbhw.jippy.domain.storeuser.dto.request.attendance.TempChangeRequest;
 import com.hbhw.jippy.domain.storeuser.dto.response.attendance.CheckInResponse;
 import com.hbhw.jippy.domain.storeuser.dto.response.attendance.CheckOutResponse;
@@ -23,8 +24,8 @@ public class AttendanceController {
 
     @Operation(summary = "직원 출근", description = "직원의 출근 기록을 등록합니다")
     @PostMapping("/{storeId}/checkIn")
-    public ApiResponse<CheckInResponse> checkIn(@PathVariable Integer storeId, @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        CheckInResponse response = attendanceService.checkIn(storeId, userPrincipal.getId());
+    public ApiResponse<CheckInResponse> checkIn(@PathVariable Integer storeId, @RequestBody AttendanceRequest attendanceRequest, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        CheckInResponse response = attendanceService.checkIn(storeId, attendanceRequest);
         return ApiResponse.success(response);
     }
 
