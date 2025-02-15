@@ -1,3 +1,4 @@
+// src/features/chat/components/ChatRoom.tsx
 import React, { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import MessageList from "./MessageList";
@@ -19,7 +20,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ chatRoom, userId, userName }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { memberCount, loading, error } = useChatMemberCount(chatRoom.storeId);
   
-  // WebSocket hook: sendMessage 함수를 여기서 받아서 MessageInput에 전달
+  // WebSocket hook: storeId를 인자로 넘겨 sendMessage 함수를 반환받음
   const { sendMessage } = useWebSocket(chatRoom.storeId.toString());
 
   useEffect(() => {

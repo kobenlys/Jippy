@@ -1,6 +1,5 @@
 // app/layout.tsx
 import RootLayoutClient from "./RootLayoutClient";
-import ServiceWorkerRegistration from "./ServiceWorkerRegistration";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,7 +9,6 @@ export const metadata: Metadata = {
 };
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
-  <ServiceWorkerRegistration />
   return <RootLayoutClient>{children}</RootLayoutClient>;
 };
 

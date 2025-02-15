@@ -16,7 +16,7 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-const useFCM = (userId: number, userType: string) => {
+const useFCM = (userId: number, userName: string, userType: string) => {
   // 백엔드에 FCM 토큰 저장
   const saveTokenToBackend = useCallback(async (token: string) => {
     try {
@@ -63,19 +63,20 @@ const useFCM = (userId: number, userType: string) => {
       if (!isFCMListenerRegistered) {
         onMessage(messaging, (payload) => {
           console.log("FCM 메시지 수신:", payload);
-          // 예를 들어, payload.data.senderId를 이용해 자신의 메시지면 무시할 수 있습니다.
-          if (payload?.data?.senderId && payload.data.senderId === String(userId)) {
+          // payload.data.senderName가 있으면 sender 필터링
+          if (payload?.data?.senderName && payload.data.senderName === userName) {
             console.log("자신이 보낸 메시지이므로 FCM 알림 무시");
             return;
           }
-          // 다른 사용자의 메시지에 대해서만 필요한 처리를 진행합니다.
+          // 다른 사용자의 메시지에 대해 필요한 처리 (예: 데스크탑 알림)
+          // 만약 여기서 알림을 표시할 필요가 없다면 별도 UI 업데이트는 하지 않습니다.
         });
         isFCMListenerRegistered = true;
       }
     } catch (error) {
       console.error("FCM 초기화 에러:", error);
     }
-  }, [saveTokenToBackend, userId]);
+  }, [saveTokenToBackend, userName]);
 
   return { initializeFCM };
 };

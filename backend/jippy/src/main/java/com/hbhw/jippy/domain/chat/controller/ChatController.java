@@ -90,18 +90,9 @@ public class ChatController {
         // 2. 해당 채팅방 멤버(직원 + 사장님)의 FCM 토큰을 조회
         List<String> fcmTokens = storeStaffService.getAllChatMemberFcmTokens(storeId);
 
-        // 3. 발신자 토큰이 있다면, 이를 목록에서 제외 (예시: chatMessage.getSenderId()로 발신자를 식별할 수 있다고 가정)
-        // 만약 발신자의 FCM 토큰을 별도로 조회할 수 있다면 아래와 같이 필터링합니다.
-        // String senderToken = ...; // 발신자의 FCM 토큰
-        // fcmTokens = fcmTokens.stream()
-        //             .filter(token -> !token.equals(senderToken))
-        //             .collect(Collectors.toList());
-
-        // 또는 발신자 정보(senderName, senderId 등)를 데이터 payload에 포함하여,
         // 클라이언트에서 필터링하도록 할 수 있습니다.
         Map<String, String> data = new HashMap<>();
-        data.put("senderName", chatMessage.getSenderId());  // 여기서는 senderId를 senderName으로 사용
-        data.put("messageType", chatMessage.getMessageType());
+        data.put("messageId", chatMessage.getMessageId());  // 여기서는 senderId를 senderName으로 사용
 
         // 4. FCM 알림 전송 (대상은 그룹 채팅 멤버 중 보낸 사람을 제외한 경우)
         if (!fcmTokens.isEmpty()) {

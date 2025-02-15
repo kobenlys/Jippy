@@ -24,14 +24,12 @@ const ChatPage: React.FC = () => {
   const userInfo = useUserInfo();
   const userId: number = userInfo.userId ?? 1;
   const userName: string = userInfo.userName ?? "";
-  
-  // 예시: staffType은 "OWNER" 혹은 "STAFF"로 나오도록 합니다.
-  const staffType = userInfo.staffType ?? "OWNER";
+  const staffType = userInfo.staffType ?? "STAFF";
 
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [showChatList, setShowChatList] = useState<boolean>(true);
 
-  const { initializeFCM } = useFCM(userId, staffType);
+  const { initializeFCM } = useFCM(userId, userName, staffType);
 
   useEffect(() => {
     dispatch(fetchChatList(userId));
