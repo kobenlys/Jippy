@@ -284,7 +284,6 @@ public class UserService {
             // ResponseCookie 생성
             ResponseCookie storeIdListCookie = ResponseCookie.from("storeIdList", encodedList)
                     .httpOnly(false)  // 클라이언트에서 접근 가능
-                    .secure(false)    // HTTPS에서만 전송할지 여부
                     .path("/")        // 모든 경로에서 접근 가능
                     .maxAge(refreshTokenExpireTime / 1000)
                     .build();
@@ -298,32 +297,27 @@ public class UserService {
         // user 정보 쿠키에 저장
         ResponseCookie userIdCookie = ResponseCookie.from("userId", principal.getId().toString())
                 .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
-                .secure(false) // HTTPS에서만 전송
                 .path("/")
                 .maxAge(refreshTokenExpireTime / 1000) // 초 단위
                 .build();
         ResponseCookie staffTypeCookie = ResponseCookie.from("staffType", staffType.name())
                 .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
-                .secure(false) // HTTPS에서만 전송
                 .path("/")
                 .maxAge(refreshTokenExpireTime / 1000) // 초 단위
                 .build();
         String encodedUserName = URLEncoder.encode(principal.getName(), StandardCharsets.UTF_8);
         ResponseCookie userNameCookie = ResponseCookie.from("userName", encodedUserName)
                 .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
-                .secure(false) // HTTPS에서만 전송
                 .path("/")
                 .maxAge(refreshTokenExpireTime / 1000) // 초 단위
                 .build();
         ResponseCookie jwtAccesssCookie = ResponseCookie.from("accessToken", accessToken)
                 .httpOnly(false)
-                .secure(false) // HTTPS에서만 전송
                 .path("/")
                 .maxAge(accessTokenExpireTime / 1000) // 초 단위
                 .build();
         ResponseCookie jwtRefreshCookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(false)
-                .secure(false) // HTTPS에서만 전송
                 .path("/")
                 .maxAge(refreshTokenExpireTime / 1000) // 초 단위
                 .build();
