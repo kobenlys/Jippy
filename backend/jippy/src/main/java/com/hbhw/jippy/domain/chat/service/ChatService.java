@@ -65,22 +65,18 @@ public class ChatService {
     }
 
     // 채팅방 생성
-    public StoreChat createChat(CreateChatRequest request) {
+    public void createChat(Integer storeId) {
         StoreChat chat = StoreChat.builder()
-                .storeId(request.getStoreId())
+                .storeId(storeId)
                 .messages(new ArrayList<>())
                 .build();
-        return chatRepository.save(chat);
+        chatRepository.insert(chat);
     }
 
 
     // 채팅방 퇴장
-    public void leaveChat(Integer storeId, String receiverId) {
-        StoreChat storeChat = chatRepository.findByStoreId(storeId)
-                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
-
-        storeChat.getMessages().removeIf(msg -> msg.getSenderId().equals(receiverId));
-        chatRepository.save(storeChat);
+    public void deleteChat(Integer storeId) {
+        chatRepository.deleteByStoreId(storeId);
     }
 
     /**

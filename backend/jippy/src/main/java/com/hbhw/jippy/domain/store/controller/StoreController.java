@@ -1,5 +1,6 @@
 package com.hbhw.jippy.domain.store.controller;
 
+import com.hbhw.jippy.domain.chat.service.ChatService;
 import com.hbhw.jippy.domain.store.dto.request.StoreCreateRequest;
 import com.hbhw.jippy.domain.store.dto.request.StoreUpdateRequest;
 import com.hbhw.jippy.domain.store.dto.response.StoreResponse;
@@ -18,12 +19,14 @@ import java.util.List;
 public class StoreController {
 
     private final StoreService storeService;
+    private final ChatService chatService;
 
     @Operation(summary = "매장 등록", description = "새로운 매장을 등록한다.")
     // @PreAuthorize("hasRole('OWNER')")
     @PostMapping("/create")
     public ApiResponse<StoreResponse> createStore(@RequestBody StoreCreateRequest request) {
         StoreResponse response = storeService.createStore(request);
+        chatService.createChat(response.getId());
         return ApiResponse.success(response);
     }
 
@@ -60,6 +63,7 @@ public class StoreController {
     @DeleteMapping("/delete/{storeId}")
     public ApiResponse<Void> deleteStore(@PathVariable("storeId") Integer storeId) {
         storeService.deleteStore(storeId);
+        chatService.deleteChat(storeId);
         return ApiResponse.success(HttpStatus.OK);
     }
 }
