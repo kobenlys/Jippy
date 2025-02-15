@@ -25,7 +25,7 @@ public class AttendanceController {
     @Operation(summary = "직원 출근", description = "직원의 출근 기록을 등록합니다")
     @PostMapping("/{storeId}/checkIn")
     public ApiResponse<CheckInResponse> checkIn(@PathVariable Integer storeId, @RequestBody AttendanceRequest attendanceRequest, @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        CheckInResponse response = attendanceService.checkIn(storeId, attendanceRequest.getStaffId());
+        CheckInResponse response = attendanceService.checkIn(storeId, attendanceRequest);
         return ApiResponse.success(response);
     }
 

@@ -1,7 +1,10 @@
 package com.hbhw.jippy.domain.storeuser.service.attendance;
 
 import com.hbhw.jippy.domain.store.entity.Store;
+import com.hbhw.jippy.domain.store.entity.StoreCoordinates;
+import com.hbhw.jippy.domain.store.repository.StoreCoordinatesRepository;
 import com.hbhw.jippy.domain.store.repository.StoreRepository;
+import com.hbhw.jippy.domain.storeuser.dto.request.attendance.AttendanceRequest;
 import com.hbhw.jippy.domain.storeuser.dto.request.attendance.TempChangeRequest;
 import com.hbhw.jippy.domain.storeuser.dto.response.attendance.CheckInResponse;
 import com.hbhw.jippy.domain.storeuser.dto.response.attendance.CheckOutResponse;
@@ -30,6 +33,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -40,17 +44,33 @@ public class AttendanceService {
     private final AttendanceStatusRepository attendanceStatusRepository;
     private final StoreRepository storeRepository;
     private final CalendarRepository calendarRepository;
+    private final StoreCoordinatesRepository storeCoordinatesRepository;
     private final RedisTemplate<String, String> redisTemplate;
+    private static final double EARTH_RADIUS = 6371e3; // 지구 반경 (미터 단위)
+    private static final double ERROR_RANGE = 10.0;
 
     private static final String TEMP_SCHEDULE_PREFIX = "temp:schedule:";
 
     @Transactional
-    public CheckInResponse checkIn(Integer storeId, Integer userStaffId) {
+    public CheckInResponse checkIn(Integer storeId, AttendanceRequest attendanceRequest) {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 매장입니다."));
 
-        StoreUserStaff staff = storeStaffRepository.findByUserStaffId(userStaffId)
+        StoreUserStaff staff = storeStaffRepository.findByUserStaffId(attendanceRequest.getStaffId())
                 .orElseThrow(() -> new NoSuchElementException("매장 직원 정보를 찾을 수 없습니다."));
+
+        // 좌표 오차 범위 내에 있는지 확인
+        Optional<StoreCoordinates> storeCoordinatesOptional = storeCoordinatesRepository.findByStoreId(storeId);
+        if (!storeCoordinatesOptional.isPresent()) {
+            throw new BusinessException(CommonErrorCode.NOT_FOUND, "스토어 좌표를 찾을 수 없습니다." + " " + storeId);
+        }
+        StoreCoordinates storeCoordinates = storeCoordinatesOptional.get();
+        System.out.println(storeCoordinates.getLatitude() + " " + storeCoordinates.getLongitude());
+        System.out.println(Double.parseDouble(attendanceRequest.getLatitude()) + " " + Double.parseDouble(attendanceRequest.getLongitude()));
+        if (!isWithinRange(storeCoordinates.getLatitude(), storeCoordinates.getLongitude(),
+            Double.parseDouble(attendanceRequest.getLatitude()), Double.parseDouble(attendanceRequest.getLongitude()), ERROR_RANGE)) {
+            throw new BusinessException(CommonErrorCode.OUT_OF_RANGE, "GPS 범위를 벗어났습니다.");
+        }
 
         String startTime = DateTimeUtils.nowString();
         validateCheckInTime(staff, DateTimeUtils.parseDateTime(startTime));
@@ -224,4 +244,23 @@ public class AttendanceService {
             throw new BusinessException(CommonErrorCode.INVALID_INPUT_VALUE, "퇴근 가능 시간이 아닙니다.");
         }
     }
+
+    private boolean isWithinRange(double lat1, double lon1, double lat2, double lon2, double range) {
+        double latRad1 = Math.toRadians(lat1);
+        double lonRad1 = Math.toRadians(lon1);
+        double latRad2 = Math.toRadians(lat2);
+        double lonRad2 = Math.toRadians(lon2);
+
+        double dLat = latRad2 - latRad1;
+        double dLon = lonRad2 - lonRad1;
+
+        double a = Math.pow(Math.sin(dLat / 2), 2) +
+                Math.cos(latRad1) * Math.cos(latRad2) *
+                        Math.pow(Math.sin(dLon / 2), 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return (EARTH_RADIUS * c) <= range;
+    }
+
 }
