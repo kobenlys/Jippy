@@ -7,7 +7,12 @@ const useWorkingStatus = (storeId: number, staffId: number) => {
   const [error, setError] = useState<string | null>(null);
 
   const getAuthToken = () => {
-    const token = localStorage.getItem("token");
+    const token = document.cookie
+      .split("; ")
+      .map((cookie) => cookie.trim())
+      .find((cookie) => cookie.startsWith("accessToken="))
+      ?.split("=")[1];
+    console.log(token);
     return token;
   };
 
