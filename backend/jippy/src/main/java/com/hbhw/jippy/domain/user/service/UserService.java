@@ -287,7 +287,7 @@ public class UserService {
                     .secure(false)    // HTTPS에서만 전송할지 여부
                     .path("/")        // 모든 경로에서 접근 가능
                     .maxAge(refreshTokenExpireTime / 1000)
-                    .sameSite("Strict")
+                    .sameSite("Lax")
                     .build();
 
             response.addHeader("Set-Cookie", storeIdListCookie.toString());
@@ -302,14 +302,14 @@ public class UserService {
                 .secure(false) // HTTPS에서만 전송
                 .path("/")
                 .maxAge(refreshTokenExpireTime / 1000) // 초 단위
-                .sameSite("Strict")
+                .sameSite("Lax")
                 .build();
         ResponseCookie staffTypeCookie = ResponseCookie.from("staffType", staffType.name())
                 .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
                 .secure(false) // HTTPS에서만 전송
                 .path("/")
                 .maxAge(refreshTokenExpireTime / 1000) // 초 단위
-                .sameSite("Strict")
+                .sameSite("Lax")
                 .build();
         String encodedUserName = URLEncoder.encode(principal.getName(), StandardCharsets.UTF_8);
         ResponseCookie userNameCookie = ResponseCookie.from("userName", encodedUserName)
@@ -317,21 +317,21 @@ public class UserService {
                 .secure(false) // HTTPS에서만 전송
                 .path("/")
                 .maxAge(refreshTokenExpireTime / 1000) // 초 단위
-                .sameSite("Strict")
+                .sameSite("Lax")
                 .build();
         ResponseCookie jwtAccesssCookie = ResponseCookie.from("accessToken", accessToken)
                 .httpOnly(false)
                 .secure(false) // HTTPS에서만 전송
                 .path("/")
                 .maxAge(accessTokenExpireTime / 1000) // 초 단위
-                .sameSite("Strict")
+                .sameSite("Lax")
                 .build();
         ResponseCookie jwtRefreshCookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(false)
                 .secure(false) // HTTPS에서만 전송
                 .path("/")
                 .maxAge(refreshTokenExpireTime / 1000) // 초 단위
-                .sameSite("Strict")
+                .sameSite("Lax")
                 .build();
         // 응답 헤더에 쿠키 추가
         response.addHeader("Set-Cookie", userIdCookie.toString());
