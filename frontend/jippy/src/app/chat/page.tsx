@@ -4,9 +4,11 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ChatList from "@/features/chat/components/ChatList";
 import ChatRoom from "@/features/chat/components/ChatRoom";
+import useFCM from "@/features/chat/hooks/useFCM";
 import { fetchChatList, setSelectedChatRoom } from "@/redux/slices/chatSlice";
 import { StoreChat } from "@/features/chat/types/chat";
 import { RootState, AppDispatch } from "@/redux/store";
+import useUserInfo from "@/utils/useUserInfo";
 import styles from "@/features/chat/styles/ChatPage.module.css";
 
 const ChatPage: React.FC = () => {
@@ -16,16 +18,25 @@ const ChatPage: React.FC = () => {
     (state: RootState) => state.chat.selectedChatRoom
   );
   
-  // 실제 로그인된 사용자의 id (여기서는 테스트로 1로 가정)
-  const user = useSelector((state: RootState) => state.user);
-  const userId: number = typeof user?.profile?.id === 'number' ? user.profile.id : 1;
-  const userName = user?.profile?.name || '';
+  
+
+  // useUserInfo를 통해 쿠키에서 사용자 정보를 읽어옵니다.
+  const userInfo = useUserInfo();
+  const userId: number = userInfo.userId ?? 1;
+  const userName: string = userInfo.userName ?? "";
+  
+  // 예시: staffType은 "OWNER" 혹은 "STAFF"로 나오도록 합니다.
+  const staffType = userInfo.staffType ?? "OWNER";
+
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [showChatList, setShowChatList] = useState<boolean>(true);
 
+  const { initializeFCM } = useFCM(userId, staffType);
+
   useEffect(() => {
     dispatch(fetchChatList(userId));
-  }, [userId, dispatch]);
+    initializeFCM();
+  }, [userId, dispatch, initializeFCM]);
 
   useEffect(() => {
     // 채팅방 선택 시, ChatRoom 내에서 WebSocket 연결을 관리하므로 별도 connect/ disconnect 호출은 생략합니다.
