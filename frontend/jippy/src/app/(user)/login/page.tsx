@@ -42,7 +42,7 @@ const LoginPage = () => {
   //     return null;
   //   }
   // };
-  
+
   const handleLogin = async () => {
     console.log("API URL:", process.env.NEXT_PUBLIC_API_URL);
     dispatch(loginStart());
@@ -72,37 +72,39 @@ const LoginPage = () => {
       if (responseData.success && responseData.data.accessToken) {
         // 로그인 성공 후 쿠키 설정 확인
         console.log("설정된 쿠키:", document.cookie);
-        
-        dispatch(loginSuccess({
-          profile: {
-            id: responseData.data.id,
-            email: responseData.data.email,
-            name: responseData.data.name,
-            age: responseData.data.age,
-            userType: responseData.data.staffType,
-          },
-          accessToken: responseData.data.accessToken,
-          refreshToken: responseData.data.refreshToken,
-        }));
+
+        dispatch(
+          loginSuccess({
+            profile: {
+              id: responseData.data.id,
+              email: responseData.data.email,
+              name: responseData.data.name,
+              age: responseData.data.age,
+              userType: responseData.data.staffType,
+            },
+            accessToken: responseData.data.accessToken,
+            refreshToken: responseData.data.refreshToken,
+          })
+        );
 
         // 매장 정보 조회 및 리덕스 업데이트
         try {
           // 쿠키 디버깅을 위한 로그
           console.log("전체 쿠키:", document.cookie);
-        
+
           const userId = document.cookie
             .split("; ")
-            .map(cookie => cookie.trim())
-            .find(cookie => cookie.startsWith("userId="))
+            .map((cookie) => cookie.trim())
+            .find((cookie) => cookie.startsWith("userId="))
             ?.split("=")[1];
-        
+
           console.log("파싱된 userId:", userId);
-        
+
           if (!userId) {
             console.log("userId 쿠키를 찾을 수 없음");
             throw new Error("사용자 정보를 찾을 수 없습니다.");
           }
-        
+
           const shopsResponse = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/api/store/select/list?ownerId=${userId}`,
             {
@@ -110,22 +112,22 @@ const LoginPage = () => {
                 Authorization: `Bearer ${responseData.data.accessToken}`,
                 "Content-Type": "application/json",
               },
-              credentials: "include"
+              credentials: "include",
             }
           );
-        
+
           console.log("매장 조회 응답 상태:", shopsResponse.status);
-          
+
           if (shopsResponse.ok) {
             const shopsData = await shopsResponse.json();
             console.log("매장 데이터:", shopsData);
-        
+
             if (shopsData.success && shopsData.data.length > 0) {
               const userShops = shopsData.data
                 .filter((shop: Shop) => {
                   console.log("매장 소유자 ID 비교:", {
                     shopOwnerId: shop.userOwnerId,
-                    userId: parseInt(userId)
+                    userId: parseInt(userId),
                   });
                   return shop.userOwnerId === parseInt(userId);
                 })
@@ -135,9 +137,9 @@ const LoginPage = () => {
                   totalCash: 0,
                   businessRegistrationNumber: "",
                 }));
-        
+
               console.log("필터링된 사용자 매장:", userShops);
-        
+
               if (userShops.length > 0) {
                 dispatch(setShops(userShops));
                 dispatch(setCurrentShop(userShops[0]));
@@ -153,7 +155,9 @@ const LoginPage = () => {
           } else {
             const errorData = await shopsResponse.json().catch(() => ({}));
             console.error("매장 조회 실패 응답:", errorData);
-            throw new Error(errorData.message || "매장 정보를 불러오는 데 실패했습니다.");
+            throw new Error(
+              errorData.message || "매장 정보를 불러오는 데 실패했습니다."
+            );
           }
         } catch (error) {
           console.error("매장 정보 조회 중 상세 오류:", error);
@@ -182,7 +186,6 @@ const LoginPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault(); // 기본 폼 제출 동작 방지
-    handleLogin();
   };
 
   return (
