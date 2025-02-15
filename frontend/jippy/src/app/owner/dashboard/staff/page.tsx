@@ -1,6 +1,7 @@
 import StaffAttendanceList from "@/features/dashboard/staff/components/StaffAttendanceList";
 import StaffListCard from "@/features/dashboard/staff/components/StaffListCard";
 import StaffScheduleCard from "@/features/dashboard/staff/components/StaffScheduleCard";
+import StoreSalaryCard from "@/features/dashboard/staff/components/StoreSalaryCard";
 import WorkingStaffCard from "@/features/dashboard/staff/components/WorkingStaffCard";
 
 const StaffDashboardPage = () => {
@@ -12,6 +13,7 @@ const StaffDashboardPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <WorkingStaffCard storeId={storeId} />
         <StaffAttendanceList storeId={storeId} />
+        <StoreSalaryCard storeId={storeId} />
         {/* 여기에 추가 통계 카드들 */}
       </div>
       <div className="mt-8">

@@ -70,6 +70,17 @@ export interface StaffTotalStatus {
 
 export type StaffTotalStatusResponse = ApiResponse<StaffTotalStatus>;
 
+export interface StoreSalary {
+  storeSalary: number;
+}
+
+export interface TotalStoreSalary {
+  totalStoreSalary: number;
+}
+
+export type StoreSalaryResponse = ApiResponse<StoreSalary>;
+export type TotalStoreSalaryResponse = ApiResponse<TotalStoreSalary>;
+
 export interface CreateScheduleRequest {
   schedules: Array<{
     dayOfWeek: string;

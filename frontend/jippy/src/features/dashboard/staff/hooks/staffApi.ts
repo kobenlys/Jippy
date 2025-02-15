@@ -5,6 +5,9 @@ import {
   StaffInfo,
   StaffMonthlyStatus,
   StaffTotalStatus,
+  StoreSalaryResponse,
+  TotalStoreSalaryResponse,
+  UpdateScheduleRequest,
   UpdateStaffRequest,
   WorkingStaffResponse,
 } from "../types/staff";
@@ -26,20 +29,6 @@ const staffApi = {
     if (!response.ok) throw new Error("Failed to fetch working status");
     return response.json();
   },
-
-  // getTotalStoreSalary: async (storeId: string, token: string) => {
-  //   const response = await fetch(
-  //     `${BASE_URL}/api/dashboard/staff/${storeId}/totalStoreSalary`,
-  //     {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //         "Content-Type": "application/json",
-  //       },
-  //     }
-  //   );
-  //   if (!response.ok) throw new Error("Failed to fetch total salary");
-  //   return response.json();
-  // },
 
   getStaffStatus: async (
     storeId: number,
@@ -104,19 +93,38 @@ const staffApi = {
     return response.json();
   },
 
-  //   getStoreSalary: async (storeId: string, token: string) => {
-  //     const response = await fetch(
-  //       `${BASE_URL}/api/dashboard/staff/${storeId}/storeSalary`,
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           "Content-Type": "application/json",
-  //         },
-  //       }
-  //     );
-  //     if (!response.ok) throw new Error("Failed to fetch store salary");
-  //     return response.json();
-  //   },
+  getStoreSalary: async (
+    storeId: number,
+    date: string
+  ): Promise<StoreSalaryResponse> => {
+    const response = await fetch(
+      `${BASE_URL}/api/dashboard/staff/${storeId}/storeSalary?date=${date}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      }
+    );
+    if (!response.ok) throw new Error("Failed to fetch store salary");
+    return response.json();
+  },
+
+  getTotalStoreSalary: async (
+    storeId: number
+  ): Promise<TotalStoreSalaryResponse> => {
+    const response = await fetch(
+      `${BASE_URL}/api/dashboard/staff/${storeId}/totalStoreSalary`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      }
+    );
+    if (!response.ok) throw new Error("Failed to fetch total store salary");
+    return response.json();
+  },
 
   updateStaff: async (
     storeId: number,
@@ -169,7 +177,6 @@ const staffApi = {
     return response.json();
   },
 
-  // 특정 직원 스케줄 조회
   getStaffSchedule: async (
     storeId: number,
     staffId: number
@@ -187,7 +194,6 @@ const staffApi = {
     return response.json();
   },
 
-  // 스케줄 등록
   createSchedule: async (
     storeId: number,
     staffId: number,
@@ -208,45 +214,43 @@ const staffApi = {
     return response.json();
   },
 
-  // // 스케줄 수정
-  // updateSchedule: async (
-  //   storeId: number,
-  //   calendarId: number,
-  //   data: UpdateScheduleRequest
-  // ): Promise<ApiResponse<StaffScheduleData>> => {
-  //   const response = await fetch(
-  //     `${BASE_URL}/api/calendar/${storeId}/update/${calendarId}`,
-  //     {
-  //       method: "PUT",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       credentials: "include",
-  //       body: JSON.stringify(data),
-  //     }
-  //   );
-  //   if (!response.ok) throw new Error("스케줄 수정에 실패했습니다.");
-  //   return response.json();
-  // },
+  updateSchedule: async (
+    storeId: number,
+    calendarId: number,
+    data: UpdateScheduleRequest
+  ): Promise<ApiResponse<StaffScheduleData>> => {
+    const response = await fetch(
+      `${BASE_URL}/api/calendar/${storeId}/update/${calendarId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(data),
+      }
+    );
+    if (!response.ok) throw new Error("스케줄 수정에 실패했습니다.");
+    return response.json();
+  },
 
-  // // 스케줄 삭제
-  // deleteSchedule: async (
-  //   storeId: number,
-  //   calendarId: number
-  // ): Promise<ApiResponse<void>> => {
-  //   const response = await fetch(
-  //     `${BASE_URL}/api/calendar/${storeId}/delete/${calendarId}`,
-  //     {
-  //       method: "DELETE",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       credentials: "include",
-  //     }
-  //   );
-  //   if (!response.ok) throw new Error("스케줄 삭제에 실패했습니다.");
-  //   return response.json();
-  // },
+  deleteSchedule: async (
+    storeId: number,
+    calendarId: number
+  ): Promise<ApiResponse<void>> => {
+    const response = await fetch(
+      `${BASE_URL}/api/calendar/${storeId}/delete/${calendarId}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      }
+    );
+    if (!response.ok) throw new Error("스케줄 삭제에 실패했습니다.");
+    return response.json();
+  },
 };
 
 export default staffApi;
