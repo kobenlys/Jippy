@@ -15,6 +15,7 @@ export interface ApiErrorResponse {
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 export type StaffType = "OWNER" | "MANAGER" | "STAFF";
+export type UpdateableStaffType = "MANAGER" | "STAFF";
 export type SalaryType = "시급" | "월급";
 
 export interface StaffInfo {
@@ -48,3 +49,13 @@ export interface StaffMonthlyStatus {
 }
 
 export type StaffMonthlyStatusResponse = ApiResponse<StaffMonthlyStatus>;
+
+export interface UpdateStaffRequest {
+  staffType?: UpdateableStaffType;
+  staffSalary?: number;
+  staffSalaryType?: SalaryType;
+}
+
+export type UpdateStaffResponse = ApiResponse<StaffInfo>;
+
+export type DeleteStaffResponse = ApiResponse<void>;

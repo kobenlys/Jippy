@@ -6,6 +6,7 @@ interface StaffListState {
   data: StaffInfo[] | null;
   isLoading: boolean;
   error: Error | null;
+  refreshList: () => Promise<void>;
 }
 
 const useStaffList = (storeId: number): StaffListState => {
@@ -37,9 +38,9 @@ const useStaffList = (storeId: number): StaffListState => {
 
   useEffect(() => {
     fetchStaffList();
-  }, [storeId]);
+  }, [fetchStaffList]);
 
-  return { data, isLoading, error };
+  return { data, isLoading, error, refreshList: fetchStaffList };
 };
 
 export default useStaffList;

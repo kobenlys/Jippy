@@ -1,5 +1,10 @@
 import { ApiResponse } from "@/features/attendance/types/attendance";
-import { StaffInfo, WorkingStaffResponse } from "../types/staff";
+import {
+  DeleteStaffResponse,
+  StaffInfo,
+  UpdateStaffRequest,
+  WorkingStaffResponse,
+} from "../types/staff";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -106,41 +111,43 @@ const staffApi = {
   //     return response.json();
   //   },
 
-  //   updateStaff: async (
-  //     storeId: string,
-  //     staffId: string,
-  //     data: any,
-  //     token: string
-  //   ) => {
-  //     const response = await fetch(
-  //       `${BASE_URL}/api/storeStaff/${storeId}/update/${staffId}`,
-  //       {
-  //         method: "PUT",
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify(data),
-  //       }
-  //     );
-  //     if (!response.ok) throw new Error("Failed to update staff");
-  //     return response.json();
-  //   },
+  updateStaff: async (
+    storeId: number,
+    staffId: number,
+    data: UpdateStaffRequest
+  ): Promise<UpdateStaffRequest> => {
+    const response = await fetch(
+      `${BASE_URL}/api/storeStaff/${storeId}/update/${staffId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+        credentials: "include",
+      }
+    );
+    if (!response.ok) throw new Error("Failed to update staff");
+    return response.json();
+  },
 
-  //   deleteStaff: async (storeId: string, staffId: string, token: string) => {
-  //     const response = await fetch(
-  //       `${BASE_URL}/api/storeStaff/${storeId}/delete/${staffId}`,
-  //       {
-  //         method: "DELETE",
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           "Content-Type": "application/json",
-  //         },
-  //       }
-  //     );
-  //     if (!response.ok) throw new Error("Failed to delete staff");
-  //     return response.json();
-  //   },
+  deleteStaff: async (
+    storeId: number,
+    staffId: number
+  ): Promise<DeleteStaffResponse> => {
+    const response = await fetch(
+      `${BASE_URL}/api/storeStaff/${storeId}/delete/${staffId}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      }
+    );
+    if (!response.ok) throw new Error("Failed to delete staff");
+    return response.json();
+  },
 };
 
 export default staffApi;
