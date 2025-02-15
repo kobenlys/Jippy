@@ -285,7 +285,7 @@ public class UserService {
             ResponseCookie storeIdListCookie = ResponseCookie.from("storeIdList", encodedList)
                     .httpOnly(false)  // 클라이언트에서 접근 가능
                     .path("/")        // 모든 경로에서 접근 가능
-                    .maxAge(refreshTokenExpireTime / 1000)
+                    .maxAge(refreshTokenExpireTime)
                     .build();
 
             response.addHeader("Set-Cookie", storeIdListCookie.toString());
@@ -298,28 +298,28 @@ public class UserService {
         ResponseCookie userIdCookie = ResponseCookie.from("userId", principal.getId().toString())
                 .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
                 .path("/")
-                .maxAge(refreshTokenExpireTime / 1000) // 초 단위
+                .maxAge(refreshTokenExpireTime) // 초 단위
                 .build();
         ResponseCookie staffTypeCookie = ResponseCookie.from("staffType", staffType.name())
                 .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
                 .path("/")
-                .maxAge(refreshTokenExpireTime / 1000) // 초 단위
+                .maxAge(refreshTokenExpireTime) // 초 단위
                 .build();
         String encodedUserName = URLEncoder.encode(principal.getName(), StandardCharsets.UTF_8);
         ResponseCookie userNameCookie = ResponseCookie.from("userName", encodedUserName)
                 .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
                 .path("/")
-                .maxAge(refreshTokenExpireTime / 1000) // 초 단위
+                .maxAge(refreshTokenExpireTime) // 초 단위
                 .build();
         ResponseCookie jwtAccesssCookie = ResponseCookie.from("accessToken", accessToken)
                 .httpOnly(false)
                 .path("/")
-                .maxAge(accessTokenExpireTime / 1000) // 초 단위
+                .maxAge(accessTokenExpireTime) // 초 단위
                 .build();
         ResponseCookie jwtRefreshCookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(false)
                 .path("/")
-                .maxAge(refreshTokenExpireTime / 1000) // 초 단위
+                .maxAge(refreshTokenExpireTime) // 초 단위
                 .build();
         // 응답 헤더에 쿠키 추가
         response.addHeader("Set-Cookie", userIdCookie.toString());
