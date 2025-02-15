@@ -20,4 +20,6 @@ public class StoreCreateRequest {
     @Builder.Default
     private Integer totalCash = 0; // default 값 0으로 설정
     private String businessRegistrationNumber;
+    private String longitude;
+    private String latitude;
 }

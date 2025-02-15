@@ -9,6 +9,8 @@ export interface Shop {
   openingDate: string;
   totalCash: number;
   businessRegistrationNumber: string;
+  latitude: string;
+  longitude: string;
 }
 
 interface ShopState {
@@ -33,7 +35,10 @@ const initialState: ShopState = {
 
 export const createShop = createAsyncThunk(
   "shop/createShop",
-  async (shopData: Omit<Shop, "id" | "totalCash">, { rejectWithValue, getState }) => {
+  async (
+    shopData: Omit<Shop, "id" | "totalCash">,
+    { rejectWithValue, getState }
+  ) => {
     try {
       const state = getState() as RootState;
       const accessToken = state.user.accessToken;
@@ -42,17 +47,20 @@ export const createShop = createAsyncThunk(
         throw new Error("인증 토큰이 없습니다.");
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/store/create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({
-          ...shopData,
-          totalCash: 0,
-        }),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/store/create`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            ...shopData,
+            totalCash: 0,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("매장 등록 실패");
@@ -78,26 +86,29 @@ export const fetchShop = createAsyncThunk(
         throw new Error("인증 토큰이 없습니다.");
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/list?ownerId=${userId}`, {
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        },
-        credentials: "include"
-      });
-      
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/list?ownerId=${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+
       if (!response.ok) {
         throw new Error("매장 정보 조회 실패");
       }
 
       const jsonResponse = await response.json();
-      
+
       if (!jsonResponse.success) {
         throw new Error("매장 정보 조회에 실패했습니다.");
       }
 
-      const userShops = jsonResponse.data.filter((shop: Shop) => 
-        shop.userOwnerId === userId
+      const userShops = jsonResponse.data.filter(
+        (shop: Shop) => shop.userOwnerId === userId
       );
 
       return userShops;
@@ -110,7 +121,10 @@ export const fetchShop = createAsyncThunk(
 
 export const updateShop = createAsyncThunk(
   "shop/updateShop",
-  async ({ storeId, data }: UpdateShopPayload, { rejectWithValue, getState }) => {
+  async (
+    { storeId, data }: UpdateShopPayload,
+    { rejectWithValue, getState }
+  ) => {
     try {
       const state = getState() as RootState;
       const accessToken = state.user.accessToken;
@@ -123,20 +137,23 @@ export const updateShop = createAsyncThunk(
         throw new Error("매장 ID가 없습니다.");
       }
 
-      console.log('Updating shop:', { storeId, data }); // 디버깅용 로그
+      console.log("Updating shop:", { storeId, data }); // 디버깅용 로그
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/store/update/${storeId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`
-        },
-        body: JSON.stringify(data),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/store/update/${storeId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(data),
+        }
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Server error response:', errorText);
+        console.error("Server error response:", errorText);
         throw new Error(errorText || "매장 정보 업데이트 실패");
       }
 
@@ -144,7 +161,11 @@ export const updateShop = createAsyncThunk(
       return responseData.data;
     } catch (error) {
       console.error("매장 정보 업데이트 중 오류 발생:", error);
-      return rejectWithValue(error instanceof Error ? error.message : "매장 정보 업데이트에 실패했습니다.");
+      return rejectWithValue(
+        error instanceof Error
+          ? error.message
+          : "매장 정보 업데이트에 실패했습니다."
+      );
     }
   }
 );
@@ -160,13 +181,16 @@ export const deleteShop = createAsyncThunk(
         throw new Error("인증 토큰이 없습니다.");
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/store/delete/${shopId}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/store/delete/${shopId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       if (!response.ok) {
         throw new Error("매장 삭제 실패");
@@ -197,7 +221,7 @@ const shopSlice = createSlice({
       state.currentShop = null;
       state.isLoading = false;
       state.error = null;
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -236,7 +260,9 @@ const shopSlice = createSlice({
       .addCase(updateShop.fulfilled, (state, action: PayloadAction<Shop>) => {
         state.isLoading = false;
         state.error = null;
-        const index = state.shops.findIndex(shop => shop.id === action.payload.id);
+        const index = state.shops.findIndex(
+          (shop) => shop.id === action.payload.id
+        );
         if (index !== -1) {
           state.shops[index] = action.payload;
         }
@@ -255,7 +281,9 @@ const shopSlice = createSlice({
       .addCase(deleteShop.fulfilled, (state, action) => {
         state.isLoading = false;
         state.error = null;
-        state.shops = state.shops.filter(shop => shop.id !== action.payload.shopId);
+        state.shops = state.shops.filter(
+          (shop) => shop.id !== action.payload.shopId
+        );
         if (state.currentShop?.id === action.payload.shopId) {
           state.currentShop = state.shops.length > 0 ? state.shops[0] : null;
         }
@@ -267,10 +295,6 @@ const shopSlice = createSlice({
   },
 });
 
-export const { 
-  setShops, 
-  setCurrentShop, 
-  clearShopState 
-} = shopSlice.actions;
+export const { setShops, setCurrentShop, clearShopState } = shopSlice.actions;
 
 export default shopSlice.reducer;
