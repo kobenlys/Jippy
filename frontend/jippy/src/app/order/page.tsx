@@ -1,10 +1,13 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import ProductGrid from '@/features/order/components/ProductGrid';
-import { Card } from '@/features/common/components/ui/card/Card';
-import { Button } from '@/features/common/components/ui/button';
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/redux/hooks";
+import ProductGrid from "@/features/order/components/ProductGrid";
+import { Card } from "@/features/common/components/ui/card/Card";
+import { Button } from "@/features/common/components/ui/button";
 import { ProductDetailResponse } from "@/redux/types/product";
+import { setOrderData } from "@/redux/slices/paymentSlice";
 
 // 상품 인터페이스 정의
 export interface Product {
@@ -20,6 +23,8 @@ export interface OrderItem extends Product {
   quantity: number;
 }
 
+type PaymentMethod = "cash" | "qr";
+
 // ProductDetailResponse를 Product로 변환하는 함수
 const convertToProduct = (productDetail: ProductDetailResponse): Product => {
   return {
@@ -32,7 +37,11 @@ const convertToProduct = (productDetail: ProductDetailResponse): Product => {
 };
 
 const POSPage = () => {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+
   const [currentOrder, setCurrentOrder] = useState<OrderItem[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
 
   const handleAddProduct = (productDetail: ProductDetailResponse) => {
     const product = convertToProduct(productDetail);
@@ -67,33 +76,49 @@ const POSPage = () => {
   };
 
   const handleCompleteOrder = async () => {
-    try {
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          items: currentOrder,
-          total: calculateTotal(),
-          timestamp: new Date().toISOString()
-        })
-      });
-
-      if (response.ok) {
-        alert('주문이 성공적으로 완료되었습니다.');
-        setCurrentOrder([]);
-      } else {
-        alert('주문 처리 중 오류가 발생했습니다.');
-      }
-    } catch (error) {
-      console.error('주문 처리 중 오류:', error);
-      alert('네트워크 오류가 발생했습니다.');
+    if (!paymentMethod) {
+      alert("결제 방법을 선택해주세요.");
+      return;
     }
+
+    if (paymentMethod === "qr") {
+      const orderData = {
+        totalAmount: calculateTotal(),
+        orderName: `주문 ${new Date().toLocaleString()}`,
+        customerName: "고객",
+        storeId: 1,
+        products: currentOrder.map(item => ({
+          id: item.id,
+          quantity: item.quantity
+        }))
+      };
+      
+      console.log("Creating order data:", orderData);
+
+      try {
+        // Redux store에 주문 데이터 저장
+        dispatch(setOrderData(orderData));
+        
+        // localStorage에 백업
+        localStorage.setItem("orderData", JSON.stringify(orderData));
+        
+        console.log("Order data saved successfully");
+        
+        // 결제 페이지로 이동
+        router.push("/payment/request");
+      } catch (error) {
+        console.error("Error saving order data:", error);
+        alert("주문 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
+      }
+      return;
+    }
+
+    // 현금 결제 로직은 추후 구현
+    alert("현금 결제는 아직 구현되지 않았습니다.");
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-full">
       <div className="w-4/6 overflow-y-auto pb-8">
       <ProductGrid
         onAddProduct={handleAddProduct}
@@ -150,6 +175,23 @@ const POSPage = () => {
               {calculateTotal().toLocaleString()}원
             </span>
           </div>
+          <div className="flex space-x-2 mb-4">
+            <Button 
+              variant={paymentMethod === "cash" ? "primary" : "default"}
+              className="w-1/2"
+              onClick={() => setPaymentMethod("cash")}
+            >
+              현금
+            </Button>
+            <Button 
+              variant={paymentMethod === "qr" ? "primary" : "default"}
+              className="w-1/2"
+              onClick={() => setPaymentMethod("qr")}
+            >
+              QR
+            </Button>
+          </div>
+          
           <div className="flex space-x-2">
             <Button 
               variant="default" 
@@ -162,9 +204,9 @@ const POSPage = () => {
               variant="default" 
               className="w-1/2"
               onClick={handleCompleteOrder}
-              disabled={currentOrder.length === 0}
+              disabled={currentOrder.length === 0 || !paymentMethod}
             >
-              주문 완료
+              결제하기
             </Button>
           </div>
         </div>

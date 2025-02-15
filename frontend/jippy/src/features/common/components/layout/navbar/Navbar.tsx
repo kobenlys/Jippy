@@ -86,10 +86,10 @@ const Navbar = () => {
 
           <div className={styles.desktopMenu}>
             <div className={styles.navLinks}>
-              <Link href="/recommended" className={styles.navLink}>
+              <Link href="/order" className={styles.navLink}>
                 주문
               </Link>
-              <Link href="/payment" className={styles.navLink}>
+              <Link href="/payment/history" className={styles.navLink}>
                 결제내역
               </Link>
               <Link href="/owner/dashboard/stock" className={styles.navLink}>
