@@ -1,14 +1,21 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
 import { Printer, QrCode, Loader2, Plus } from "lucide-react";
 import { Button } from "@/features/common/components/ui/button";
 import { Card, CardContent } from "@/features/common/components/ui/card/Card";
-import { RootState } from "@/redux/store";
 import { QR_PAGES } from "@/features/qr/constants/pages";
 import { QRConfig, QRData } from "../types/qr";
 import Image from "next/image";
+
+const getCookieValue = (name: string): string | null => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    return parts.pop()?.split(";").shift() || null;
+  }
+  return null;
+};
 
 const QR_CONFIGS: QRConfig[] = [
   {
@@ -16,13 +23,11 @@ const QR_CONFIGS: QRConfig[] = [
     explain: "FEEDBACKQR",
     url: "https://jippy.duckdns.org/svt/customer/feedback/{storeId}",
   },
-
-  // 다른 메뉴 추가 시 url 추가하고 해당 메뉴 주석 해제
-  // {
-  //   name: "회원가입",
-  //   explain: "USERQR",
-  //   url: ""
-  // },
+  {
+    name: "직원 등록",
+    explain: "USERQR",
+    url: "https://jippy.duckdns.org/signup/staff/{storeId}",
+  },
   // {
   //   name: "직원 출퇴근",
   //   explain: "ATTENDANCEQR",
@@ -42,9 +47,34 @@ const QRCodeCRUD: React.FC = () => {
   const [qrExists, setQrExists] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [qrList, setQrList] = useState<QRData[]>([]);
+  const [storeId, setStoreId] = useState<number | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
-  const accessToken = useSelector((state: RootState) => state.user.accessToken);
-  const storeId = useSelector((state: RootState) => state.shop.currentShop?.id);
+  useEffect(() => {
+    try {
+      const encodedStoreIdList = getCookieValue("storeIdList");
+      if (!encodedStoreIdList) {
+        setError("다시 로그인해주세요");
+        return;
+      }
+
+      const decodedStoreIdList = decodeURIComponent(encodedStoreIdList);
+      const storeIdList = JSON.parse(decodedStoreIdList);
+
+      if (!storeIdList || storeIdList.length === 0) {
+        setError("매장 정보를 찾을 수 없습니다");
+        return;
+      }
+
+      setStoreId(storeIdList[0]); // store 선택 페이지 구성 후 수정 필요요
+
+      const token = getCookieValue("accessToken");
+      setAccessToken(token);
+    } catch (error) {
+      console.log(error);
+      setError("쿠키 처리 중 오류가 발생했습니다");
+    }
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -64,6 +94,7 @@ const QRCodeCRUD: React.FC = () => {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
+          credentials: "include",
         }
       );
 
@@ -130,6 +161,7 @@ const QRCodeCRUD: React.FC = () => {
             headers: {
               Authorization: `Bearer ${accessToken}`,
             },
+            credentials: "include",
           }
         );
 
@@ -225,6 +257,7 @@ const QRCodeCRUD: React.FC = () => {
             explain: qrConfig.explain,
             url: formattedUrl,
           }),
+          credentials: "include",
         }
       );
 
