@@ -71,6 +71,7 @@ public class UserService {
         }
 
         BaseUser newUser = userFactory.createUser(request, UserType.OWNER);
+        log.info("newUser {}", newUser);
         userOwnerRepository.save((UserOwner) newUser);
     }
 
