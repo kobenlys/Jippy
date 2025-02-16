@@ -1,3 +1,4 @@
+// src/features/chat/hooks/useWebSocket.ts
 import { useEffect, useState, useCallback } from "react";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
@@ -27,9 +28,9 @@ export const useWebSocket = (storeId: string) => {
         });
       },
       onStompError: (frame) => {
-        console.error("Broker reported error: " + frame.headers['message']);
+        console.error("Broker reported error: " + frame.headers["message"]);
         console.error("Additional details: " + frame.body);
-      }
+      },
     });
     client.activate();
     setStompClient(client);
@@ -39,18 +40,15 @@ export const useWebSocket = (storeId: string) => {
     };
   }, [storeId, dispatch]);
 
+  // sendMessage는 Message 객체를 인자로 받아 전송합니다.
   const sendMessage = useCallback(
-    (message: string, senderId: string) => {
+    (message: Message) => {
       console.log("sendMessage 호출됨. 연결 상태:", stompClient?.active);
       if (stompClient && stompClient.active) {
         console.log("WebSocket 연결 상태: 전송 진행", message);
         stompClient.publish({
           destination: `/app/chat/${storeId}/send`,
-          body: JSON.stringify({
-            senderId,
-            messageContent: message,
-            messageType: "TEXT",
-          }),
+          body: JSON.stringify(message),
         });
       } else {
         console.warn("WebSocket이 연결되어 있지 않습니다.");

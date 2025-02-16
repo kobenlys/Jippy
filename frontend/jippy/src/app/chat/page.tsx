@@ -8,6 +8,7 @@ import useFCM from "@/features/chat/hooks/useFCM";
 import { fetchChatList, setSelectedChatRoom } from "@/redux/slices/chatSlice";
 import { StoreChat } from "@/features/chat/types/chat";
 import { RootState, AppDispatch } from "@/redux/store";
+import useUserInfo from "@/utils/useUserInfo";
 import styles from "@/features/chat/styles/ChatPage.module.css";
 
 const ChatPage: React.FC = () => {
@@ -17,15 +18,18 @@ const ChatPage: React.FC = () => {
     (state: RootState) => state.chat.selectedChatRoom
   );
   
-  // 실제 로그인된 사용자의 id (여기서는 테스트로 1로 가정)
-  const user = useSelector((state: RootState) => state.user);
-  const userId: number = typeof user?.profile?.id === 'number' ? user.profile.id : 1;
-  const userType = user?.profile?.userType ? user.profile.userType : 'staff';
-  const userName = user?.profile?.name || '';
+  
+
+  // useUserInfo를 통해 쿠키에서 사용자 정보를 읽어옵니다.
+  const userInfo = useUserInfo();
+  const userId: number = userInfo.userId ?? 1;
+  const userName: string = userInfo.userName ?? "";
+  const staffType = userInfo.staffType ?? "STAFF";
+
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [showChatList, setShowChatList] = useState<boolean>(true);
 
-  const { initializeFCM } = useFCM(userId, userType);
+  const { initializeFCM } = useFCM(userId, staffType);
 
   useEffect(() => {
     dispatch(fetchChatList(userId));

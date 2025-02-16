@@ -6,6 +6,7 @@ import com.hbhw.jippy.domain.user.entity.UserOwner;
 import com.hbhw.jippy.domain.user.entity.UserStaff;
 import com.hbhw.jippy.domain.user.enums.StaffType;
 import com.hbhw.jippy.domain.user.enums.UserType;
+import com.hbhw.jippy.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -24,6 +25,7 @@ public class UserFactory {
                     .password(encodedPassword)
                     .name(request.getName())
                     .age(request.getAge())
+                    .createdAt(DateTimeUtils.nowString())
                     .staffType(StaffType.OWNER)
                     .build();
 

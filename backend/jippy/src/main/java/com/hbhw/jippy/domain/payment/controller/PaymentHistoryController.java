@@ -83,7 +83,7 @@ public class PaymentHistoryController {
         return ApiResponse.success(HttpStatus.OK);
     }
 
-    @GetMapping("/detail")
+    @PostMapping("/detail")
     public ApiResponse<PaymentDetailResponse> getDetailPaymentHistory(@RequestBody PaymentUUIDRequest paymentUUIDRequest) {
         PaymentDetailResponse paymentDetailResponse = paymentHistoryService.selectDetailPaymentHistory(paymentUUIDRequest);
         return ApiResponse.success(HttpStatus.OK, paymentDetailResponse);

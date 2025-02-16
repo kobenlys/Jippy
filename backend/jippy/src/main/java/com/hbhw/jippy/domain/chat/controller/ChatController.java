@@ -22,7 +22,9 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -47,18 +49,16 @@ public class ChatController {
     @GetMapping("/{userId}/select/{storeId}")
     public ApiResponse<List<ChatMessageResponse>> getMessages(
             @PathVariable Integer userId,
-            @PathVariable Integer storeId,
-            @RequestParam(required = false, defaultValue = "20") int limit,
-            @RequestParam(required = false) String before
+            @PathVariable Integer storeId
     ) {
-        List<ChatMessageResponse> messages = chatService.getMessages(storeId, limit, before);
+        List<ChatMessageResponse> messages = chatService.getMessages(storeId);
         return ApiResponse.success(messages);
     }
 
     @Operation(summary = "가장 최근 메시지 조회", description = "채팅창 미리보기를 위핸 최근 메시지 조회")
     @GetMapping("/select/recent/{storeId}")
     public ApiResponse<ChatMessageResponse> getRecentMessage(@PathVariable Integer storeId) {
-        ChatMessageResponse message = chatService.getMessages(storeId, 20, null).getLast();
+        ChatMessageResponse message = chatService.getMessages(storeId).getLast();
         return ApiResponse.success(message);
     }
 
@@ -71,8 +71,8 @@ public class ChatController {
 
     @Operation(summary = "채팅방 생성", description = "새로운 채팅방을 생성합니다.")
     @PostMapping("/{storeId}")
-    public ApiResponse<StoreChat> createChat(@RequestBody CreateChatRequest request) {
-        return ApiResponse.success(chatService.createChat(request));
+    public void createChat(@RequestBody CreateChatRequest request) {
+        chatService.createChat(request.getStoreId());
     }
 
     /**
@@ -85,12 +85,18 @@ public class ChatController {
         ChatMessageResponse chatMessageResponse = chatService.saveMessage(storeId, chatMessage);
         messagingTemplate.convertAndSend("/topic/chat/" + storeId, chatMessageResponse);
 
-        // 2. 해당 채팅방 멤버(직원 + 사장님)의 FCM 토큰을 조회
+        // 2. 해당 채팅방 멤버(직원 + 사장님)의 FCM 토큰 조회
         List<String> fcmTokens = storeStaffService.getAllChatMemberFcmTokens(storeId);
 
-        // 3. FCM 알림 전송
+        // 3. 전달할 데이터 구성 (추가 정보가 필요하면 여기서 확장)
+        Map<String, String> data = new HashMap<>();
+        data.put("messageId", chatMessage.getMessageId());
+        data.put("senderId", chatMessage.getSenderId());
+
+        // 4. FCM 알림 전송 (데이터 메시지 전송)
         if (!fcmTokens.isEmpty()) {
-            fcmService.sendGroupChatNotification(fcmTokens, "새 메시지 도착", chatMessage.getMessageContent());
+            fcmService.sendGroupChatNotification(fcmTokens, "JIPPY Alert", chatMessage.getMessageContent(), data);
         }
     }
+
 }

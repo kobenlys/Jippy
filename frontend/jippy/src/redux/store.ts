@@ -3,9 +3,12 @@ import stockReducer from "./slices/stockSlice";
 import userReducer from "./slices/userSlice";
 import shopReducer from "./slices/shopSlice";
 import productReducer from "./slices/productSlice";
-import categoryReducer from './slices/categorySlice';
+import categoryReducer from "./slices/categorySlice";
 import recipeReducer from "./slices/recipeSlice";
 import chatReducer from "./slices/chatSlice";
+import orderReducer from "./slices/orderSlice";
+import paymentReducer from "./slices/paymentSlice";
+
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +19,8 @@ export const store = configureStore({
     category: categoryReducer,
     recipe: recipeReducer,
     chat: chatReducer,
+    order: orderReducer,
+    payment: paymentReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
