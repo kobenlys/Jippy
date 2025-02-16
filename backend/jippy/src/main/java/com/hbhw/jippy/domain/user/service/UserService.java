@@ -24,6 +24,7 @@ import com.hbhw.jippy.global.auth.repository.RefreshTokenRepository;
 import com.hbhw.jippy.global.auth.config.UserPrincipal;
 import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -276,51 +277,26 @@ public class UserService {
             // 리스트를 JSON 문자열로 변환
             String jsonList = objectMapper.writeValueAsString(storeIdList);
             String encodedList = URLEncoder.encode(jsonList, StandardCharsets.UTF_8);
-            // ResponseCookie 생성
-            ResponseCookie storeIdListCookie = ResponseCookie.from("storeIdList", encodedList)
-                    .httpOnly(false)  // 클라이언트에서 접근 가능
-                    .path("/")        // 모든 경로에서 접근 가능
-                    .maxAge(refreshTokenExpireTime)
-                    .build();
+            String encodedUserName = URLEncoder.encode(principal.getName(), StandardCharsets.UTF_8);
 
-            response.addHeader("Set-Cookie", storeIdListCookie.toString());
+            // ResponseCookie 생성
+            addCookie(response, "storeIdList", encodedList, (int) (refreshTokenExpireTime / 1000));
+            addCookie(response, "userId", principal.getId().toString(), (int) (refreshTokenExpireTime / 1000));
+            addCookie(response, "staffType", staffType.name(), (int) (refreshTokenExpireTime / 1000));
+            addCookie(response, "userName", encodedUserName, (int) (refreshTokenExpireTime / 1000));
+            addCookie(response, "accessToken", accessToken, (int) (accessTokenExpireTime / 1000));
+            addCookie(response, "refreshToken", refreshToken, (int) (refreshTokenExpireTime / 1000));
         } catch (Exception e) {
             e.printStackTrace();
             throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "리스트 JSON 매핑 뱐환 오류");
         }
+    }
 
-        // user 정보 쿠키에 저장
-        ResponseCookie userIdCookie = ResponseCookie.from("userId", principal.getId().toString())
-                .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
-                .path("/")
-                .maxAge(refreshTokenExpireTime) // 초 단위
-                .build();
-        ResponseCookie staffTypeCookie = ResponseCookie.from("staffType", staffType.name())
-                .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
-                .path("/")
-                .maxAge(refreshTokenExpireTime) // 초 단위
-                .build();
-        String encodedUserName = URLEncoder.encode(principal.getName(), StandardCharsets.UTF_8);
-        ResponseCookie userNameCookie = ResponseCookie.from("userName", encodedUserName)
-                .httpOnly(false) // 클라이언트에서 읽을 수 있도록 설정
-                .path("/")
-                .maxAge(refreshTokenExpireTime) // 초 단위
-                .build();
-        ResponseCookie jwtAccesssCookie = ResponseCookie.from("accessToken", accessToken)
-                .httpOnly(false)
-                .path("/")
-                .maxAge(accessTokenExpireTime) // 초 단위
-                .build();
-        ResponseCookie jwtRefreshCookie = ResponseCookie.from("refreshToken", refreshToken)
-                .httpOnly(false)
-                .path("/")
-                .maxAge(refreshTokenExpireTime) // 초 단위
-                .build();
-        // 응답 헤더에 쿠키 추가
-        response.addHeader("Set-Cookie", userIdCookie.toString());
-        response.addHeader("Set-Cookie", userNameCookie.toString());
-        response.addHeader("Set-Cookie", staffTypeCookie.toString());
-        response.addHeader("Set-Cookie", jwtAccesssCookie.toString());
-        response.addHeader("Set-Cookie", jwtRefreshCookie.toString());
+    public static void addCookie(HttpServletResponse response, String name, String value, int maxAge) {
+        Cookie cookie = new Cookie(name, value);
+        cookie.setPath("/");
+        cookie.setMaxAge(maxAge);
+        cookie.setHttpOnly(false);
+        response.addCookie(cookie);
     }
 }
