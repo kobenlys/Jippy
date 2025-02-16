@@ -11,12 +11,10 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
 
     @Query("SELECT n FROM Notice n " +
             "WHERE n.storeId.id = :storeId " +
-              "AND (:author IS NULL OR n.author = :author) " +
               "AND (:startDate IS NULL OR n.createdAt >= :startDate)" +
               "AND (:endDate IS NULL OR n.createdAt <= :endDate)")
     Page<Notice> findByStoreIdAndSearchConditions(
             @Param("storeId") Integer storeId,
-            @Param("author") String author,
             @Param("startDate") String startDate,
             @Param("endDate") String endDate,
             Pageable pageable
