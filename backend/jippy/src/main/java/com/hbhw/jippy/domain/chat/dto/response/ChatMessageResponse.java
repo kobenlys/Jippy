@@ -9,6 +9,7 @@ import lombok.*;
 @Builder
 public class ChatMessageResponse {
     private String senderId;
+    private String messageId;
     private String messageContent;
     private String timestamp;
     private String messageType;

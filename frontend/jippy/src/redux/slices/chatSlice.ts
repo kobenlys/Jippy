@@ -14,7 +14,6 @@ const initialState: ChatState = {
   selectedChatRoom: null,
 };
 
-// 채팅방 목록 불러오기
 export const fetchChatList = createAsyncThunk<StoreChat[], number>(
   "chat/fetchChatList",
   async (userId: number) => {
@@ -27,7 +26,6 @@ export const fetchChatList = createAsyncThunk<StoreChat[], number>(
   }
 );
 
-// 특정 채팅방의 메시지 불러오기
 export const fetchMessages = createAsyncThunk<
   { storeId: number; messages: Message[] },
   { userId: number; storeId: number }
@@ -52,13 +50,18 @@ const chatSlice = createSlice({
     setSelectedChatRoom(state, action: PayloadAction<StoreChat>) {
       state.selectedChatRoom = action.payload;
     },
-    // WebSocket 등을 통해 새 메시지를 수신했을 때 상태에 추가하는 리듀서
+    // messageId를 기준으로 중복 메시지 추가를 방지합니다.
     addReceivedMessage(state, action: PayloadAction<{ storeId: number; message: Message }>) {
       const { storeId, message } = action.payload;
       if (!state.messages[storeId]) {
         state.messages[storeId] = [];
       }
-      state.messages[storeId].push(message);
+      const exists = state.messages[storeId].some(
+        (m) => m.messageId === message.messageId
+      );
+      if (!exists) {
+        state.messages[storeId].push(message);
+      }
     },
   },
   extraReducers: (builder) => {

@@ -12,6 +12,9 @@ public class Message {
     @Field("sender_id")
     private String senderId;
 
+    @Field("message_id")
+    private String messageId;
+
     @Field("message_content")
     private String messageContent;
 

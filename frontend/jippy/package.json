@@ -38,7 +38,8 @@
     "redux-persist": "^6.0.0",
     "sockjs-client": "^1.6.1",
     "stompjs": "^2.3.3",
-    "tailwind-merge": "^3.0.1"
+    "tailwind-merge": "^3.0.1",
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "@types/node": "^20",

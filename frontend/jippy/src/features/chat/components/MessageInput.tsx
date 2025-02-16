@@ -1,12 +1,20 @@
+// src/features/chat/components/MessageInput.tsx
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { addReceivedMessage } from "@/redux/slices/chatSlice";
 import styles from "@/features/chat/styles/MessageInput.module.css";
+import { v4 as uuidv4 } from "uuid";
 
 interface MessageInputProps {
   storeId: number;
   userName: string;
-  sendMessage: (message: string, senderId: string) => void;
+  sendMessage: (message: {
+    senderId: string;
+    messageId: string;
+    messageContent: string;
+    timestamp: string;
+    messageType: string;
+  }) => void;
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({ storeId, userName, sendMessage }) => {
@@ -19,6 +27,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ storeId, userName, sendMess
     console.log("전송 버튼 클릭됨:", message);
     const chatMessage = {
       senderId: userName,
+      messageId: uuidv4(), // 고유한 ID 생성
       messageContent: message,
       timestamp: new Date().toISOString(),
       messageType: "text",
@@ -28,7 +37,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ storeId, userName, sendMess
     dispatch(addReceivedMessage({ storeId, message: chatMessage }));
 
     // WebSocket을 통해 메시지 전송 (백엔드도 FCM 알림 전송)
-    sendMessage(message, userName);
+    sendMessage(chatMessage);
     setMessage("");
   };
 
@@ -44,7 +53,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ storeId, userName, sendMess
         type="text"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        onKeyPress={handleKeyPress}
+        onKeyDown={handleKeyPress}
         className={styles.inputField}
         placeholder="메시지를 입력하세요."
       />
