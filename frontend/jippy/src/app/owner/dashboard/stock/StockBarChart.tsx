@@ -1,107 +1,63 @@
 "use client";
 
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import { StockItem } from "@/redux/slices/stockDashSlice";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
-  BarController,
-  PointElement,
-  LineElement,
-  LineController,
   Title,
   Tooltip,
   Legend,
   ChartData,
   ChartOptions,
 } from "chart.js";
-import { Chart } from "react-chartjs-2"; // ✅ Use `Chart` instead of `Bar`
+import { Bar } from "react-chartjs-2";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  BarController,
-  PointElement,
-  LineElement,
-  LineController,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-// ✅ Explicitly define ChartData type
-const data: ChartData<"bar" | "line", number[], string> = {
-  labels: [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-  ],
-  datasets: [
-    {
-      label: "Current Year",
-      type: "bar" as const,
-      backgroundColor: "#FF6B00",
-      data: [8000, 7000, 6500, 5000, 5500, 6800, 5200, 4500, 5000, 3000, 4000],
-    },
-    {
-      label: "Past Year",
-      type: "bar" as const,
-      backgroundColor: "#FFC099",
-      data: [7800, 6800, 6000, 4800, 5300, 6600, 5000, 4300, 4800, 2900, 3900],
-    },
-    {
-      label: "주문수",
-      type: "line" as const, // ✅ Explicitly specify "line"
-      borderColor: "#FF0080",
-      backgroundColor: "#FF0080",
-      fill: false,
-      data: [7500, 6700, 6100, 7200, 8500, 8200, 7700, 6900, 6200, 5000, 5800],
-    },
-  ],
-};
+const StockBarChart = () => {
+  const stockData = useSelector((state: RootState) => state.stock) as StockItem[];
 
-// ✅ Explicitly define ChartOptions type
-const options: ChartOptions<"bar" | "line"> = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      position: "top", // ✅ Must be a valid position
-    },
-    title: {
-      display: true,
-      text: "주문수 대비 재고 사용량 및 재고 예측량",
-    },
-  },
-  scales: {
-    y: {
-      beginAtZero: true,
-      ticks: {
-        callback: function (tickValue: string | number) {
-          // ✅ Ensure tickValue is always a number
-          const numericValue =
-            typeof tickValue === "string" ? parseFloat(tickValue) : tickValue;
-          return `$${numericValue / 1000}K`;
-        },
+  // 모든 재고 항목을 재고 총량 기준 내림차순 정렬
+  const sortedStocks = [...stockData].sort((a, b) => b.stockTotalValue - a.stockTotalValue);
+
+  const labels = sortedStocks.map((stock) => stock.stockName);
+  const dataValues = sortedStocks.map((stock) => stock.stockTotalValue);
+
+  const data: ChartData<"bar", number[], string> = {
+    labels,
+    datasets: [
+      {
+        label: "재고 총량",
+        data: dataValues,
+        backgroundColor: "rgba(255, 107, 0, 0.6)",
       },
-    },
-  },
-};
+    ],
+  };
 
-export default function InventoryChart() {
+  const options: ChartOptions<"bar"> = {
+    responsive: true,
+    plugins: {
+      title: {
+        display: true,
+        text: "재고별 데이터 (전체 품목)",
+      },
+      legend: { position: "bottom" },
+    },
+    scales: {
+      y: { beginAtZero: true },
+    },
+  };
+
+  // key를 data.labels 기반으로 지정하여 데이터 변경 시 컴포넌트 재생성 (legend 갱신)
   return (
-    <div className="h-full p-2">
-      <Chart type="bar" data={data} options={options} />{" "}
-      {/* ✅ Use `Chart` instead of `Bar` */}
+    <div className="p-4">
+      <Bar key={labels.join("-")} data={data} options={options} />
     </div>
   );
-}
+};
+
+export default StockBarChart;

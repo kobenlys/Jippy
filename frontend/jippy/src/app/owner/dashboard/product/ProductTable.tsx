@@ -5,7 +5,6 @@ import { RootState } from "@/redux/store";
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import ProductForm from "@/features/dashboard/product/components/ProductForm";
-import Image from "next/image";
 
 interface ProductItem {
   id: number;
@@ -117,7 +116,7 @@ const ProductTable = () => {
                       {item.status ? "판매중" : "판매중지"}
                     </td>
                     <td className="p-2 border-b">
-                      <Image
+                      <img
                         src={item.image}
                         alt={item.name}
                         className="w-16 h-16 object-cover rounded"
