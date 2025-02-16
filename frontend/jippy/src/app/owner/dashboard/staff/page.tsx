@@ -13,6 +13,7 @@ import TodoList from "@/features/todo/components/TodoList";
 
 const StaffDashboardPage = () => {
   const [storeId, setStoreId] = useState<number | null>(null);
+  const [ownerName, setOwnerName] = useState<string>("");
   const router = useRouter();
 
   useEffect(() => {
@@ -29,11 +30,19 @@ const StaffDashboardPage = () => {
       } else {
         setStoreId(parsedStoreId);
       }
+
+      const ownerName = document.cookie
+        .split("; ")
+        .find((cookie) => cookie.startsWith("userName="))
+        ?.split("=")[1];
+
+      const decodedName = ownerName ? decodeURIComponent(ownerName) : "";
+      setOwnerName(decodedName);
     }
   }, [router]);
 
   if (storeId === null) {
-    return null; // 로딩 중일 때 아무것도 표시하지 않음
+    return null;
   }
 
   return (
@@ -44,7 +53,6 @@ const StaffDashboardPage = () => {
         <WorkingStaffCard storeId={storeId} />
         <StaffAttendanceList storeId={storeId} />
         <StoreSalaryCard storeId={storeId} />
-        {/* 여기에 추가 통계 카드들 */}
       </div>
       <div className="mt-8">
         <StaffListCard storeId={storeId} />
@@ -53,7 +61,7 @@ const StaffDashboardPage = () => {
         <StaffScheduleCard storeId={storeId} />
       </div>
       <div className="mt-8">
-        <NoticeList storeId={storeId} ownerName={"사장 이름"} />
+        <NoticeList storeId={storeId} ownerName={ownerName} />
       </div>
       <div className="mt-8">
         <TodoList storeId={storeId} />
