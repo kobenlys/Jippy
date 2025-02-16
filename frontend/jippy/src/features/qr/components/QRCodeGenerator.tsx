@@ -6,6 +6,7 @@ import { Button } from "@/features/common/components/ui/button";
 import { Card, CardContent } from "@/features/common/components/ui/card/Card";
 import { QR_PAGES } from "@/features/qr/constants/pages";
 import { QRConfig, QRData } from "../types/qr";
+import Image from "next/image";
 
 const getCookieValue = (name: string): string | null => {
   const value = `; ${document.cookie}`;
@@ -430,7 +431,7 @@ const QRCodeCRUD: React.FC = () => {
                             </Button>
                           </div>
                         ) : qrImage && imageDimensions.width > 0 ? (
-                          <img
+                          <Image
                             src={qrImage}
                             alt="QR Code"
                             className="w-[200px] h-[200px] object-contain"

@@ -7,6 +7,7 @@ import {
 } from "@/features/feedback/types/feedback";
 import { useEffect, useState } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const CATEGORIES: { value: string; label: string; }[] = [
     { value: 'ALL', label: '전체' },
@@ -16,9 +17,17 @@ const CATEGORIES: { value: string; label: string; }[] = [
     { value: 'ETC', label: '기타' }
 ];
 
+const getCookieValue = (name: string): string | null => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+        return parts.pop()?.split(';').shift() || null;
+    }
+    return null;
+};
+
 const FeedbackPage = () => {
-    // redux 구현 시 변경
-    const storeId = 1;
+    const router = useRouter();
     const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -31,12 +40,24 @@ const FeedbackPage = () => {
             setIsLoading(true);
             setError(null);
 
+            const encodedStoreIdList = getCookieValue('storeIdList');
+            const userId = getCookieValue('userId');
+
+            if (!encodedStoreIdList || !userId) {
+                router.push("/login");
+                return;
+              }
+
+            const decodedStoreIdList = decodeURIComponent(encodedStoreIdList);
+            const storeIdList = JSON.parse(decodedStoreIdList);
+            const storeId = storeIdList[0];
+
             const url = category === 'ALL'
                 ? `${process.env.NEXT_PUBLIC_API_URL}/api/feedback/${storeId}/select`
                 : `${process.env.NEXT_PUBLIC_API_URL}/api/feedback/${storeId}/select/${category}`
 
             const response = await fetch(url);
-            const responseData : ApiResponse<Feedback[]> = await response.json();
+            const responseData: ApiResponse<Feedback[]> = await response.json();
 
             if (!responseData.success) {
                 throw new Error(
@@ -122,7 +143,7 @@ const FeedbackPage = () => {
                                 <span className="px-1">{selectedCategoryLabel}</span>
                                 {isCategoryOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                             </button>
-                            
+
                             {isCategoryOpen && (
                                 <div className="absolute top-full left-0 w-full bg-white shadow-lg rounded-lg z-10 mt-1 border">
                                     {CATEGORIES.map(({ value, label }) => (
@@ -165,8 +186,8 @@ const FeedbackPage = () => {
                     </div>
                 </div>
             </div>
-            
-            <button 
+
+            <button
                 onClick={scrollToTop}
                 className={`fixed bottom-32 right-8 w-12 h-12 bg-[#ff5c00] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#ff7c33] transition-all ${showScrollTop ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
                 aria-label="맨 위로 스크롤"

@@ -22,6 +22,8 @@ public class ProductMapper {
                 .price(product.getPrice())
                 .status(product.isStatus())
                 .image(product.getImage())
+                .productSize(product.getProductSize())
+                .productType(product.getProductType())
                 .build();
     }
 

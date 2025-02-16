@@ -2,6 +2,7 @@
 "use client";
 import React, { useState, ChangeEvent } from "react";
 import RecipeForm from "./RecipeForm";
+import Image from "next/image";
 
 interface ProductItem {
   id: number;
@@ -22,7 +23,11 @@ interface ProductFormProps {
   onClose: () => void;
 }
 
-const ProductForm: React.FC<ProductFormProps> = ({ mode, productData, onClose }) => {
+const ProductForm: React.FC<ProductFormProps> = ({
+  mode,
+  productData,
+  onClose,
+}) => {
   const [product, setProduct] = useState<ProductItem>({
     id: productData?.id || 0,
     storeId: productData?.storeId || 1, // 기본 storeId 1
@@ -35,7 +40,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ mode, productData, onClose })
     productSize: productData?.productSize || "S",
     totalSold: productData?.totalSold || 0,
   });
-  
+
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [createdProductId, setCreatedProductId] = useState<number | null>(null);
 
@@ -56,7 +61,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ mode, productData, onClose })
       mode === "create"
         ? `${process.env.NEXT_PUBLIC_API_URL}/api/product/${storeId}/create`
         : `${process.env.NEXT_PUBLIC_API_URL}/api/product/${storeId}/update/${product.id}`;
-    
+
     const formData = new FormData();
     // 생성 모드와 수정 모드에 따라 JSON 데이터를 key 이름을 다르게 보냅니다.
     if (mode === "create") {
@@ -95,7 +100,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ mode, productData, onClose })
         )
       );
     }
-    
+
     // 이미지 파일이 있다면 FormData에 추가
     if (imageFile) {
       formData.append("image", imageFile);
@@ -214,7 +219,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ mode, productData, onClose })
           />
           {imageFile && (
             <div className="mt-2">
-              <img
+              <Image
                 src={product.image}
                 alt="미리보기"
                 className="max-h-40 object-contain border"
@@ -241,7 +246,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ mode, productData, onClose })
       </form>
 
       {/* 상품 등록 후 또는 수정 시 레시피 등록/수정 폼 */}
-      {((mode === "edit") || (mode === "create" && createdProductId)) && (
+      {(mode === "edit" || (mode === "create" && createdProductId)) && (
         <div className="mt-8">
           <h3 className="text-xl font-semibold mb-4">레시피 등록/수정</h3>
           <RecipeForm
