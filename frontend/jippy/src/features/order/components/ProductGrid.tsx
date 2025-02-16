@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
@@ -20,10 +20,12 @@ interface ProductGridProps {
 const ProductGrid = ({
   onProductSelect,
   onAddProduct,
-  showAddButton = true
+  showAddButton = true,
 }: ProductGridProps) => {
   const dispatch = useDispatch<AppDispatch>();
-  const [selectedProduct, setSelectedProduct] = useState<ProductDetailResponse[] | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<
+    ProductDetailResponse[] | null
+  >(null);
   const [isOptionModalOpen, setIsOptionModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("전체");
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | -1>(-1);
@@ -31,40 +33,132 @@ const ProductGrid = ({
   const DEFAULT_IMAGE_PATH = "/images/ProductPlaceholder.png";
 
   const currentShop = useSelector((state: RootState) => state.shop.currentShop);
-  const { products, loading, error } = useSelector((state: RootState) => state.product);
+  const { products, loading, error } = useSelector(
+    (state: RootState) => state.product
+  );
 
   useEffect(() => {
     if (currentShop?.id) {
+      console.log("상점 ID로 상품 조회:", currentShop.id);
       dispatch(fetchProducts(currentShop.id));
     }
   }, [dispatch, currentShop?.id]);
 
-  const handleCategorySelect = (categoryName: string, categoryId: number | -1) => {
-    console.log('카테고리 선택됨:', { categoryName, categoryId });
+  const handleCategorySelect = (
+    categoryName: string,
+    categoryId: number | -1
+  ) => {
+    console.log("카테고리 선택:", { categoryName, categoryId });
     setSelectedCategory(categoryName);
     setSelectedCategoryId(categoryId);
   };
 
-  const handleProductClick = (product: ProductDetailResponse) => {
-    if (onAddProduct) {
-      onAddProduct(product);
-    } else {
-      setSelectedProduct([product]);
-      setIsOptionModalOpen(true);
+  // 상품 그룹화 로직
+  const groupedProducts = useMemo(() => {
+    console.log("상품 그룹화 시작:", products);
+    if (!Array.isArray(products)) return [];
+
+    const groups: { [key: string]: ProductDetailResponse[] } = {};
+
+    products.forEach((product) => {
+      if (!groups[product.name]) {
+        groups[product.name] = [];
+      }
+      groups[product.name].push(product);
+    });
+
+    const result = Object.entries(groups).map(([name, variants]) => {
+      console.log("name:", name); // name 변수를 활용하여 오류 방지
+      return {
+        ...variants[0],
+        variants: variants,
+      };
+    });
+
+    console.log("그룹화된 상품:", result);
+    return result;
+  }, [products]);
+
+  const handleProductClick = (
+    product: ProductDetailResponse & { variants: ProductDetailResponse[] }
+  ) => {
+    console.group("===== 상품 클릭 테스트 =====");
+    console.log("1. 선택된 기본 상품:", {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      type: product.productType,
+      size: product.productSize,
+    });
+
+    // variants 데이터 구조 확인
+    const variantsSummary = product.variants.map((v) => ({
+      id: v.id,
+      name: v.name,
+      price: v.price,
+      type: v.productType,
+      size: v.productSize,
+    }));
+    console.log("2. 생성된 variants:", variantsSummary);
+
+    // 옵션이 하나뿐이거나 기본 상품만 있을 경우 바로 추가
+    if (product.variants.length === 1) {
+      console.log("단일 상품 바로 추가");
+      if (onProductSelect) {
+        onProductSelect(product.variants[0]);
+      }
+      if (onAddProduct) {
+        onAddProduct(product.variants[0]);
+      }
+      console.groupEnd();
+      return;
     }
+
+    // 옵션이 여러 개인 경우 모달 오픈
+    setSelectedProduct(product.variants);
+    setIsOptionModalOpen(true);
+    console.groupEnd();
+  };
+
+  const handleOptionSelect = (selectedOption: ProductDetailResponse) => {
+    console.group("옵션 선택");
+    console.log("선택된 옵션:", selectedOption);
+
+    if (!selectedOption) {
+      console.warn("⚠️ 선택된 옵션이 없습니다.");
+      return;
+    }
+
+    if (onAddProduct) {
+      console.log("📌 onAddProduct 호출");
+      onAddProduct(selectedOption); // POSPage에 상품 추가 전달
+    }
+
+    setIsOptionModalOpen(false);
+    setSelectedProduct(null);
+    console.groupEnd();
   };
 
   if (!currentShop) return <div>매장을 선택해주세요.</div>;
-  if (loading) return <div className="flex justify-center items-center h-full">
-    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
-  </div>;
-  if (error) return <div className="flex justify-center items-center h-full text-red-500">{error}</div>;
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-full">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
+      </div>
+    );
+  if (error)
+    return (
+      <div className="flex justify-center items-center h-full text-red-500">
+        {error}
+      </div>
+    );
 
-  const productsData = Array.isArray(products) ? products : [];
-
-  const filteredProducts = selectedCategoryId === -1
-    ? productsData
-    : productsData.filter(product => product.productCategoryId === selectedCategoryId);
+  const filteredProducts =
+    selectedCategoryId === -1
+      ? groupedProducts
+      : groupedProducts.filter(
+          (product) => product.productCategoryId === selectedCategoryId
+        );
 
   return (
     <div className="h-full flex flex-col">
@@ -89,7 +183,8 @@ const ProductGrid = ({
                 <Image
                   src={
                     item.image &&
-                      (item.image.startsWith('http') || item.image.startsWith('/'))
+                    (item.image.startsWith("http") ||
+                      item.image.startsWith("/"))
                       ? item.image
                       : DEFAULT_IMAGE_PATH
                   }
@@ -131,15 +226,16 @@ const ProductGrid = ({
         </div>
       </div>
 
-      {selectedProduct && onProductSelect && (
+      {selectedProduct && (
         <ProductOptionModal
           isOpen={isOptionModalOpen}
           onClose={() => {
+            console.log("옵션 모달 닫기");
             setIsOptionModalOpen(false);
             setSelectedProduct(null);
           }}
           product={selectedProduct}
-          onSelect={onProductSelect}
+          onSelect={handleOptionSelect}
         />
       )}
 

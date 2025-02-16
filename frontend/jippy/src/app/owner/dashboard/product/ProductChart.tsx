@@ -46,7 +46,8 @@ const ProductChart: React.FC<ProductChartProps> = ({ storeId }) => {
         jsonResponse.data &&
         jsonResponse.data.productSoldInfo
       ) {
-        const productSales: ProductSalesItem[] = jsonResponse.data.productSoldInfo;
+        const productSales: ProductSalesItem[] =
+          jsonResponse.data.productSoldInfo;
         const labels = productSales.map((item) => item.name);
         const salesData = productSales.map((item) => item.totalSold);
         setChartData({
@@ -58,10 +59,10 @@ const ProductChart: React.FC<ProductChartProps> = ({ storeId }) => {
               backgroundColor: "#F27B39",
               borderColor: "#F27B39",
               borderWidth: 1,
-               // 추가할 속성들
-              hoverBackgroundColor: "#D35F1D",  // hover 시 더 진한 색상
-              borderRadius: 8,  // 모서리를 둥글게
-              barThickness: 'flex',  // 자동으로 적절한 두께 조정
+              // 추가할 속성들
+              hoverBackgroundColor: "#D35F1D", // hover 시 더 진한 색상
+              borderRadius: 8, // 모서리를 둥글게
+              barThickness: "flex", // 자동으로 적절한 두께 조정
             },
           ],
         });
@@ -88,7 +89,8 @@ const ProductChart: React.FC<ProductChartProps> = ({ storeId }) => {
         jsonResponse.data &&
         jsonResponse.data.productSoldInfo
       ) {
-        const productSales: ProductSalesItem[] = jsonResponse.data.productSoldInfo;
+        const productSales: ProductSalesItem[] =
+          jsonResponse.data.productSoldInfo;
         const labels = productSales.map((item) => item.name);
         const salesData = productSales.map((item) => item.totalSold);
         setChartData({
@@ -117,7 +119,14 @@ const ProductChart: React.FC<ProductChartProps> = ({ storeId }) => {
     } else {
       fetchMonthlyData();
     }
-  }, [storeId, viewType, selectedYear, selectedMonth]);
+  }, [
+    storeId,
+    viewType,
+    selectedYear,
+    selectedMonth,
+    fetchMonthlyData,
+    fetchRecentData,
+  ]);
 
   return (
     <div className="w-full overflow-x-auto">
@@ -128,7 +137,9 @@ const ProductChart: React.FC<ProductChartProps> = ({ storeId }) => {
         <div className="flex items-center gap-4 mt-2 sm:mt-0">
           <select
             value={viewType}
-            onChange={(e) => setViewType(e.target.value as "recent" | "monthly")}
+            onChange={(e) =>
+              setViewType(e.target.value as "recent" | "monthly")
+            }
             className="border p-1 rounded"
           >
             <option value="recent">최근 30일</option>
@@ -141,11 +152,13 @@ const ProductChart: React.FC<ProductChartProps> = ({ storeId }) => {
                 onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                 className="border p-1 rounded"
               >
-                {Array.from({ length: 5 }, (_, i) => currentYear - i).map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
+                {Array.from({ length: 5 }, (_, i) => currentYear - i).map(
+                  (year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  )
+                )}
               </select>
               <select
                 value={selectedMonth}
