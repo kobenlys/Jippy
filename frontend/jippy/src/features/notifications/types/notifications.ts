@@ -14,7 +14,6 @@ export interface NoticeRequest {
   pageSize: number;
   sortBy: string;
   direction: "ASC" | "DESC";
-  author: string;
   startDate: string;
   endDate: string;
 }

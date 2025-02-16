@@ -36,15 +36,12 @@ const NotificationsPage = () => {
 
   const fetchNotices = async () => {
     const now = new Date();
-    // redux 구현 시 변경
-    const owner_name = "한승남";
 
     const params: NoticeRequest = {
       page: currentPage,
       pageSize: 7,
       sortBy: "createdAt",
       direction: "DESC",
-      author: owner_name,
       startDate: "2025-02-01 00:00:00",
       endDate: now.toISOString().split('T')[0] + " 23:59:59"
     };
