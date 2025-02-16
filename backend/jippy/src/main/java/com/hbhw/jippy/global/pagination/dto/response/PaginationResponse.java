@@ -51,7 +51,6 @@ public class PaginationResponse<T> {
         return PaginationResponse.<T>builder()
                 .content(page.getContent())
                 .page(page.getNumber())
-                .author(request.getAuthor())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .pageSize(page.getSize())

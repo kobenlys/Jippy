@@ -4,23 +4,42 @@ import Link from "next/link";
 import Image from "next/image";
 import { Menu, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
-import { logout } from "@/redux/slices/userSlice"; // import 수정
+import { useDispatch } from "react-redux";
+import { logout } from "@/redux/slices/userSlice";
 import { useRouter } from "next/navigation";
 import styles from "./Navbar.module.css";
 
 const Navbar = () => {
   const router = useRouter();
   const dispatch = useDispatch();
-  const accessToken = useSelector((state: RootState) => state.user.accessToken);
 
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const user = useSelector((state: RootState) => state.user);
-  const username = user?.profile?.name || "";
+  // 🔥 클라이언트 사이드에서만 실행하도록 변경
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>("사용자");
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      // document가 클라이언트에서만 실행됨을 보장
+      const token =
+        document.cookie
+          .split("; ")
+          .find((cookie) => cookie.startsWith("accessToken="))
+          ?.split("=")[1] || null;
+
+      const encodedUserName =
+        document.cookie
+          .split("; ")
+          .find((cookie) => cookie.startsWith("userName="))
+          ?.split("=")[1] || "";
+
+      setAccessToken(token);
+      setUserName(decodeURIComponent(encodedUserName) || "사용자");
+    }
+  }, []); // 👈 useEffect 안에서 실행 (클라이언트 사이드에서만 실행됨)
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -59,8 +78,8 @@ const Navbar = () => {
         throw new Error("로그아웃 실패");
       }
 
-      dispatch(logout()); // 단일 액션으로 변경
-
+      dispatch(logout());
+      setAccessToken(null);
       setIsDropdownOpen(false);
       router.push("/");
       alert("성공적으로 로그아웃되었습니다.");
@@ -112,7 +131,7 @@ const Navbar = () => {
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className={styles.profileButton}
                 >
-                  <span>{username ? `${username} 님` : "사용자"}</span>
+                  <span>{userName ? `${userName} 님` : "사용자"}</span>
                   <ChevronDown className={styles.dropdownIcon} />
                 </button>
 

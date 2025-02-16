@@ -11,8 +11,21 @@ import PageTitle from "@/features/common/components/layout/title/PageTitle";
 import useUserInfo from "@/utils/useUserInfo";
 import { ChevronLeft, User } from 'lucide-react';
 import useChatMemberCount from "@/features/chat/hooks/useChatMemberCount";
+import { useRouter } from "next/navigation";
+
+const getCookieValue = (name: string): string | null => {
+  if (typeof document === "undefined") return null;
+  
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    return parts.pop()?.split(';').shift() || null;
+  }
+  return null;
+};
 
 const ChattingPage: React.FC = () => {
+  const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const chatRooms: StoreChat[] = useSelector((state: RootState) => state.chat.chatList);
   const selectedChatRoom: StoreChat | null = useSelector(
@@ -43,6 +56,13 @@ const ChattingPage: React.FC = () => {
         setIsMobile(false);
         setShowChatList(true);
       }
+      const encodedStoreIdList = getCookieValue('storeIdList');
+        const userId = getCookieValue('userId');
+
+        if (!encodedStoreIdList || !userId) {
+          router.push("/login");
+          return;
+        }
     };
 
     handleResize();

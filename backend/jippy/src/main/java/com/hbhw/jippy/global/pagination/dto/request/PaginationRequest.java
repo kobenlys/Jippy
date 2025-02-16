@@ -37,9 +37,6 @@ public class PaginationRequest {
     @Builder.Default
     private String direction = "DESC";
 
-    @Schema(description = "작성자", example = "카리나")
-    private String author;
-
     @Schema(description = "시작 날짜", example = "2025-02-05 00:00:00")
     private String startDate;
 

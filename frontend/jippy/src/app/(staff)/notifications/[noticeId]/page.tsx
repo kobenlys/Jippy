@@ -10,16 +10,20 @@ import {
 
 const getCookieValue = (name: string): string | null => {
   if (typeof document === "undefined") return null;
-
+  
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) {
-    return parts.pop()?.split(";").shift() || null;
+    return parts.pop()?.split(';').shift() || null;
   }
   return null;
 };
 
-const NoticeDetailPage = ({ params }: { params: { noticeId: string } }) => {
+const NoticeDetailPage = ({
+  params
+}: {
+  params: { noticeId: string }
+}) => {
   const router = useRouter();
   const [notice, setNotice] = useState<Notice | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -28,8 +32,8 @@ const NoticeDetailPage = ({ params }: { params: { noticeId: string } }) => {
     try {
       setIsLoading(true);
 
-      const encodedStoreIdList = getCookieValue("storeIdList");
-      const userId = getCookieValue("userId");
+      const encodedStoreIdList = getCookieValue('storeIdList');
+      const userId = getCookieValue('userId');
 
       if (!encodedStoreIdList || !userId) {
         router.push("/login");

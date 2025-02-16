@@ -80,6 +80,12 @@ const LoginPage = () => {
           })
         );
 
+        // 직원인 경우 바로 출퇴근 페이지로 이동
+        if (userType === "STAFF") {
+          router.replace("/attendance");
+          return;
+        }
+
         // 매장 정보 조회 및 리덕스 업데이트
         try {
           // 쿠키 디버깅을 위한 로그
@@ -137,13 +143,13 @@ const LoginPage = () => {
                 dispatch(setShops(userShops));
                 dispatch(setCurrentShop(userShops[0]));
                 if (isPos) {
-                  document.cookie = `loginType=${"POS"}; path=/; max-age=86400`;
+                  document.cookie = `loginType=${"POS"}; path=/; max-age=2419200`;
                   router.replace("/order");
                 } else if (userType == "OWNER") {
-                  document.cookie = `loginType=${"OWNER"}; path=/; max-age=86400`;
-                  router.replace("/confirm");
+                  document.cookie = `loginType=${"OWNER"}; path=/; max-age=2419200`;
+                  router.replace("/owner/dashboard");
                 } else if (userType == "STAFF") {
-                  document.cookie = `loginType=${"STAFF"}; path=/; max-age=86400`;
+                  document.cookie = `loginType=${"STAFF"}; path=/; max-age=2419200`;
                   router.replace("/attendance");
                 }
               } else {

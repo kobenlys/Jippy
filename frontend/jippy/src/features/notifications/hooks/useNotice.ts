@@ -30,7 +30,6 @@ const useNoticeList = ({
           pageSize,
           sortBy: "createdAt",
           direction: "DESC" as const,
-          author: ownerName,
           startDate: "2020-01-01 00:00:00",
           endDate: `${now.toISOString().split("T")[0]} 23:59:59`,
         };
