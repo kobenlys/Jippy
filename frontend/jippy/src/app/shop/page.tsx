@@ -6,16 +6,20 @@ import { AppDispatch, RootState } from "@/redux/store";
 import { Shop } from "@/features/shop/types/shops";
 import ShopDetailModal from "@/features/shop/components/ShopDetailModal";
 import { fetchShop, updateShop, deleteShop } from "@/redux/slices/shopSlice";
+import { useRouter } from "next/navigation";
 
 export default function ShopsPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { shops, isLoading, error } = useSelector((state: RootState) => state.shop);
+  const { shops, isLoading, error } = useSelector(
+    (state: RootState) => state.shop
+  );
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
-  
+
   const user = useSelector((state: RootState) => state.user.profile);
   const accessToken = useSelector((state: RootState) => state.user.accessToken);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchShops = async () => {
@@ -24,7 +28,9 @@ export default function ShopsPage() {
           await dispatch(fetchShop(Number(user.id))).unwrap();
           setLocalError(null);
         } catch (err) {
-          setLocalError("매장 정보를 불러오는데 실패했습니다. 다시 시도해주세요.");
+          setLocalError(
+            "매장 정보를 불러오는데 실패했습니다. 다시 시도해주세요."
+          );
           console.error("Error fetching shops:", err);
         }
       }
@@ -33,18 +39,17 @@ export default function ShopsPage() {
     fetchShops();
   }, [user?.id, accessToken, dispatch]);
 
-  const fetchShopDetail = async (shopId: number) => {
+  const fetchShopDetail = async (storeId: number) => {
     try {
+      document.cookie = `selectStoreId=` + storeId + `; path=/; max-age=86400`;
       if (!accessToken) {
         setLocalError("로그인이 필요합니다.");
         return;
       }
 
-      const selectedShop = shops?.find(shop => shop.id === shopId);
+      const selectedShop = shops?.find((shop) => shop.id === storeId);
       if (selectedShop) {
-        setSelectedShop(selectedShop);
-        setIsModalOpen(true);
-        setLocalError(null);
+        router.replace("/owner/dashboard/sales");
       } else {
         throw new Error("매장을 찾을 수 없습니다.");
       }
@@ -55,8 +60,10 @@ export default function ShopsPage() {
   };
 
   const handleShopDelete = async (shopId: number) => {
-    const isConfirmed = window.confirm("정말로 이 매장을 삭제하시겠습니까? 삭제된 매장은 복구할 수 없습니다.");
-    
+    const isConfirmed = window.confirm(
+      "정말로 이 매장을 삭제하시겠습니까? 삭제된 매장은 복구할 수 없습니다."
+    );
+
     if (!isConfirmed) return;
 
     try {
@@ -82,11 +89,13 @@ export default function ShopsPage() {
         return;
       }
 
-      await dispatch(updateShop({ 
-        storeId: updatedShop.id, 
-        data: updatedShop 
-      })).unwrap();
-      
+      await dispatch(
+        updateShop({
+          storeId: updatedShop.id,
+          data: updatedShop,
+        })
+      ).unwrap();
+
       setIsModalOpen(false);
       setSelectedShop(null);
       setLocalError(null);
@@ -105,9 +114,7 @@ export default function ShopsPage() {
   if (!accessToken) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="text-center text-gray-600">
-          로그인이 필요합니다.
-        </div>
+        <div className="text-center text-gray-600">로그인이 필요합니다.</div>
       </div>
     );
   }
@@ -123,7 +130,7 @@ export default function ShopsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">내 매장 목록</h1>
-      
+
       {(error || localError) && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error || localError}
@@ -131,9 +138,7 @@ export default function ShopsPage() {
       )}
 
       {(shops?.length === 0 || !shops) && !isLoading ? (
-        <div className="text-center text-gray-600">
-          등록된 매장이 없습니다.
-        </div>
+        <div className="text-center text-gray-600">등록된 매장이 없습니다.</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {shops?.map((shop) => (
