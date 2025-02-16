@@ -434,7 +434,14 @@ const QRCodeCRUD: React.FC = () => {
                           <Image
                             src={qrImage}
                             alt="QR Code"
-                            className="w-[200px] h-[200px] object-contain"
+                            width={200}
+                            height={200}
+                            className="object-contain"
+                            onError={() => {
+                              setError("QR 코드 이미지를 불러올 수 없습니다");
+                              setQrImage(null);
+                            }}
+                            unoptimized
                           />
                         ) : (
                           <div className="flex flex-col items-center justify-center text-gray-500">

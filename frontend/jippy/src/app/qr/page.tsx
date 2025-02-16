@@ -1,4 +1,3 @@
-// app/qr/page.tsx
 import QRCodeGenerator from "@/features/qr/components/QRCodeGenerator";
 
 export default function QRPage() {
