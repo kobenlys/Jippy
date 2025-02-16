@@ -21,7 +21,7 @@ const MLAnalysis: React.FC<MLAnalysisProps> = ({ storeId }) => {
 
   return (
     <div className="p-6">
-      {/* 피드백 총계 */}
+      {/* 피드백 총계 카드 */}
       <div className="mb-6 flex flex-col md:flex-row gap-4">
         <div className="flex-1 bg-[#F27B39] text-white p-4 rounded shadow">
           <h3 className="text-xl font-semibold">긍정 피드백</h3>
