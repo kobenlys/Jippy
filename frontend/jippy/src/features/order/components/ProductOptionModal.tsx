@@ -35,21 +35,44 @@ const ProductOptionModal = ({
   };
 
   const handleConfirm = () => {
+    console.log("🛠 선택 확인: ", { selectedType, selectedSize });
+    console.log("🔍 전체 상품 목록: ", product);
+
     if (!selectedType || !selectedSize) {
       alert("타입과 사이즈를 선택해주세요.");
       return;
     }
 
-    const selectedProduct = product.find(
-      (p) => p.productType === selectedType && p.productSize === selectedSize
-    );
+    const selectedTypeStr = ProductType[
+      selectedType as number
+    ] as unknown as string;
+    const selectedSizeStr = ProductSize[
+      selectedSize as number
+    ] as unknown as string;
 
-    if (selectedProduct) {
-      onSelect(selectedProduct);
-      onClose();
-      setSelectedType(null);
-      setSelectedSize(null);
+    const selectedProduct = product.find((p) => {
+      console.log(
+        `📌 비교 중 -> 상품명: ${p.name}, 타입: ${p.productType}, 사이즈: ${p.productSize}`
+      );
+      return (
+        String(p.productType) === selectedTypeStr &&
+        String(p.productSize) === selectedSizeStr
+      );
+    });
+
+    if (!selectedProduct) {
+      console.warn("⚠️ 선택된 옵션에 해당하는 상품이 없습니다.");
+      console.log("📌 현재 선택된 타입:", selectedType);
+      console.log("📌 현재 선택된 사이즈:", selectedSize);
+      console.log("📌 상품 리스트:", product);
+      return;
     }
+
+    console.log("✅ 선택된 상품:", selectedProduct);
+    onSelect(selectedProduct);
+    onClose();
+    setSelectedType(null);
+    setSelectedSize(null);
   };
 
   const firstProduct = product[0];

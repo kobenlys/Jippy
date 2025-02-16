@@ -1,9 +1,13 @@
+import { ProductSize, ProductType } from "@/redux/types/product";
+
 export interface Product {
   id: number;
   name: string;
   price: number;
   category: string;
   image?: string;
+  size: ProductSize;
+  type: ProductType;
 }
 
 export interface OrderItem extends Product {

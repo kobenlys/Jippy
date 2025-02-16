@@ -102,7 +102,7 @@ public class ProductService {
     public List<ProductListResponse> getListAllProduct(Integer storeId) {
         List<Product> productList = productRepository.findByStoreId(storeId);
         if (productList == null || productList.isEmpty()) {
-            throw new NoSuchElementException();
+            throw new BusinessException(CommonErrorCode.NOT_FOUND, "상품이 존재하지 않습니다");
         }
 
         return productList.stream()

@@ -84,6 +84,8 @@ const ProductGrid = ({
       id: product.id,
       name: product.name,
       price: product.price,
+      type: product.productType,
+      size: product.productSize,
     });
 
     // variants 데이터 구조 확인
@@ -119,16 +121,18 @@ const ProductGrid = ({
     console.group("옵션 선택");
     console.log("선택된 옵션:", selectedOption);
 
-    if (onProductSelect) {
-      console.log("onProductSelect 호출");
-      onProductSelect(selectedOption);
+    if (!selectedOption) {
+      console.warn("⚠️ 선택된 옵션이 없습니다.");
+      return;
     }
+
     if (onAddProduct) {
-      console.log("onAddProduct 호출");
-      onAddProduct(selectedOption);
+      console.log("📌 onAddProduct 호출");
+      onAddProduct(selectedOption); // POSPage에 상품 추가 전달
     }
 
     setIsOptionModalOpen(false);
+    setSelectedProduct(null);
     console.groupEnd();
   };
 
