@@ -49,8 +49,8 @@ public class StoreStaffController {
 
     @Operation(summary = "직원 별 매출 발생 통계", description = "매장별 직원 매출 통계를 조회합니다")
     @GetMapping("/staff/earn")
-    public ApiResponse<?> fetchStaffEarnSales(@RequestParam("storeId") Integer storeId) {
-        List<StaffEarnSalesResponse> responseList = storeStaffService.fetchStaffEarnSales(storeId);
+    public ApiResponse<?> fetchStaffEarnSales(@RequestParam("storeId") Integer storeId, @RequestParam("yearMonth") String yearMonth) {
+        List<StaffEarnSalesResponse> responseList = storeStaffService.fetchStaffEarnSales(storeId, yearMonth);
         return ApiResponse.success(HttpStatus.OK,responseList);
     }
 

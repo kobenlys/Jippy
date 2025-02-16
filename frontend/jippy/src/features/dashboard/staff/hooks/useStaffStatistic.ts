@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  MonthlyPerformanceData,
   StaffMonthlyStatus,
   StaffTotalStatus,
   WorkingStaffData,
@@ -136,9 +137,86 @@ const useStaffStatus = (storeId: number, staffId: number) => {
   return { monthlyStats, totalStats };
 };
 
+const useStaffPerformance = (storeId: number) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [monthlySales, setMonthlySales] = useState<MonthlyPerformanceData[]>(
+    []
+  );
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const currentDate = new Date();
+        const months = Array(2)
+          .fill(null)
+          .map((_, i) => {
+            const date = new Date(
+              currentDate.getFullYear(),
+              currentDate.getMonth() - i - 1
+            );
+            return `${date.getFullYear()}-${String(
+              date.getMonth() + 1
+            ).padStart(2, "0")}`;
+          });
+
+        const processedData = await Promise.all(
+          months.map(async (yearMonth) => {
+            const startDate = `${yearMonth}-01 00:00:00`;
+            const endDate =
+              new Date(
+                parseInt(yearMonth.split("-")[0]),
+                parseInt(yearMonth.split("-")[1]),
+                0
+              )
+                .toISOString()
+                .split("T")[0] + " 23:59:59";
+
+            const [salesResponse, staffResponse] = await Promise.all([
+              staffApi.fetchMonthlySales(storeId, startDate, endDate),
+              staffApi.fetchStaffSales(storeId, yearMonth),
+            ]);
+
+            if (!salesResponse.success || !staffResponse.success) {
+              throw new Error("데이터 조회에 실패했습니다");
+            }
+
+            const totalSales = salesResponse.data.salesByMonth.reduce(
+              (sum, day) => sum + day.totalSales,
+              0
+            );
+
+            return {
+              yearMonth,
+              totalSales,
+              staffSales: staffResponse.data,
+            };
+          })
+        );
+
+        setMonthlySales(processedData);
+      } catch (error) {
+        setError(
+          error instanceof Error ? error.message : "데이터 로딩에 실패했습니다"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [storeId]);
+
+  return { isLoading, error, monthlySales };
+};
+
 export {
   useWorkingStaff,
   useStaffMonthlyStatus,
   useStaffTotalStatus,
   useStaffStatus,
+  useStaffPerformance,
 };

@@ -1,8 +1,19 @@
+export interface CreateNoticeRequest {
+  title: string;
+  content: string;
+  author: string;
+}
+
+export interface UpdateNoticeRequest {
+  title: string;
+  content: string;
+}
+
 export interface NoticeRequest {
   page: number;
   pageSize: number;
   sortBy: string;
-  direction: 'ASC' | 'DESC';
+  direction: "ASC" | "DESC";
   author: string;
   startDate: string;
   endDate: string;

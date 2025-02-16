@@ -113,3 +113,28 @@ export const SCHEDULE_COLORS = {
     "bg-teal-200/50",
   ],
 } as const;
+
+export interface StaffSalesInfo {
+  staffId: number;
+  staffName: string;
+  earnSales: number;
+}
+
+export interface MonthlySalesData {
+  date: string;
+  totalSales: number;
+  orderCount: number;
+}
+
+export interface SalesByMonthResponse {
+  salesByMonth: MonthlySalesData[];
+}
+
+export type StaffSalesResponse = ApiResponse<StaffSalesInfo[]>;
+export type MonthlySalesResponse = ApiResponse<SalesByMonthResponse>;
+
+export interface MonthlyPerformanceData {
+  yearMonth: string;
+  totalSales: number;
+  staffSales: StaffSalesInfo[];
+}

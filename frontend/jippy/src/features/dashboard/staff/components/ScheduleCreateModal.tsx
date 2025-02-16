@@ -1,4 +1,5 @@
-// components/ScheduleCreateModal.tsx
+"use client";
+
 import { useEffect, useState } from "react";
 import { DAYS_OF_WEEK } from "@/features/calendar/types/calendar";
 import { StaffInfo } from "@/features/dashboard/staff/types/staff";

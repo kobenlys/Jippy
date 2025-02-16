@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -64,14 +65,17 @@ public class StoreStaffService {
         storeStaffRepository.delete(staff);
     }
 
-    public List<StaffEarnSalesResponse> fetchStaffEarnSales(Integer storeId) {
+    public List<StaffEarnSalesResponse> fetchStaffEarnSales(Integer storeId, String yearMonth) {
+        String startDate = yearMonth + "-01 00:00:00";
+        String endDate = YearMonth.parse(yearMonth).atEndOfMonth() + " 23:59:59";
+
         List<StoreUserStaff> storeUserStaffList = storeStaffRepository.findByStoreId(storeId);
         log.info("Fetching earnings for storeId: {}", storeId);
 
         List<StaffEarnSalesResponse> staffEarnList = new ArrayList<>();
 
         for (StoreUserStaff staff : storeUserStaffList) {
-            List<EmploymentStatus> attendanceStatusList = employmentStatusRepository.findByStoreUserStaff(staff);
+            List<EmploymentStatus> attendanceStatusList = employmentStatusRepository.findByStoreUserStaffAndStartDateBetween(staff, startDate, endDate);
 
             Integer sumTotalCost = attendanceStatusList.stream()
                     .mapToInt(saleInfo -> {
