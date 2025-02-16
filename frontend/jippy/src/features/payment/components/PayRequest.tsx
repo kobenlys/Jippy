@@ -7,7 +7,7 @@ import { Button } from "@/features/common/components/ui/button";
 import { useAppSelector } from "@/redux/hooks";
 // import type { OrderData } from "@/features/payment/types/payment";
 
-const TOSS_CLIENT_KEY = "test_ck_ma60RZblrqzQnGRxeeGz8wzYWBn1";
+const TOSS_CLIENT_KEY = "test_ck_yZqmkKeP8gpJeNxBdjGd3bQRxB9l";
 
 const generateRandomOrderId = () => {
   return "xxxx-xxxx-4xxx-yxxx-xxxxxx".replace(/[xy]/g, (c) => {
@@ -34,22 +34,27 @@ const PaymentRequestComponent = () => {
       console.log("dd");
       setIsLoading(true);
       const orderId = generateRandomOrderId();
-      
+
       const tossPayments = await loadTossPayments(TOSS_CLIENT_KEY);
-      
+
       const paymentData = {
         amount: orderData.totalAmount,
         orderId: orderId,
         orderName: orderData.orderName || "주문",
         customerName: orderData.customerName || "고객",
         successUrl: `${window.location.origin}/payment/success`,
-        failUrl: `${window.location.origin}/payment/fail`
+        failUrl: `${window.location.origin}/payment/fail`,
       };
       console.log(paymentData);
       await tossPayments.requestPayment("토스페이", paymentData);
     } catch (error: unknown) {
       console.error("결제 요청 중 오류 발생:", error);
-      if (error && typeof error === "object" && "code" in error && error.code === "USER_CANCEL") {
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === "USER_CANCEL"
+      ) {
         alert("결제가 취소되었습니다.");
       } else {
         alert("결제 요청 중 오류가 발생했습니다.");
@@ -81,14 +86,17 @@ const PaymentRequestComponent = () => {
               <div className="mt-4 border-t pt-4">
                 <h3 className="font-semibold mb-2">주문 상품</h3>
                 {orderData.products.map((product, index) => (
-                  <div key={index} className="flex justify-between items-center text-sm">
+                  <div
+                    key={index}
+                    className="flex justify-between items-center text-sm"
+                  >
                     <span>상품 ID: {product.id}</span>
                     <span>수량: {product.quantity}개</span>
                   </div>
                 ))}
               </div>
             )}
-            <Button 
+            <Button
               onClick={handlePayment}
               disabled={isLoading}
               className="w-full bg-blue-500 hover:bg-blue-600 text-white mt-4"

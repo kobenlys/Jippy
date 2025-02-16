@@ -16,14 +16,14 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   return (
     <div className="flex space-x-2 mb-4">
       <Button
-        variant={paymentMethod === "cash" ? "primary" : "default"}
+        variant={paymentMethod === "cash" ? "orange" : "default"}
         className="w-1/2"
         onClick={() => onSelectPaymentMethod("cash")}
       >
         현금
       </Button>
       <Button
-        variant={paymentMethod === "qr" ? "primary" : "default"}
+        variant={paymentMethod === "qr" ? "orange" : "default"}
         className="w-1/2"
         onClick={() => onSelectPaymentMethod("qr")}
       >
