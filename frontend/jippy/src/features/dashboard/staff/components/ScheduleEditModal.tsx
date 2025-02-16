@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { DAYS_OF_WEEK, Schedule } from "@/features/calendar/types/calendar";
 import staffApi from "../hooks/staffApi";

@@ -2,8 +2,10 @@ import { ApiResponse } from "@/features/attendance/types/attendance";
 import {
   CreateScheduleRequest,
   DeleteStaffResponse,
+  MonthlySalesResponse,
   StaffInfo,
   StaffMonthlyStatus,
+  StaffSalesResponse,
   StaffTotalStatus,
   StoreSalaryResponse,
   TotalStoreSalaryResponse,
@@ -250,6 +252,53 @@ const staffApi = {
     );
     if (!response.ok) throw new Error("스케줄 삭제에 실패했습니다.");
     return response.json();
+  },
+
+  fetchStaffSales: async (
+    storeId: number,
+    yearMonth: string
+  ): Promise<StaffSalesResponse> => {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/api/storeStaff/staff/earn?storeId=${storeId}&yearMonth=${yearMonth}`,
+        {
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("직원 매출 조회에 실패했습니다");
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error("직원 매출 조회 실패:", error);
+      throw error;
+    }
+  },
+
+  fetchMonthlySales: async (
+    storeId: number,
+    startDate: string,
+    endDate: string
+  ): Promise<MonthlySalesResponse> => {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/api/payment-history/sales/month?storeId=${storeId}&startDate=${startDate}&endDate=${endDate}`,
+        {
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("월별 매출 조회에 실패했습니다");
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error("월별 매출 조회 실패:", error);
+      throw error;
+    }
   },
 };
 

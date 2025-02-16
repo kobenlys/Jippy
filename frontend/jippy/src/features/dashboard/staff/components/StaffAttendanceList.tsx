@@ -1,10 +1,10 @@
 "use client";
 
-import LoadingSpinner from "@/features/common/components/ui/LoadingSpinner";
-import useStaffList from "../hooks/useStaffManagement";
-import { AlertTriangle, ChevronDown } from "lucide-react";
+import React, { useState } from "react";
 import StaffAttendanceCard from "./StaffAttendanceCard";
-import { useState } from "react";
+import LoadingSpinner from "@/features/common/components/ui/LoadingSpinner";
+import { AlertTriangle, ChevronDown } from "lucide-react";
+import useStaffList from "../hooks/useStaffManagement";
 
 interface StaffAttendanceListProps {
   storeId: number;
@@ -13,13 +13,6 @@ interface StaffAttendanceListProps {
 const StaffAttendanceList = ({ storeId }: StaffAttendanceListProps) => {
   const { data: staffList, isLoading, error } = useStaffList(storeId);
   const [openStaffId, setOpenStaffId] = useState<number | null>(null);
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[200px]">
-        <LoadingSpinner />
-      </div>
-    );
-  }
 
   if (isLoading) {
     return (
