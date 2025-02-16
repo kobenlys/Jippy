@@ -17,15 +17,33 @@ export default function ShopsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  const user = useSelector((state: RootState) => state.user.profile);
-  const accessToken = useSelector((state: RootState) => state.user.accessToken);
   const router = useRouter();
+  // 클라이언트 사이드에서만 실행하도록 변경
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [userId, setUserName] = useState<string | null>(null);
 
   useEffect(() => {
+    if (typeof document !== "undefined") {
+      // document가 클라이언트에서만 실행됨을 보장
+      const token =
+        document.cookie
+          .split("; ")
+          .find((cookie) => cookie.startsWith("accessToken="))
+          ?.split("=")[1] || null;
+      const userId =
+        document.cookie
+          .split("; ")
+          .find((cookie) => cookie.startsWith("userId="))
+          ?.split("=")[1] || null;
+
+      setAccessToken(token);
+      setUserName(userId);
+    }
+
     const fetchShops = async () => {
-      if (user?.id && accessToken) {
+      if (userId && accessToken) {
         try {
-          await dispatch(fetchShop(Number(user.id))).unwrap();
+          await dispatch(fetchShop(Number(userId))).unwrap();
           setLocalError(null);
         } catch (err) {
           setLocalError(
@@ -37,7 +55,7 @@ export default function ShopsPage() {
     };
 
     fetchShops();
-  }, [user?.id, accessToken, dispatch]);
+  }, [dispatch]); // 👈 useEffect 안에서 실행 (클라이언트 사이드에서만 실행됨)
 
   const fetchShopDetail = async (storeId: number) => {
     try {
