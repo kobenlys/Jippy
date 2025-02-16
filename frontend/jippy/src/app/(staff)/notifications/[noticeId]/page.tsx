@@ -8,34 +8,53 @@ import {
     ApiResponse
 } from "@/features/notifications/types/notifications";
 
+const getCookieValue = (name: string): string | null => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+        return parts.pop()?.split(';').shift() || null;
+    }
+    return null;
+};
+
 const NoticeDetailPage = ({
     params
-} : {
-    params : { noticeId: string }
+}: {
+    params: { noticeId: string }
 }) => {
     const router = useRouter();
     const [notice, setNotice] = useState<Notice | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // redux 구현 시 변경
-    const storeId = 1;
-
     const fetchNoticeDetail = async () => {
         try {
             setIsLoading(true);
             setError(null);
+
+            const encodedStoreIdList = getCookieValue('storeIdList');
+            const userId = getCookieValue('userId');
+
+            if (!encodedStoreIdList || !userId) {
+                router.push("/login");
+                return;
+            }
+
+            const decodedStoreIdList = decodeURIComponent(encodedStoreIdList);
+            const storeIdList = JSON.parse(decodedStoreIdList);
+            const storeId = storeIdList[0];
+
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/notice/${storeId}/select/${params.noticeId}`,
                 {
-                    method : "GET",
+                    method: "GET",
                     headers: {
-                        "Content-Type" : "application/json",
+                        "Content-Type": "application/json",
                     },
                 }
             );
 
-            const responseData : ApiResponse<Notice> = await response.json();
+            const responseData: ApiResponse<Notice> = await response.json();
 
             if (!responseData.success) {
                 throw new Error(
@@ -67,7 +86,7 @@ const NoticeDetailPage = ({
     if (isLoading) {
         return (
             <div>
-                <PageTitle/>
+                <PageTitle />
                 <div className="p-4 text-center">로딩 중...</div>
             </div>
         );
@@ -85,7 +104,7 @@ const NoticeDetailPage = ({
     if (!notice) {
         return (
             <div>
-                <PageTitle/>
+                <PageTitle />
                 <div className="p-4 text-center">존재하지 않는 공지사항입니다</div>
                 <div className="mt-4 text-center">
                     <button
@@ -111,7 +130,7 @@ const NoticeDetailPage = ({
                             <span className="text-gray-300">{notice.createdAt}</span>
                         </div>
                     </div>
-                    
+
                     <div className="py-6 whitespace-pre-wrap">
                         {notice.content}
                     </div>
