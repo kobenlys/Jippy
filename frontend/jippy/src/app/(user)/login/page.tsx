@@ -137,13 +137,13 @@ const LoginPage = () => {
                 dispatch(setShops(userShops));
                 dispatch(setCurrentShop(userShops[0]));
                 if (isPos) {
-                  document.cookie = `loginType=${"POS"}; path=/; max-age=86400`;
+                  document.cookie = `loginType=${"POS"}; path=/; max-age=2419200`;
                   router.replace("/order");
                 } else if (userType == "OWNER") {
-                  document.cookie = `loginType=${"OWNER"}; path=/; max-age=86400`;
+                  document.cookie = `loginType=${"OWNER"}; path=/; max-age=2419200`;
                   router.replace("/confirm");
                 } else if (userType == "STAFF") {
-                  document.cookie = `loginType=${"STAFF"}; path=/; max-age=86400`;
+                  document.cookie = `loginType=${"STAFF"}; path=/; max-age=2419200`;
                   router.replace("/attendance");
                 }
               } else {
