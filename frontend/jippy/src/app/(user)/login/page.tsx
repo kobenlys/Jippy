@@ -139,7 +139,7 @@ const LoginPage = () => {
                 if (isPos) {
                   router.replace("/order");
                 } else if (userType == "OWNER") {
-                  router.replace("/shop");
+                  router.replace("/owner/dashboard");
                 } else if (userType == "STAFF") {
                   router.replace("/attendance");
                 }

@@ -22,7 +22,7 @@ const StaffDashboardPage = () => {
       const parsedStoreId = cookieValue ? parseInt(cookieValue, 10) : null;
 
       if (!parsedStoreId || isNaN(parsedStoreId)) {
-        router.push("/shop");
+        router.push("/owner/dashboard");
       } else {
         setStoreId(parsedStoreId);
       }
