@@ -30,7 +30,7 @@ const convertToProduct = (productDetail: ProductDetailResponse): Product => {
     name: productDetail.name,
     price: productDetail.price,
     category: productDetail.productCategoryId.toString(),
-    image: productDetail.image
+    image: productDetail.image,
   };
 };
 
@@ -39,12 +39,16 @@ const POSPage = () => {
   const dispatch = useAppDispatch();
 
   const [currentOrder, setCurrentOrder] = useState<OrderItem[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(
+    null
+  );
 
   const handleAddProduct = (productDetail: ProductDetailResponse) => {
     const product = convertToProduct(productDetail);
-    const existingItemIndex = currentOrder.findIndex(item => item.id === product.id);
-    
+    const existingItemIndex = currentOrder.findIndex(
+      (item) => item.id === product.id
+    );
+
     if (existingItemIndex > -1) {
       const updatedOrder = [...currentOrder];
       updatedOrder[existingItemIndex].quantity += 1;
@@ -56,9 +60,9 @@ const POSPage = () => {
 
   const handleQuantityChange = (productId: number, newQuantity: number) => {
     if (newQuantity === 0) {
-      setCurrentOrder(currentOrder.filter(item => item.id !== productId));
+      setCurrentOrder(currentOrder.filter((item) => item.id !== productId));
     } else {
-      const updatedOrder = currentOrder.map(item => 
+      const updatedOrder = currentOrder.map((item) =>
         item.id === productId ? { ...item, quantity: newQuantity } : item
       );
       setCurrentOrder(updatedOrder);
@@ -66,7 +70,10 @@ const POSPage = () => {
   };
 
   const calculateTotal = () => {
-    return currentOrder.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return currentOrder.reduce(
+      (total, item) => total + item.price * item.quantity,
+      0
+    );
   };
 
   const handleCancelOrder = () => {
@@ -86,23 +93,23 @@ const POSPage = () => {
         orderName: `주문 ${new Date().toLocaleString()}`,
         customerName: "고객",
         storeId: 1,
-        products: currentOrder.map(item => ({
+        products: currentOrder.map((item) => ({
           id: item.id,
-          quantity: item.quantity
-        }))
+          quantity: item.quantity,
+        })),
       };
-      
+
       console.log("Creating order data:", orderData);
 
       try {
         // Redux store에 주문 데이터 저장
         dispatch(setOrderData(orderData));
-        
+
         // localStorage에 백업
         localStorage.setItem("orderData", JSON.stringify(orderData));
-        
+
         console.log("Order data saved successfully");
-        
+
         // 결제 페이지로 이동
         router.push("/payment/request");
       } catch (error) {
@@ -119,9 +126,7 @@ const POSPage = () => {
   return (
     <div className="flex h-full">
       <div className="w-4/6 overflow-y-auto pb-8">
-      <ProductGrid
-        onAddProduct={handleAddProduct}
-      />
+        <ProductGrid onAddProduct={handleAddProduct} />
       </div>
 
       <div className="w-2/6 h-full bg-white p-4 flex flex-col">
@@ -133,8 +138,11 @@ const POSPage = () => {
                 <p className="text-gray-500">주문 항목이 없습니다.</p>
               ) : (
                 <ul>
-                  {currentOrder.map(item => (
-                    <li key={item.id} className="flex justify-between items-center mb-2 pb-2 border-b">
+                  {currentOrder.map((item) => (
+                    <li
+                      key={item.id}
+                      className="flex justify-between items-center mb-2 pb-2 border-b"
+                    >
                       <div>
                         <span>{item.name}</span>
                         <span className="text-gray-500 ml-2">
@@ -144,7 +152,9 @@ const POSPage = () => {
                       <div className="flex items-center">
                         <Button
                           variant="default"
-                          onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                          onClick={() =>
+                            handleQuantityChange(item.id, item.quantity - 1)
+                          }
                           className="mr-2 sm"
                         >
                           -
@@ -152,7 +162,9 @@ const POSPage = () => {
                         <span>{item.quantity}</span>
                         <Button
                           variant="default"
-                          onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                          onClick={() =>
+                            handleQuantityChange(item.id, item.quantity + 1)
+                          }
                           className="ml-2 sm"
                         >
                           +
@@ -165,46 +177,47 @@ const POSPage = () => {
             </div>
           </Card>
 
-        <div className="bg-gray-100 p-4 rounded">
-          <div className="flex justify-between mb-4">
-            <span className="font-bold">총 합계:</span>
-            <span className="font-bold text-xl">
-              {calculateTotal().toLocaleString()}원
-            </span>
-          </div>
-          <div className="flex space-x-2 mb-4">
-            <Button 
-              variant={paymentMethod === "cash" ? "primary" : "default"}
-              className="w-1/2"
-              onClick={() => setPaymentMethod("cash")}
-            >
-              현금
-            </Button>
-            <Button 
-              variant={paymentMethod === "qr" ? "primary" : "default"}
-              className="w-1/2"
-              onClick={() => setPaymentMethod("qr")}
-            >
-              QR
-            </Button>
-          </div>
-          
-          <div className="flex space-x-2">
-            <Button 
-              variant="default" 
-              className="w-1/2"
-              onClick={handleCancelOrder}
-            >
-              주문 취소
-            </Button>
-            <Button 
-              variant="default" 
-              className="w-1/2"
-              onClick={handleCompleteOrder}
-              disabled={currentOrder.length === 0 || !paymentMethod}
-            >
-              결제하기
-            </Button>
+          <div className="bg-gray-100 p-4 rounded">
+            <div className="flex justify-between mb-4">
+              <span className="font-bold">총 합계:</span>
+              <span className="font-bold text-xl">
+                {calculateTotal().toLocaleString()}원
+              </span>
+            </div>
+            <div className="flex space-x-2 mb-4">
+              <Button
+                variant={paymentMethod === "cash" ? "primary" : "default"}
+                className="w-1/2"
+                onClick={() => setPaymentMethod("cash")}
+              >
+                현금
+              </Button>
+              <Button
+                variant={paymentMethod === "qr" ? "primary" : "default"}
+                className="w-1/2"
+                onClick={() => setPaymentMethod("qr")}
+              >
+                QR
+              </Button>
+            </div>
+
+            <div className="flex space-x-2">
+              <Button
+                variant="default"
+                className="w-1/2"
+                onClick={handleCancelOrder}
+              >
+                주문 취소
+              </Button>
+              <Button
+                variant="default"
+                className="w-1/2"
+                onClick={handleCompleteOrder}
+                disabled={currentOrder.length === 0 || !paymentMethod}
+              >
+                결제하기
+              </Button>
+            </div>
           </div>
         </div>
       </div>
