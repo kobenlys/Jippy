@@ -1,4 +1,3 @@
-// POSPage.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -13,6 +12,7 @@ import {
   convertToProduct,
 } from "@/features/order/components/utils";
 import { OrderPayment } from "@/features/order/components/OrderSummary";
+import { CashPaymentModal } from "@/features/order/components/CashPaymentModal";
 
 const POSPage = () => {
   const router = useRouter();
@@ -22,6 +22,7 @@ const POSPage = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(
     null
   );
+  const [isCashModalOpen, setIsCashModalOpen] = useState(false);
 
   const handleAddProduct = (productDetail: ProductDetailResponse) => {
     const product = convertToProduct(productDetail);
@@ -52,6 +53,29 @@ const POSPage = () => {
   const handleCancelOrder = () => {
     setCurrentOrder([]);
     setPaymentMethod(null);
+    setIsCashModalOpen(false);
+  };
+
+  const handleCashPayment = async (request: {
+    storeId: number;
+    totalCost: number;
+    paymentType: "CASH";
+    productList: Array<{
+      productId: number;
+      quantity: number;
+    }>;
+    receivedAmount: number;
+  }) => {
+    try {
+      // TODO: API 호출로 현금 결제 처리
+      console.log("현금 결제 처리:", request);
+
+      // 결제 성공 후 주문 초기화
+      handleCancelOrder();
+    } catch (error) {
+      console.error("현금 결제 오류:", error);
+      throw error;
+    }
   };
 
   const handlePaymentSubmit = async () => {
@@ -83,7 +107,10 @@ const POSPage = () => {
       return;
     }
 
-    alert("현금 결제는 아직 구현되지 않았습니다.");
+    if (paymentMethod === "cash") {
+      setIsCashModalOpen(true);
+      return;
+    }
   };
 
   return (
@@ -103,6 +130,18 @@ const POSPage = () => {
           onCancelOrder={handleCancelOrder}
         />
       </div>
+
+      <CashPaymentModal
+        isOpen={isCashModalOpen}
+        onClose={() => setIsCashModalOpen(false)}
+        totalAmount={calculateTotal(currentOrder)}
+        onConfirm={handleCashPayment}
+        storeId={1}
+        productList={currentOrder.map((item) => ({
+          productId: item.id,
+          quantity: item.quantity,
+        }))}
+      />
     </div>
   );
 };
