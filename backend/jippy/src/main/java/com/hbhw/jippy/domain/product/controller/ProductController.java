@@ -50,10 +50,15 @@ public class ProductController {
 
     @Operation(summary = "매장 별 상품 정보수정", description = "상품 정보를 수정합니다")
     @PutMapping("{storeId}/update/{productId}")
-    public ApiResponse<?> updateProduct(@RequestBody ProductUpdateRequest productUpdateRequest, @PathVariable("storeId") Integer storeId, @PathVariable("productId") Long productId) {
-        productService.modifyProduct(storeId, productId, productUpdateRequest);
+    public ApiResponse<?> updateProduct(
+            @PathVariable("storeId") Integer storeId,
+            @PathVariable("productId") Long productId,
+            @RequestPart("productUpdateRequest") ProductUpdateRequest productUpdateRequest,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        productService.modifyProduct(storeId, productId, productUpdateRequest, image);
         return ApiResponse.success(HttpStatus.OK);
     }
+
 
     @Operation(summary = "매장 별 상품 삭제", description = "상품을 삭제합니다")
     @DeleteMapping("{storeId}/delete/{productId}")

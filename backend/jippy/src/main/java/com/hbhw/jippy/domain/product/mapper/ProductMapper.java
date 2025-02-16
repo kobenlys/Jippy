@@ -16,6 +16,7 @@ public class ProductMapper {
     public static ProductListResponse convertProductListResponse(Product product) {
         return ProductListResponse.builder()
                 .id(product.getId())
+                .storeId(product.getStore().getId())
                 .productCategoryId(product.getProductCategory().getId())
                 .name(product.getName())
                 .price(product.getPrice())

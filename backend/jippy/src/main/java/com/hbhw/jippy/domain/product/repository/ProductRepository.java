@@ -19,5 +19,5 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findByIdAndStoreId(Long id, Integer storeId);
 
     @Transactional
-    void deleteByIdAndStoreId(Integer id, Long storeId);
+    void deleteByStoreIdAndId(Integer storeId, Long id);
 }
