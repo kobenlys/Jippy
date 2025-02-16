@@ -11,6 +11,8 @@ export const convertToProduct = (
     price: productDetail.price,
     category: productDetail.productCategoryId.toString(),
     image: productDetail.image,
+    size: productDetail.productSize,
+    type: productDetail.productType,
   };
 };
 
