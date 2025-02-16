@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/features/common/components/ui/LoadingSpinner";
 import {
   ApiResponse,
@@ -11,7 +12,17 @@ import PageTitle from "@/features/common/components/layout/title/PageTitle";
 import CalendarGrid from "@/features/calendar/components/CalendarGrid";
 import CalendarHeader from "@/features/calendar/components/CalendarHeader";
 
+const getCookieValue = (name: string): string | null => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    return parts.pop()?.split(';').shift() || null;
+  }
+  return null;
+};
+
 const CalendarPage = () => {
+  const router = useRouter();
   const [scheduleData, setScheduleData] = useState<StaffScheduleData | null>(
     null
   );
@@ -26,12 +37,20 @@ const CalendarPage = () => {
       try {
         setIsLoading(true);
 
-        // redux 구축 후 교체 필요!!!
-        const storeId = 1;
-        const staffId = 1;
+        const encodedStoreIdList = getCookieValue('storeIdList');
+        const userId = getCookieValue('userId');
+
+        if (!encodedStoreIdList || !userId) {
+          router.push("/login");
+          return;
+        }
+
+        const decodedStoreIdList = decodeURIComponent(encodedStoreIdList);
+        const storeIdList = JSON.parse(decodedStoreIdList);
+        const storeId = storeIdList[0];
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/calendar/${storeId}/select/${staffId}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/calendar/${storeId}/select/${userId}`,
           {
             method: "GET",
             headers: {
@@ -56,7 +75,6 @@ const CalendarPage = () => {
 
         setScheduleData(responseData.data as StaffScheduleData);
 
-        // 시간 범위 계산
         const schedules = (responseData.data as StaffScheduleData).schedules;
         let minHour = Math.min(
           ...schedules.map((s) => parseInt(s.startTime.split(":")[0]))
@@ -71,7 +89,6 @@ const CalendarPage = () => {
         minHour = Math.max(0, minHour - 1);
         maxHour = Math.min(24, maxHour);
 
-        // 시간 슬롯 생성
         const slots: TimeSlot[] = Array.from(
           { length: maxHour - minHour + 1 },
           (_, i) => {
@@ -95,7 +112,6 @@ const CalendarPage = () => {
       } catch (error) {
         setError("스케줄을 불러오는데 실패했습니다.");
 
-        // 개발 환경에서만 에러 console에 출력
         if (process.env.NODE_ENV === "development") {
           console.error("스케줄 로딩 실패: ", error);
         }
@@ -107,7 +123,6 @@ const CalendarPage = () => {
     fetchSchedule();
   }, []);
 
-  // 첫 시간 슬롯 기준 위치 계산
   const calculateEventPosition = (hour: number) => {
     const firstHour = timeSlots[0]?.originalHour ?? 0;
     return (hour - firstHour) * 40;
