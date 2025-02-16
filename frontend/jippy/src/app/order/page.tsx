@@ -1,26 +1,18 @@
-// app/pos/page.tsx
+// POSPage.tsx
 "use client";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch } from "@/redux/hooks";
 import ProductGrid from "@/features/order/components/ProductGrid";
-import { Button } from "@/features/common/components/ui/button";
 import { ProductDetailResponse } from "@/redux/types/product";
 import { setOrderData } from "@/redux/slices/paymentSlice";
-import {
-  OrderItem,
-  PaymentMethod,
-  PaymentType,
-  //   CashDenomination,
-} from "@/features/order/types/pos";
-import { OrderSummary } from "@/features/order/components/OrderSummary";
-import { PaymentMethodSelector } from "@/features/order/components/PaymentMethodSelector";
-// import { CashPaymentModal } from "@/features/order/components/CashPaymentModal";
+import { OrderItem, PaymentMethod } from "@/features/order/types/pos";
 import {
   calculateTotal,
   convertToProduct,
 } from "@/features/order/components/utils";
+import { OrderPayment } from "@/features/order/components/OrderSummary";
 
 const POSPage = () => {
   const router = useRouter();
@@ -30,7 +22,6 @@ const POSPage = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(
     null
   );
-  //   const [isCashPaymentModalOpen, setIsCashPaymentModalOpen] = useState(false);
 
   const handleAddProduct = (productDetail: ProductDetailResponse) => {
     const product = convertToProduct(productDetail);
@@ -61,26 +52,26 @@ const POSPage = () => {
   const handleCancelOrder = () => {
     setCurrentOrder([]);
     setPaymentMethod(null);
-    // setIsCashPaymentModalOpen(false);
   };
 
-  const handleCompleteOrder = async () => {
+  const handlePaymentSubmit = async () => {
     if (!paymentMethod) {
       alert("결제 방법을 선택해주세요.");
       return;
     }
 
-    const orderData = {
-      storeId: 1, // Hardcoded for now, might need to be dynamic
-      totalCost: calculateTotal(currentOrder),
-      paymentType: paymentMethod === "qr" ? "QRCODE" : ("CASH" as PaymentType),
-      productList: currentOrder.map((item) => ({
-        productId: item.id,
-        quantity: item.quantity,
-      })),
-    };
-
     if (paymentMethod === "qr") {
+      const orderData = {
+        totalAmount: calculateTotal(currentOrder),
+        orderName: `주문 ${new Date().toLocaleString()}`,
+        customerName: "고객",
+        storeId: 1,
+        products: currentOrder.map((item) => ({
+          id: item.id,
+          quantity: item.quantity,
+        })),
+      };
+
       try {
         dispatch(setOrderData(orderData));
         localStorage.setItem("orderData", JSON.stringify(orderData));
@@ -92,58 +83,8 @@ const POSPage = () => {
       return;
     }
 
-    // Cash Payment Flow
-    if (paymentMethod === "cash") {
-      //   setIsCashPaymentModalOpen(true);
-    }
+    alert("현금 결제는 아직 구현되지 않았습니다.");
   };
-
-  // const handleCashPaymentConfirm = async (
-  //   cashDenomination: CashDenomination
-  // ) => {
-  //   try {
-  //     const cashPaymentRequest = {
-  //       storeId: 1, // 하드코딩 값
-  //       totalCost: calculateTotal(currentOrder),
-  //       paymentType: "CASH" as PaymentType,
-  //       productList: currentOrder.map((item) => ({
-  //         productId: item.id,
-  //         quantity: item.quantity,
-  //       })),
-  //       cashRequest: cashDenomination,
-  //     };
-
-  //     const response = await fetch(
-  //       `${process.env.NEXT_PUBLIC_API_URL}/api/payment/cash/confirm`,
-  //       {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify(cashPaymentRequest),
-  //       }
-  //     );
-
-  //     if (!response.ok) {
-  //       // 에러 응답 본문 로깅
-  //       const errorBody = await response.text();
-  //       console.error("Error response body:", errorBody);
-  //       throw new Error(`Cash payment failed with status ${response.status}`);
-  //     }
-
-  //     const responseData = await response.json();
-  //     console.log("결제 응답:", responseData);
-
-  //     // 결제 후 처리
-  //     handleCancelOrder();
-
-  //     // 결제 성공 메시지
-  //     alert(responseData.message || "현금 결제가 완료되었습니다.");
-  //   } catch (error) {
-  //     console.error("Cash payment error:", error);
-  //     alert("현금 결제 중 오류가 발생했습니다. 다시 시도해주세요.");
-  //   }
-  // };
 
   return (
     <div className="flex h-full">
@@ -151,46 +92,17 @@ const POSPage = () => {
         <ProductGrid onAddProduct={handleAddProduct} />
       </div>
 
-      <div className="w-2/6 h-full bg-white p-4 flex flex-col">
-        <h2 className="text-xl font-bold mb-4">현재 주문</h2>
-        <div className="flex-1 overflow-hidden flex flex-col">
-          <OrderSummary
-            currentOrder={currentOrder}
-            onQuantityChange={handleQuantityChange}
-            calculateTotal={() => calculateTotal(currentOrder)}
-          />
-
-          <PaymentMethodSelector
-            paymentMethod={paymentMethod}
-            onSelectPaymentMethod={setPaymentMethod}
-          />
-
-          <div className="flex space-x-2">
-            <Button
-              variant="default"
-              className="w-1/2"
-              onClick={handleCancelOrder}
-            >
-              주문 취소
-            </Button>
-            <Button
-              variant="default"
-              className="w-1/2"
-              onClick={handleCompleteOrder}
-              disabled={currentOrder.length === 0 || !paymentMethod}
-            >
-              결제하기
-            </Button>
-          </div>
-        </div>
+      <div className="w-2/6 h-full">
+        <OrderPayment
+          currentOrder={currentOrder}
+          onQuantityChange={handleQuantityChange}
+          calculateTotal={() => calculateTotal(currentOrder)}
+          paymentMethod={paymentMethod}
+          onSelectPaymentMethod={setPaymentMethod}
+          onPaymentSubmit={handlePaymentSubmit}
+          onCancelOrder={handleCancelOrder}
+        />
       </div>
-
-      {/* <CashPaymentModal
-        isOpen={isCashPaymentModalOpen}
-        totalAmount={calculateTotal(currentOrder)}
-        onClose={() => setIsCashPaymentModalOpen(false)}
-        onConfirm={handleCashPaymentConfirm}
-      /> */}
     </div>
   );
 };

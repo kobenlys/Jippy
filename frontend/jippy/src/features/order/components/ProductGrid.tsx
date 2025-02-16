@@ -1,3 +1,4 @@
+// ProductGrid.tsx
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -9,7 +10,7 @@ import { ProductDetailResponse } from "@/redux/types/product";
 import ProductRegistrationModal from "./ProductRegistrationModal";
 import ProductOptionModal from "./ProductOptionModal";
 import { Plus } from "lucide-react";
-import CreateCategory from "./Category";
+import CategoryList from "./CategoryList";
 
 interface ProductGridProps {
   onProductSelect?: (product: ProductDetailResponse) => void;
@@ -39,7 +40,6 @@ const ProductGrid = ({
 
   useEffect(() => {
     if (currentShop?.id) {
-      console.log("상점 ID로 상품 조회:", currentShop.id);
       dispatch(fetchProducts(currentShop.id));
     }
   }, [dispatch, currentShop?.id]);
@@ -48,18 +48,15 @@ const ProductGrid = ({
     categoryName: string,
     categoryId: number | -1
   ) => {
-    console.log("카테고리 선택:", { categoryName, categoryId });
     setSelectedCategory(categoryName);
     setSelectedCategoryId(categoryId);
   };
 
   // 상품 그룹화 로직
   const groupedProducts = useMemo(() => {
-    console.log("상품 그룹화 시작:", products);
     if (!Array.isArray(products)) return [];
 
     const groups: { [key: string]: ProductDetailResponse[] } = {};
-
     products.forEach((product) => {
       if (!groups[product.name]) {
         groups[product.name] = [];
@@ -67,76 +64,30 @@ const ProductGrid = ({
       groups[product.name].push(product);
     });
 
-    const result = Object.entries(groups).map(([name, variants]) => {
-      console.log("name:", name); // name 변수를 활용하여 오류 방지
-      return {
-        ...variants[0],
-        variants: variants,
-      };
-    });
-
-    console.log("그룹화된 상품:", result);
-    return result;
+    return Object.entries(groups).map(([name, variants]) => ({
+      ...variants[0],
+      variants: variants,
+    }));
   }, [products]);
 
   const handleProductClick = (
     product: ProductDetailResponse & { variants: ProductDetailResponse[] }
   ) => {
-    console.group("===== 상품 클릭 테스트 =====");
-    console.log("1. 선택된 기본 상품:", {
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      type: product.productType,
-      size: product.productSize,
-    });
-
-    // variants 데이터 구조 확인
-    const variantsSummary = product.variants.map((v) => ({
-      id: v.id,
-      name: v.name,
-      price: v.price,
-      type: v.productType,
-      size: v.productSize,
-    }));
-    console.log("2. 생성된 variants:", variantsSummary);
-
-    // 옵션이 하나뿐이거나 기본 상품만 있을 경우 바로 추가
     if (product.variants.length === 1) {
-      console.log("단일 상품 바로 추가");
-      if (onProductSelect) {
-        onProductSelect(product.variants[0]);
-      }
-      if (onAddProduct) {
-        onAddProduct(product.variants[0]);
-      }
-      console.groupEnd();
+      if (onProductSelect) onProductSelect(product.variants[0]);
+      if (onAddProduct) onAddProduct(product.variants[0]);
       return;
     }
 
-    // 옵션이 여러 개인 경우 모달 오픈
     setSelectedProduct(product.variants);
     setIsOptionModalOpen(true);
-    console.groupEnd();
   };
 
   const handleOptionSelect = (selectedOption: ProductDetailResponse) => {
-    console.group("옵션 선택");
-    console.log("선택된 옵션:", selectedOption);
-
-    if (!selectedOption) {
-      console.warn("⚠️ 선택된 옵션이 없습니다.");
-      return;
-    }
-
-    if (onAddProduct) {
-      console.log("📌 onAddProduct 호출");
-      onAddProduct(selectedOption); // POSPage에 상품 추가 전달
-    }
-
+    if (!selectedOption) return;
+    if (onAddProduct) onAddProduct(selectedOption);
     setIsOptionModalOpen(false);
     setSelectedProduct(null);
-    console.groupEnd();
   };
 
   if (!currentShop) return <div>매장을 선택해주세요.</div>;
@@ -162,9 +113,9 @@ const ProductGrid = ({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-none bg-white p-4 border-b border-t">
+      <div className="flex-none bg-white p-4 border-b">
         <div className="px-4">
-          <CreateCategory
+          <CategoryList
             selectedCategory={selectedCategory}
             onCategorySelect={handleCategorySelect}
           />
@@ -230,7 +181,6 @@ const ProductGrid = ({
         <ProductOptionModal
           isOpen={isOptionModalOpen}
           onClose={() => {
-            console.log("옵션 모달 닫기");
             setIsOptionModalOpen(false);
             setSelectedProduct(null);
           }}
