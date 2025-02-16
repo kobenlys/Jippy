@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import {
   ApiResponse,
   NoticeResponse,
@@ -23,7 +23,7 @@ const NotificationsPage = () => {
   const [error, setError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  const fetchNotices = async () => {
+  const fetchNotices = useCallback(async () => {
     const now = new Date();
     // redux 구현 시 변경
     const owner_name = "한승남";
@@ -75,11 +75,11 @@ const NotificationsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentPage]);
 
   useEffect(() => {
     fetchNotices();
-  }, [currentPage]);
+  }, [fetchNotices]);
 
   useEffect(() => {
     if (!isLoading && notices) {

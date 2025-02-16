@@ -182,7 +182,9 @@ const SeasonPreferenceChart: React.FC<SeasonPreferenceChartProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* 월별 총 판매량 (Line 차트) */}
           <div className="bg-gray-50 rounded p-4 shadow">
-            <h3 className="text-lg font-semibold mb-2 text-gray-700">월별 총 주문량</h3>
+            <h3 className="text-lg font-semibold mb-2 text-gray-700">
+              월별 총 주문량
+            </h3>
             {monthlyLineChartData ? (
               <div style={{ height: "300px" }}>
                 <Line

@@ -1,4 +1,3 @@
-// ProductGrid.tsx
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -64,8 +63,8 @@ const ProductGrid = ({
       groups[product.name].push(product);
     });
 
-    return Object.entries(groups).map(([name, variants]) => ({
-      ...variants[0],
+    return Object.values(groups).map((variants) => ({
+      ...variants[0], // Only using the first variant
       variants: variants,
     }));
   }, [products]);

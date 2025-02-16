@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -8,7 +6,7 @@ import {
   DialogTitle,
 } from "@/features/common/components/ui/dialog/dialog";
 
-interface CashSettlementModalProps {
+interface PettyCashModalProps {
   isOpen: boolean;
   onClose: () => void;
   storeId: number;
@@ -35,22 +33,29 @@ interface PaymentHistoryItem {
   uuid: string;
 }
 
-interface ApiResponse<T> {
-  code: number;
-  success: boolean;
-  data: T;
-}
+const denominationMap = {
+  fifty_thousand_won: { value: 50000, label: "50,000원" },
+  ten_thousand_won: { value: 10000, label: "10,000원" },
+  five_thousand_won: { value: 5000, label: "5,000원" },
+  one_thousand_won: { value: 1000, label: "1,000원" },
+  five_hundred_won: { value: 500, label: "500원" },
+  one_hundred_won: { value: 100, label: "100원" },
+  fifty_won: { value: 50, label: "50원" },
+  ten_won: { value: 10, label: "10원" },
+};
 
-export default function CashSettlementModal({
+export default function PettyCashModal({
   isOpen,
   onClose,
   storeId,
-}: CashSettlementModalProps) {
+}: PettyCashModalProps) {
   const [activeTab, setActiveTab] = useState<"cash" | "qr">("cash");
   const [cashData, setCashData] = useState<CashData | null>(null);
+  const [modifiedCash, setModifiedCash] = useState<CashData | null>(null);
   const [qrPayments, setQrPayments] = useState<PaymentHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [requestStartTime, setRequestStartTime] = useState<number | null>(null);
   const [initialCash, setInitialCash] = useState<
     Omit<CashData, "id" | "store_id">
   >({
@@ -63,102 +68,116 @@ export default function CashSettlementModal({
     fifty_won: 0,
     ten_won: 0,
   });
-  const [modifiedCash, setModifiedCash] = useState<CashData | null>(null);
-
-  const denominationMap = {
-    fifty_thousand_won: { value: 50000, label: "50,000원" },
-    ten_thousand_won: { value: 10000, label: "10,000원" },
-    five_thousand_won: { value: 5000, label: "5,000원" },
-    one_thousand_won: { value: 1000, label: "1,000원" },
-    five_hundred_won: { value: 500, label: "500원" },
-    one_hundred_won: { value: 100, label: "100원" },
-    fifty_won: { value: 50, label: "50원" },
-    ten_won: { value: 10, label: "10원" },
-  };
 
   const fetchQrPayments = async () => {
     setIsLoading(true);
     setError(null);
+    setRequestStartTime(Date.now());
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/list/success?storeId=${storeId}`
-      );
+      console.log("QR Payments 요청 시작:", new Date().toISOString());
+
+      const today = new Date();
+      const startDate = new Date(today.setHours(0, 0, 0, 0)).toISOString();
+      const endDate = new Date(today.setHours(23, 59, 59, 999)).toISOString();
+
+      const url =
+        `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/list?` +
+        new URLSearchParams({
+          storeId: storeId.toString(),
+          startDate,
+          endDate,
+          status: "SUCCESS",
+          type: "QR",
+        });
+
+      console.log("요청 URL:", url);
+
+      const response = await fetch(url);
+      console.log("응답 상태:", response.status);
 
       if (!response.ok) {
-        throw new Error("QR 결제 내역을 불러오는데 실패했습니다");
+        throw new Error(`QR 결제 내역 요청 실패: ${response.status}`);
       }
 
-      const result: ApiResponse<PaymentHistoryItem[]> = await response.json();
+      const result = await response.json();
+      console.log("데이터 수신 완료:", Date.now() - requestStartTime!, "ms");
+      console.log("받은 데이터 크기:", JSON.stringify(result).length, "bytes");
 
       if (!result.success) {
-        throw new Error("QR 결제 내역을 불러오는데 실패했습니다");
+        throw new Error(
+          result.message || "QR 결제 내역을 불러오는데 실패했습니다"
+        );
       }
 
-      const qrPaymentsOnly = result.data.filter(
-        (payment) => payment.paymentType === "QR"
-      );
-      setQrPayments(qrPaymentsOnly);
+      setQrPayments(result.data);
+      setError(null);
     } catch (error) {
-      setError("QR 결제 내역을 불러오는데 실패했습니다");
       console.error("QR payments fetch error:", error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "알 수 없는 오류가 발생했습니다"
+      );
     } finally {
       setIsLoading(false);
+      setRequestStartTime(null);
     }
   };
 
   const fetchCashData = async () => {
     setIsLoading(true);
     setError(null);
+    setRequestStartTime(Date.now());
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/cash/${storeId}/select`
-      );
+      console.log("Cash Data 요청 시작:", new Date().toISOString());
+
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/api/cash/${storeId}/select`;
+      console.log("요청 URL:", url);
+
+      const response = await fetch(url);
+      console.log("응답 상태:", response.status);
 
       if (!response.ok) {
         if (response.status === 404 || response.status === 500) {
+          console.log("데이터 없음 응답");
           setCashData(null);
           setModifiedCash(null);
           return;
         }
-        throw new Error("시재 정보를 불러오는데 실패했습니다");
+        throw new Error(`시재 정보 요청 실패: ${response.status}`);
       }
 
-      const result: ApiResponse<CashData> = await response.json();
+      const result = await response.json();
+      console.log("데이터 수신 완료:", Date.now() - requestStartTime!, "ms");
+      console.log("받은 데이터 크기:", JSON.stringify(result).length, "bytes");
 
       if (!result.success) {
-        throw new Error("시재 정보를 불러오는데 실패했습니다");
+        throw new Error(
+          result.message || "시재 정보를 불러오는데 실패했습니다"
+        );
       }
 
       setCashData(result.data);
       setModifiedCash(result.data);
     } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message !== "시재 정보를 불러오는데 실패했습니다"
-      ) {
-        setError("알 수 없는 오류가 발생했습니다");
-      }
       console.error("Cash data fetch error:", error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "알 수 없는 오류가 발생했습니다"
+      );
     } finally {
       setIsLoading(false);
+      setRequestStartTime(null);
     }
   };
-
-  useEffect(() => {
-    if (isOpen) {
-      if (activeTab === "cash") {
-        fetchCashData();
-      } else {
-        fetchQrPayments();
-      }
-    }
-  }, [isOpen, activeTab, storeId]);
 
   const createInitialCash = async () => {
     setIsLoading(true);
     setError(null);
+    setRequestStartTime(Date.now());
 
     try {
       const response = await fetch(
@@ -176,18 +195,19 @@ export default function CashSettlementModal({
         throw new Error("시재 추가에 실패했습니다");
       }
 
-      const result: ApiResponse<CashData> = await response.json();
+      const result = await response.json();
 
       if (!result.success) {
         throw new Error("시재 추가에 실패했습니다");
       }
 
-      fetchCashData();
+      await fetchCashData();
     } catch (error) {
       setError("시재 추가에 실패했습니다");
       console.error("Create cash error:", error);
     } finally {
       setIsLoading(false);
+      setRequestStartTime(null);
     }
   };
 
@@ -196,6 +216,7 @@ export default function CashSettlementModal({
 
     setIsLoading(true);
     setError(null);
+    setRequestStartTime(Date.now());
 
     try {
       const response = await fetch(
@@ -205,16 +226,7 @@ export default function CashSettlementModal({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            fifty_thousand_won: modifiedCash.fifty_thousand_won,
-            ten_thousand_won: modifiedCash.ten_thousand_won,
-            five_thousand_won: modifiedCash.five_thousand_won,
-            one_thousand_won: modifiedCash.one_thousand_won,
-            five_hundred_won: modifiedCash.five_hundred_won,
-            one_hundred_won: modifiedCash.one_hundred_won,
-            fifty_won: modifiedCash.fifty_won,
-            ten_won: modifiedCash.ten_won,
-          }),
+          body: JSON.stringify(modifiedCash),
         }
       );
 
@@ -222,7 +234,7 @@ export default function CashSettlementModal({
         throw new Error("시재 수정에 실패했습니다");
       }
 
-      const result: ApiResponse<CashData> = await response.json();
+      const result = await response.json();
 
       if (!result.success) {
         throw new Error("시재 수정에 실패했습니다");
@@ -234,17 +246,8 @@ export default function CashSettlementModal({
       console.error("Update cash error:", error);
     } finally {
       setIsLoading(false);
+      setRequestStartTime(null);
     }
-  };
-
-  const handleCashUpdate = (
-    key: keyof Omit<CashData, "id" | "store_id">,
-    count: number
-  ) => {
-    setInitialCash((prev) => ({
-      ...prev,
-      [key]: count,
-    }));
   };
 
   const handleModifiedCashChange = (
@@ -277,12 +280,44 @@ export default function CashSettlementModal({
     );
   };
 
+  useEffect(() => {
+    console.log("Effect 실행 - 상태:", {
+      isOpen,
+      activeTab,
+      storeId,
+    });
+
+    if (isOpen) {
+      if (activeTab === "cash") {
+        fetchCashData();
+      } else {
+        fetchQrPayments();
+      }
+    }
+  }, [isOpen, activeTab, storeId]);
+
+  // 로딩 시간이 3초를 초과하면 경고 표시
+  const isLongLoading =
+    requestStartTime && Date.now() - requestStartTime > 3000;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] bg-white">
         <DialogHeader>
           <DialogTitle>시재 정산</DialogTitle>
         </DialogHeader>
+
+        {isLoading && (
+          <div className="text-sm text-gray-500">
+            로딩 시간:{" "}
+            {requestStartTime ? `${Date.now() - requestStartTime}ms` : "0ms"}
+            {isLongLoading && (
+              <div className="text-yellow-500">
+                ⚠️ 요청이 예상보다 오래 걸리고 있습니다
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mb-4">
           <div className="flex space-x-2 border-b">
@@ -366,10 +401,10 @@ export default function CashSettlementModal({
                         className="w-16 text-center border rounded-md"
                         value={initialCash[key as keyof typeof initialCash]}
                         onChange={(e) =>
-                          handleCashUpdate(
-                            key as keyof Omit<CashData, "id" | "store_id">,
-                            parseInt(e.target.value) || 0
-                          )
+                          setInitialCash((prev) => ({
+                            ...prev,
+                            [key]: parseInt(e.target.value) || 0,
+                          }))
                         }
                       />
                     </div>

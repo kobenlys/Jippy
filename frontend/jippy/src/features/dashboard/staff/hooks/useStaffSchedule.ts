@@ -37,7 +37,7 @@ const useStaffSchedule = (storeId: number): UseStaffScheduleReturn => {
 
   useEffect(() => {
     fetchSchedule();
-  }, [storeId]);
+  }, [storeId, fetchSchedule]);
 
   return {
     data,

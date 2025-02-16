@@ -3,14 +3,14 @@
 import { useState } from "react";
 import PaymentHistoryList from "@/features/payment/components/HistoryList";
 import PaymentHistoryDetail from "@/features/payment/components/HistoryDetail";
-import CashSettlementModal from "@/features/payment/components/SettlementModal";
+import PettyCashModal from "@/features/payment/components/PettyCashModal";
 import {
   PaymentHistoryDetail as PaymentDetailType,
   PaymentHistoryItem,
   ApiResponse,
 } from "@/features/payment/types/history";
 
-const PaymentHistoryPage = () => {
+export default function PaymentHistoryPage() {
   const [selectedPayment, setSelectedPayment] =
     useState<PaymentDetailType | null>(null);
   const [historyFilter, setHistoryFilter] = useState<
@@ -136,13 +136,11 @@ const PaymentHistoryPage = () => {
         </div>
       </div>
 
-      <CashSettlementModal
+      <PettyCashModal
         isOpen={isCashModalOpen}
         onClose={() => setIsCashModalOpen(false)}
         storeId={1}
       />
     </div>
   );
-};
-
-export default PaymentHistoryPage;
+}

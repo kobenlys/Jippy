@@ -40,6 +40,12 @@ const CategoryModals = ({
 }: CategoryModalsProps) => {
   const getModalClassName = (modalType: "action" | "create" | "update") => {
     const baseClass = "w-[480px] max-h-fit rounded-2xl";
+    if (modalType === "create") {
+      return `${baseClass} bg-green-100`; // 추가 모달에 대한 스타일 예시
+    }
+    if (modalType === "update") {
+      return `${baseClass} bg-blue-100`; // 수정 모달에 대한 스타일 예시
+    }
     return baseClass;
   };
 

@@ -10,15 +10,15 @@ import {
 import { Button } from "@/features/common/components/ui/button";
 
 // Payment request interface definition
-interface PaymentRequest {
-  storeId: number;
-  totalCost: number;
-  paymentType: "CASH";
-  productList: Array<{
-    productId: number;
-    quantity: number;
-  }>;
-}
+// interface PaymentRequest {
+//   storeId: number;
+//   totalCost: number;
+//   paymentType: "CASH";
+//   productList: Array<{
+//     productId: number;
+//     quantity: number;
+//   }>;
+// }
 
 interface CashPaymentModalProps {
   isOpen: boolean;

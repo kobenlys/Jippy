@@ -5,7 +5,7 @@ import {
   ProductSize,
   ProductTypeLabel,
   ProductSizeLabel,
-  AVAILABLE_SIZES,
+  // AVAILABLE_SIZES,
 } from "@/redux/types/product";
 import { useState } from "react";
 import Image from "next/image";
