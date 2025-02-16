@@ -1,36 +1,49 @@
 "use client";
 
-import { RootState } from "@/redux/store";
-import React from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
-
-// ✅ Define the Stock Type
-interface StockUnit {
-  stockUnitSize: string;
-  stockUnit: string;
-  stockCount: number;
-}
-
-interface StockItem {
-  stockName: string;
-  stock: StockUnit[];
-}
+import { RootState } from "@/redux/store";
+import { StockItem } from "@/redux/slices/stockDashSlice";
+import StockRegisterModal from "@/features/dashboard/stock/components/StockRegisterModal";
+import StockUpdateModal from "@/features/dashboard/stock/components/StockUpdateModal";
 
 const StockTable = () => {
-  // ✅ Explicitly type `stockData`
   const stockData = useSelector((state: RootState) => state.stock) as StockItem[];
 
-  console.log(stockData);
+  const [isRegisterModalOpen, setRegisterModalOpen] = useState(false);
+  const [isUpdateModalOpen, setUpdateModalOpen] = useState(false);
+  const [selectedStockItem, setSelectedStockItem] = useState<StockItem | null>(null);
+
+  const handleRegisterSuccess = () => {
+    // 재고 등록 후 데이터 새로 고침 처리
+  };
+
+  const handleUpdateSuccess = () => {
+    // 재고 수정 후 데이터 새로 고침 처리
+  };
 
   return (
     <div>
-      {/* Tabs */}
       <div className="flex gap-1 mb-4">
         <div className="bg-orange-500 text-white px-4 py-1 rounded-full">재고</div>
-        <button className="bg-gray-100 text-gray-600 px-4 py-1 rounded-full">재고 등록</button>
+        <button
+          className="bg-gray-100 text-gray-600 px-4 py-1 rounded-full"
+          onClick={() => setRegisterModalOpen(true)}
+        >
+          재고 등록
+        </button>
       </div>
-
-      {/* Table Container */}
+      <StockRegisterModal
+        isOpen={isRegisterModalOpen}
+        onClose={() => setRegisterModalOpen(false)}
+        onSuccess={handleRegisterSuccess}
+      />
+      <StockUpdateModal
+        isOpen={isUpdateModalOpen}
+        onClose={() => setUpdateModalOpen(false)}
+        stockItem={selectedStockItem}
+        onSuccess={handleUpdateSuccess}
+      />
       <div className="bg-white rounded-lg">
         <div className="overflow-x-auto">
           <div className="max-h-72 overflow-y-auto relative">
@@ -42,23 +55,29 @@ const StockTable = () => {
                   <th className="p-2 text-left border-b w-32">용량(단위)</th>
                   <th className="p-2 text-left border-b w-24">수량</th>
                   <th className="p-2 text-left border-b w-32">총량</th>
+                  <th className="p-2 text-center border-b w-20">수정</th>
+                  <th className="p-2 text-center border-b w-20">삭제</th>
                 </tr>
               </thead>
               <tbody>
-                {/* ✅ Ensure `stockData` is an array before accessing it */}
-                {Array.isArray(stockData) && stockData.length > 0 ? (
+                {stockData.length > 0 ? (
                   stockData.map((item, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="p-2 border-b">{index + 1}</td>
                       <td className="p-2 border-b">{item.stockName}</td>
                       <td className="p-2 border-b">
                         {item.stock.map((unit, idx) => (
-                          <div key={idx} className="py-1">{unit.stockUnitSize}{unit.stockUnit}</div>
+                          <div key={idx} className="py-1">
+                            {unit.stockUnitSize}
+                            {unit.stockUnit}
+                          </div>
                         ))}
                       </td>
                       <td className="p-2 border-b">
                         {item.stock.map((unit, idx) => (
-                          <div key={idx} className="py-1">{unit.stockCount}</div>
+                          <div key={idx} className="py-1">
+                            {unit.stockCount}
+                          </div>
                         ))}
                       </td>
                       <td className="p-2 border-b">
@@ -69,11 +88,27 @@ const StockTable = () => {
                           </div>
                         ))}
                       </td>
+                      <td className="p-2 border-b text-center">
+                        <button
+                          className="bg-blue-500 text-white px-2 py-1 rounded"
+                          onClick={() => {
+                            setSelectedStockItem(item);
+                            setUpdateModalOpen(true);
+                          }}
+                        >
+                          수정
+                        </button>
+                      </td>
+                      <td className="p-2 border-b text-center">
+                        <button className="bg-red-500 text-white px-2 py-1 rounded">
+                          삭제
+                        </button>
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="text-center py-4 text-gray-500">
+                    <td colSpan={7} className="text-center py-4 text-gray-500">
                       재고 데이터가 없습니다.
                     </td>
                   </tr>
@@ -81,16 +116,18 @@ const StockTable = () => {
               </tbody>
               <tfoot className="bg-orange-50 sticky bottom-0 z-10">
                 <tr>
-                  <td className="p-2">{Array.isArray(stockData) ? stockData.length : 0}</td>
-                  <td colSpan={2} className="p-2 text-right">전체 수량</td>
-                  <td className="p-2">
-                    {Array.isArray(stockData)
-                      ? stockData.reduce((sum, item) =>
-                          sum + item.stock.reduce((s, unit) => s + unit.stockCount, 0), 0
-                        )
-                      : 0}
+                  <td className="p-2">{stockData.length}</td>
+                  <td colSpan={2} className="p-2 text-right">
+                    전체 수량
                   </td>
-                  <td></td>
+                  <td className="p-2">
+                    {stockData.reduce(
+                      (sum, item) =>
+                        sum + item.stock.reduce((s, unit) => s + unit.stockCount, 0),
+                      0
+                    )}
+                  </td>
+                  <td colSpan={2}></td>
                 </tr>
               </tfoot>
             </table>

@@ -1,15 +1,16 @@
+export const dynamic = "force-dynamic";
+
 import StockTable from "./StockTable";
-import StockChart from "./StockChart";
+import StockBarChart from "./StockBarChart"; // 혼합형 바/라인 차트
+import WeeklySalesChart from "./WeeklySalesChart"; // 파이 차트 (재고별 데이터)
+import LowStockChart from "./LowStockChart"; // 새로 만든 저재고 수평 바 차트
 import { StoreProvider } from "@/redux/StoreProvider";
-import StockBarChart from "./StockBarChart";
 
 async function getStockData(storeId: string) {
+  // 재고 조회 API 호출 예시
   const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/stock/${storeId}/select`;
-  console.log(API_URL);
-
   try {
     const response = await fetch(API_URL, { cache: "no-store" });
-    console.log(response);
     if (!response.ok) throw new Error("데이터를 불러오는데 실패했습니다.");
     const data = await response.json();
     return data?.data?.inventory || [];
@@ -22,21 +23,25 @@ async function getStockData(storeId: string) {
 export default async function StockPage() {
   const storeId: string = "1";
   const stockData = await getStockData(storeId);
-  console.log(stockData);
   return (
     <StoreProvider preloadedState={stockData}>
       <div className="min-h-screen">
-        <div className="bg-white pt-0 p-4 rounded-lg shadow-md">
+        <div className="bg-white p-4 rounded-lg shadow-md">
           <StockTable />
         </div>
-        <div className="bg-white rounded-lg shadow-md flex ">
-          <div className="p-4 w-1/2">
-            <StockChart />
+        <div className="bg-white rounded-lg shadow-md p-4 mt-4">
+          <h2 className="text-xl font-bold mb-2">재고 데이터</h2>
+          <StockBarChart />
+        </div>
+        <div className="bg-white rounded-lg shadow-md p-4 mt-4 flex gap-4">
+          <div className="w-1/2">
+            <h2 className="text-xl font-bold mb-2">1주일 재고 변화 예측 그래프</h2>
+            <WeeklySalesChart />
           </div>
-          <div className="p-4 w-1/2">
-            <StockBarChart />
+          <div className="w-1/2">
+            <h2 className="text-xl font-bold mb-2">재고 부족 현황</h2>
+            <LowStockChart />
           </div>
-          {/* <PieChart /> */}
         </div>
       </div>
     </StoreProvider>
