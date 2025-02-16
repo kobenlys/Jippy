@@ -141,7 +141,7 @@ const LoginPage = () => {
                   router.replace("/order");
                 } else if (userType == "OWNER") {
                   document.cookie = `loginType=${"OWNER"}; path=/; max-age=2419200`;
-                  router.replace("/confirm");
+                  router.replace("/owner/dashboard");
                 } else if (userType == "STAFF") {
                   document.cookie = `loginType=${"STAFF"}; path=/; max-age=2419200`;
                   router.replace("/attendance");

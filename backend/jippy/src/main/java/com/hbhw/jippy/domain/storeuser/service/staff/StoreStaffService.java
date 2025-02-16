@@ -8,7 +8,6 @@ import com.hbhw.jippy.domain.store.repository.StoreRepository;
 import com.hbhw.jippy.domain.storeuser.dto.request.staff.UpdateStaffRequest;
 import com.hbhw.jippy.domain.storeuser.dto.response.staff.StaffEarnSalesResponse;
 import com.hbhw.jippy.domain.storeuser.dto.response.staff.StaffResponse;
-import com.hbhw.jippy.domain.storeuser.entity.attendance.AttendanceStatus;
 import com.hbhw.jippy.domain.storeuser.entity.attendance.EmploymentStatus;
 import com.hbhw.jippy.domain.storeuser.entity.staff.StoreUserStaff;
 import com.hbhw.jippy.domain.storeuser.repository.attendance.EmploymentStatusRepository;
@@ -39,7 +38,6 @@ public class StoreStaffService {
     @Transactional(readOnly = true)
     public List<StaffResponse> getStaffList(Integer storeId) {
         validateStore(storeId);
-
         return storeStaffRepository.findAllByStoreIdWithUserStaff(storeId).stream()
                 .map(StaffResponse::new)
                 .collect(Collectors.toList());
