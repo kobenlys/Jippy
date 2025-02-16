@@ -49,7 +49,7 @@ export default function ShopsPage() {
 
       const selectedShop = shops?.find((shop) => shop.id === storeId);
       if (selectedShop) {
-        router.replace("/owner/dashboard/sales");
+        router.replace("/owner/dashboard/sale");
       } else {
         throw new Error("매장을 찾을 수 없습니다.");
       }
