@@ -9,113 +9,71 @@ import {
 } from "@/features/notifications/types/notifications";
 
 const getCookieValue = (name: string): string | null => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) {
-        return parts.pop()?.split(';').shift() || null;
-    }
-    return null;
+  if (typeof document === "undefined") return null;
+  
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    return parts.pop()?.split(';').shift() || null;
+  }
+  return null;
 };
 
 const NoticeDetailPage = ({
-    params
+  params
 }: {
-    params: { noticeId: string }
+  params: { noticeId: string }
 }) => {
-    const router = useRouter();
-    const [notice, setNotice] = useState<Notice | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-    const fetchNoticeDetail = async () => {
-        try {
-            setIsLoading(true);
-            setError(null);
+  const fetchNoticeDetail = async () => {
+    try {
+      setIsLoading(true);
 
-            const encodedStoreIdList = getCookieValue('storeIdList');
-            const userId = getCookieValue('userId');
+      const encodedStoreIdList = getCookieValue('storeIdList');
+      const userId = getCookieValue('userId');
 
-            if (!encodedStoreIdList || !userId) {
-                router.push("/login");
-                return;
-            }
+      if (!encodedStoreIdList || !userId) {
+        router.push("/login");
+        return;
+      }
 
-            const decodedStoreIdList = decodeURIComponent(encodedStoreIdList);
-            const storeIdList = JSON.parse(decodedStoreIdList);
-            const storeId = storeIdList[0];
+      const decodedStoreIdList = decodeURIComponent(encodedStoreIdList);
+      const storeIdList = JSON.parse(decodedStoreIdList);
+      const storeId = storeIdList[0];
 
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/notice/${storeId}/select/${params.noticeId}`,
-                {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
-
-            const responseData: ApiResponse<Notice> = await response.json();
-
-            if (!responseData.success) {
-                throw new Error(
-                    responseData.message || "공지사항을 불러오는데 실패했습니다"
-                );
-            }
-
-            const noticeData = responseData.data;
-            setNotice(noticeData || null);
-        } catch (error) {
-            setError("공지사항을 불러오는데 실패했습니다");
-
-            if (process.env.NODE_ENV === "development") {
-                console.error("공지사항 상세 로딩에 실패했습니다", error);
-            }
-        } finally {
-            setIsLoading(false);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/notice/${storeId}/select/${params.noticeId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
       );
 
       const responseData: ApiResponse<Notice> = await response.json();
 
-    const handleGoBack = () => {
-        router.back();
-    };
-
-    if (isLoading) {
-        return (
-            <div>
-                <PageTitle />
-                <div className="p-4 text-center">로딩 중...</div>
-            </div>
+      if (!responseData.success) {
+        throw new Error(
+          responseData.message || "공지사항을 불러오는데 실패했습니다"
         );
       }
 
-      const noticeData = responseData.data;
-      setNotice(noticeData || null);
+      setNotice(responseData.data);
     } catch (error) {
-      setError("공지사항을 불러오는데 실패했습니다");
-
-    if (!notice) {
-        return (
-            <div>
-                <PageTitle />
-                <div className="p-4 text-center">존재하지 않는 공지사항입니다</div>
-                <div className="mt-4 text-center">
-                    <button
-                        onClick={() => router.back()}
-                        className="px-4 py-2 border border-[#ff5c00] text-[#ff5c00] rounded hover:bg-[#ff5c00] hover:text-white transition-colors"
-                    >
-                        목록으로 돌아가기
-                    </button>
-                </div>
-            </div>
-        )
+      console.error("공지사항 상세 로딩에 실패했습니다", error);
+      router.push("/login");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchNoticeDetail();
-  }, [params.noticeId, fetchNoticeDetail]);
+  }, [params.noticeId]);
 
   const handleGoBack = () => {
     router.back();
@@ -123,41 +81,9 @@ const NoticeDetailPage = ({
 
   if (isLoading) {
     return (
-        <div>
-            <PageTitle />
-            <div className="p-4">
-                <div className="bg-white rounded-lg shadow p-6">
-                    <div className="border-b pb-4">
-                        <h1 className="text-xl font-medium mb-2">{notice.title}</h1>
-                        <div className="flex justify-between text-sm text-gray-600">
-                            <span>{notice.author}</span>
-                            <span className="text-gray-300">{notice.createdAt}</span>
-                        </div>
-                    </div>
-
-                    <div className="py-6 whitespace-pre-wrap">
-                        {notice.content}
-                    </div>
-
-                    <div className="mt-6 flex justify-center">
-                        <button
-                            onClick={handleGoBack}
-                            className="px-4 py-2 border border-[#ff5c00] text-[#ff5c00] rounded hover:bg-[#ff5c00] hover:text-white transition-colors"
-                        >
-                            목록으로 돌아가기
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-  }
-
-  if (error) {
-    return (
       <div>
         <PageTitle />
-        <div className="p-4 text-center text-red-500">{error}</div>
+        <div className="p-4 text-center">로딩 중...</div>
       </div>
     );
   }
@@ -169,7 +95,7 @@ const NoticeDetailPage = ({
         <div className="p-4 text-center">존재하지 않는 공지사항입니다</div>
         <div className="mt-4 text-center">
           <button
-            onClick={() => router.back()}
+            onClick={handleGoBack}
             className="px-4 py-2 border border-[#ff5c00] text-[#ff5c00] rounded hover:bg-[#ff5c00] hover:text-white transition-colors"
           >
             목록으로 돌아가기
