@@ -52,9 +52,10 @@ const StockBarChart = () => {
     },
   };
 
+  // key를 data.labels 기반으로 지정하여 데이터 변경 시 컴포넌트 재생성 (legend 갱신)
   return (
     <div className="p-4">
-      <Bar data={data} options={options} />
+      <Bar key={labels.join("-")} data={data} options={options} />
     </div>
   );
 };

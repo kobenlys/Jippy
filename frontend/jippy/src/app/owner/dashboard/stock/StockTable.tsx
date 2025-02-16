@@ -15,11 +15,46 @@ const StockTable = () => {
   const [selectedStockItem, setSelectedStockItem] = useState<StockItem | null>(null);
 
   const handleRegisterSuccess = () => {
-    // 재고 등록 후 데이터 새로 고침 처리
+    window.location.reload();
   };
 
   const handleUpdateSuccess = () => {
-    // 재고 수정 후 데이터 새로 고침 처리
+    window.location.reload();
+  };
+
+  const deleteStock = async (storeId: number, stockName: string) => {
+    if (!window.confirm(`${stockName} 재고를 삭제하시겠습니까?`)) return;
+    // 예시로 단위 정보는 고정값으로 전달합니다.
+    const payload = {
+      inventory: [
+        {
+          stock: [
+            {
+              stockUnitSize: 100,
+              stockUnit: "g",
+              isDisposal: true,
+            },
+          ],
+        },
+      ],
+    };
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/stock/${storeId}/delete/${encodeURIComponent(stockName)}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+      if (!response.ok) throw new Error("삭제 실패");
+      alert("재고 삭제 성공");
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      alert("재고 삭제 중 오류 발생");
+    }
   };
 
   return (
@@ -100,7 +135,10 @@ const StockTable = () => {
                         </button>
                       </td>
                       <td className="p-2 border-b text-center">
-                        <button className="bg-red-500 text-white px-2 py-1 rounded">
+                        <button
+                          className="bg-red-500 text-white px-2 py-1 rounded"
+                          onClick={() => deleteStock(1, item.stockName)}
+                        >
                           삭제
                         </button>
                       </td>
@@ -127,7 +165,7 @@ const StockTable = () => {
                       0
                     )}
                   </td>
-                  <td colSpan={2}></td>
+                  <td colSpan={3}></td>
                 </tr>
               </tfoot>
             </table>

@@ -13,7 +13,6 @@ import {
   Legend,
   ChartOptions,
 } from "chart.js";
-// react-chartjs-2에서는 Chart만 export합니다.
 import { Chart } from "react-chartjs-2";
 import type { ChartData } from "chart.js";
 
@@ -33,58 +32,59 @@ interface WeeklyDataset {
   data: number[];
 }
 
+interface WeeklyPredictionStatistics {
+  total_predicted: number;
+  average_daily: number;
+  max_predicted: number;
+  min_predicted: number;
+}
+
+interface WeeklyPrediction {
+  date: string;
+  day_of_week: string;
+  predicted_quantity: number;
+  confidence_interval: number;
+  features_used: {
+    year: number;
+    month: number;
+    day: number;
+    dayofweek: number;
+    season: number;
+  };
+}
+
 interface WeeklyPredictionResponse {
   status: string;
   message: string;
   data: {
     labels: string[];
     datasets: WeeklyDataset[];
+    statistics: WeeklyPredictionStatistics;
+    predictions: WeeklyPrediction[];
   };
 }
 
-interface ComparisonResponse {
-  status: string;
-  message: string;
-  data: {
-    labels: string[];
-    datasets: WeeklyDataset[];
-  };
-}
-
-const WeeklySalesChart = () => {
+const WeeklyPredictionChart = () => {
   const [chartData, setChartData] = useState<ChartData<"bar" | "line", number[], string> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const storeId = 1;
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchWeeklyPrediction() {
       try {
-        const storeId = 1;
-        const predResponse = await fetch(
+        const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/stock-ml/api/${storeId}/predictions/weekly`,
           { cache: "no-store" }
         );
-        const predJson = (await predResponse.json()) as WeeklyPredictionResponse;
-
-        const compResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/stock-ml/api/${storeId}/stock/comparison`,
-          { cache: "no-store" }
-        );
-        const compJson = (await compResponse.json()) as ComparisonResponse;
-
-        const labels = predJson.data.labels;
-        const predDataset = predJson.data.datasets.find((ds) => ds.name === "예측 판매량");
-        const upperDataset = predJson.data.datasets.find((ds) => ds.name === "신뢰구간 상한");
-        const lowerDataset = predJson.data.datasets.find((ds) => ds.name === "신뢰구간 하한");
-        const compDataset = compJson.data.datasets.find((ds) => ds.name === "전년도 판매량");
+        const json = (await response.json()) as WeeklyPredictionResponse;
+        const labels = json.data.labels;
+        const predDataset = json.data.datasets.find((ds) => ds.name === "예측 판매량");
+        const upperDataset = json.data.datasets.find((ds) => ds.name === "신뢰구간 상한");
+        const lowerDataset = json.data.datasets.find((ds) => ds.name === "신뢰구간 하한");
 
         const data: ChartData<"bar" | "line", number[], string> = {
           labels,
           datasets: [
-            {
-              label: "실제 판매량",
-              data: compDataset ? compDataset.data : [],
-              type: "bar",
-              backgroundColor: "rgba(54, 162, 235, 0.5)",
-            },
             {
               label: "예측 판매량",
               data: predDataset ? predDataset.data : [],
@@ -118,10 +118,12 @@ const WeeklySalesChart = () => {
         };
         setChartData(data);
       } catch (error) {
-        console.error("주간 판매 데이터 호출 오류:", error);
+        console.error("주간 예측 데이터 호출 오류:", error);
+      } finally {
+        setLoading(false);
       }
     }
-    fetchData();
+    fetchWeeklyPrediction();
   }, []);
 
   const options: ChartOptions<"bar"> = {
@@ -129,9 +131,16 @@ const WeeklySalesChart = () => {
     plugins: {
       title: {
         display: true,
-        text: "주문수 대비 재고 사용량 및 예측량",
+        text: "1주일 재고 판매 예측",
       },
-      legend: { position: "bottom" as const },
+      legend: {
+        position: "bottom" as const,
+        labels: {
+          boxWidth: 15,
+          font: { size: 10 },
+          padding: 10,
+        },
+      },
     },
     scales: {
       y: { beginAtZero: true },
@@ -140,13 +149,15 @@ const WeeklySalesChart = () => {
 
   return (
     <div>
-      {chartData ? (
-        <Chart type="bar" data={chartData as ChartData<"bar", number[], string>} options={options} />
+      {loading ? (
+        <p>1주일 예측 데이터를 불러오는 중...</p>
+      ) : chartData ? (
+        <Chart type="bar" data={chartData as unknown as ChartData<"bar", number[], string>} options={options} />
       ) : (
-        <p>데이터를 불러오는 중...</p>
+        <p>데이터가 없습니다.</p>
       )}
     </div>
   );
 };
 
-export default WeeklySalesChart;
+export default WeeklyPredictionChart;

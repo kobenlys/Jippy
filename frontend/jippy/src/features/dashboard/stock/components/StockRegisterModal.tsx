@@ -41,7 +41,7 @@ const StockRegisterModal: React.FC<StockRegisterModalProps> = ({ isOpen, onClose
       });
       if (!response.ok) throw new Error("재고 등록 실패");
       alert("재고 등록 성공");
-      onSuccess();
+      onSuccess(); // 부모에서 새로고침 처리 (예: window.location.reload())
       onClose();
     } catch (error) {
       console.error(error);
