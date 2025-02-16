@@ -1,5 +1,6 @@
-'use client'
+export const dynamic = "force-dynamic";
 
+// app/owner/dashboard/product/page.tsx
 import ProductTable from "./ProductTable";
 import ProductChart from "./ProductChart";
 import CategoryPieChart from "./CategoryPieChart";
@@ -22,29 +23,30 @@ async function getProductData(storeId: number) {
 export default async function ProductDashboardPage() {
   const storeId: number = 1;
   const productData = await getProductData(storeId);
+
   return (
     <StoreProvider preloadedState={productData}>
-      <div className="min-h-screen max-w mx-auto p-4 h-screen overflow-y-auto no-scrollbar">
+      {/* 서버 컴포넌트로 작성 – "use client" 제거 */}
+      <div className="max-w mx-auto p-4 pb-20 h-screen overflow-y-auto no-scrollbar">
+        {/* 상품 테이블 카드 */}
         <div className="bg-white p-4 rounded-lg shadow-md mb-4 border border-gray-200">
-      <ProductTable />
+          <ProductTable />
         </div>
 
-        {/* 1. 최근 30일 재고별 판매량 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-2">
+        {/* 2열 그리드: ProductChart와 CategoryPieChart */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
           <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
-            <ProductChart storeId={storeId} />
+            <ProductChart storeId={Number(storeId)} />
           </div>
           <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
             <CategoryPieChart storeId={storeId} />
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-4 p-2">
-          {/* 2. 시즌 선호도 (월별 총 주문량 & 연간 판매 상위 상품) */}
-          <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
-            <SeasonPreferenceChart storeId={storeId} />
-          </div>
+
+        {/* SeasonPreferenceChart 카드 */}
+        <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
+          <SeasonPreferenceChart storeId={Number(storeId)} />
         </div>
-        
       </div>
     </StoreProvider>
   );
