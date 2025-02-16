@@ -1,9 +1,12 @@
-// app/owner/dashboard/product/page.tsx
-import ProductTable from "./ProductTable";
-import { StoreProvider } from "@/redux/StoreProvider";
-import ProductChart from "./ProductChart";
+'use client'
 
-async function getStockData(storeId: number) {
+import ProductTable from "./ProductTable";
+import ProductChart from "./ProductChart";
+import CategoryPieChart from "./CategoryPieChart";
+import SeasonPreferenceChart from "./SeasonPreferenceChart";
+import { StoreProvider } from "@/redux/StoreProvider";
+
+async function getProductData(storeId: number) {
   const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/product/${storeId}/select`;
   try {
     const response = await fetch(API_URL, { cache: "no-store" });
@@ -16,25 +19,32 @@ async function getStockData(storeId: number) {
   }
 }
 
-export default async function StockPage() {
+export default async function ProductDashboardPage() {
   const storeId: number = 1;
-  const stockData = await getStockData(storeId);
+  const productData = await getProductData(storeId);
   return (
-    <StoreProvider preloadedState={stockData}>
-      {/* 최대 1024px, 중앙 정렬, 스크롤바는 숨김 */}
-      <div className="max-w-[1024px] mx-auto p-4 h-screen overflow-y-auto no-scrollbar">
-        <div className="bg-white p-4 rounded-lg shadow-md mb-4">
-          <ProductTable />
+    <StoreProvider preloadedState={productData}>
+      <div className="min-h-screen max-w mx-auto p-4 h-screen overflow-y-auto no-scrollbar">
+        <div className="bg-white p-4 rounded-lg shadow-md mb-4 border border-gray-200">
+      <ProductTable />
         </div>
-        <div className="bg-white rounded-lg shadow-md flex flex-col md:flex-row">
-          <div className="p-4 w-full md:w-1/2">
+
+        {/* 1. 최근 30일 재고별 판매량 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-2">
+          <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
             <ProductChart storeId={storeId} />
           </div>
-          <div className="p-4 w-full md:w-1/2 flex items-center justify-center">
-            {/* 추가 차트 영역 */}
-            <div className="w-full text-center text-gray-500">추가 차트 영역</div>
+          <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
+            <CategoryPieChart storeId={storeId} />
           </div>
         </div>
+        <div className="grid grid-cols-1 gap-4 p-2">
+          {/* 2. 시즌 선호도 (월별 총 주문량 & 연간 판매 상위 상품) */}
+          <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
+            <SeasonPreferenceChart storeId={storeId} />
+          </div>
+        </div>
+        
       </div>
     </StoreProvider>
   );
