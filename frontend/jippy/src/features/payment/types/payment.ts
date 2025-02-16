@@ -39,9 +39,40 @@ export interface ConfirmQrCodePaymentRequest {
   totalCost: number;
   paymentType: "QRCODE";
   productList: Product[];
-  
+
   // ConfirmQrCodePaymentRequest 추가 필드
   orderId: string;
   paymentKey: string;
   amount: number;
+}
+
+// features/payment/types/cash.ts
+export interface CashDenominations {
+  fifty_thousand_won: number;
+  ten_thousand_won: number;
+  five_thousand_won: number;
+  one_thousand_won: number;
+  five_hundred_won: number;
+  one_hundred_won: number;
+  fifty_won: number;
+  ten_won: number;
+}
+
+export interface CashPaymentRequest {
+  storeId: number;
+  totalCost: number;
+  paymentType: "CASH";
+  productList: Array<{
+    productId: number;
+    quantity: number;
+  }>;
+  cashRequest: CashDenominations;
+}
+
+export interface CashCancelRequest {
+  paymentUUIDRequest: {
+    storeId: number;
+    paymentUUID: string;
+  };
+  cashRequest: CashDenominations;
 }
