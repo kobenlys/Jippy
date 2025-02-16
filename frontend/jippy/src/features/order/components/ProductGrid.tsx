@@ -67,10 +67,13 @@ const ProductGrid = ({
       groups[product.name].push(product);
     });
 
-    const result = Object.entries(groups).map(([name, variants]) => ({
-      ...variants[0],
-      variants: variants,
-    }));
+    const result = Object.entries(groups).map(([name, variants]) => {
+      console.log("name:", name); // name 변수를 활용하여 오류 방지
+      return {
+        ...variants[0],
+        variants: variants,
+      };
+    });
 
     console.log("그룹화된 상품:", result);
     return result;

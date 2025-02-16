@@ -12,7 +12,7 @@ import {
   OrderItem,
   PaymentMethod,
   PaymentType,
-  CashDenomination,
+  //   CashDenomination,
 } from "@/features/order/types/pos";
 import { OrderSummary } from "@/features/order/components/OrderSummary";
 import { PaymentMethodSelector } from "@/features/order/components/PaymentMethodSelector";
@@ -30,7 +30,7 @@ const POSPage = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(
     null
   );
-  const [isCashPaymentModalOpen, setIsCashPaymentModalOpen] = useState(false);
+  //   const [isCashPaymentModalOpen, setIsCashPaymentModalOpen] = useState(false);
 
   const handleAddProduct = (productDetail: ProductDetailResponse) => {
     const product = convertToProduct(productDetail);
@@ -61,7 +61,7 @@ const POSPage = () => {
   const handleCancelOrder = () => {
     setCurrentOrder([]);
     setPaymentMethod(null);
-    setIsCashPaymentModalOpen(false);
+    // setIsCashPaymentModalOpen(false);
   };
 
   const handleCompleteOrder = async () => {
@@ -94,7 +94,7 @@ const POSPage = () => {
 
     // Cash Payment Flow
     if (paymentMethod === "cash") {
-      setIsCashPaymentModalOpen(true);
+      //   setIsCashPaymentModalOpen(true);
     }
   };
 

@@ -5,6 +5,7 @@ import { RootState } from "@/redux/store";
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import ProductForm from "@/features/dashboard/product/components/ProductForm";
+import Image from "next/image";
 
 interface ProductItem {
   id: number;
@@ -22,7 +23,9 @@ const ProductTable = () => {
   ) as ProductItem[];
   const [showFormModal, setShowFormModal] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
-  const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(
+    null
+  );
 
   const handleDelete = async (storeId: number, productId: number) => {
     if (confirm("정말 삭제하시겠습니까?")) {
@@ -86,7 +89,10 @@ const ProductTable = () => {
 
       {/* 테이블 컨테이너 (최대 높이 300px, 수직 스크롤) */}
       <div className="bg-white rounded-lg shadow overflow-x-auto">
-        <div className="min-w-full" style={{ maxHeight: "300px", overflowY: "auto" }}>
+        <div
+          className="min-w-full"
+          style={{ maxHeight: "300px", overflowY: "auto" }}
+        >
           <table className="w-full table-fixed">
             <thead className="bg-orange-50 sticky top-0 z-10">
               <tr>
@@ -104,10 +110,14 @@ const ProductTable = () => {
                   <tr key={item.id} className="hover:bg-gray-50">
                     <td className="p-2 border-b">{index + 1}</td>
                     <td className="p-2 border-b">{item.name}</td>
-                    <td className="p-2 border-b">{item.price.toLocaleString()}원</td>
-                    <td className="p-2 border-b">{item.status ? "판매중" : "판매중지"}</td>
                     <td className="p-2 border-b">
-                      <img
+                      {item.price.toLocaleString()}원
+                    </td>
+                    <td className="p-2 border-b">
+                      {item.status ? "판매중" : "판매중지"}
+                    </td>
+                    <td className="p-2 border-b">
+                      <Image
                         src={item.image}
                         alt={item.name}
                         className="w-16 h-16 object-cover rounded"
@@ -131,7 +141,10 @@ const ProductTable = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="text-center py-4 text-gray-500 text-base">
+                  <td
+                    colSpan={6}
+                    className="text-center py-4 text-gray-500 text-base"
+                  >
                     상품 데이터가 없습니다.
                   </td>
                 </tr>
@@ -139,9 +152,15 @@ const ProductTable = () => {
             </tbody>
             <tfoot className="bg-orange-50 sticky bottom-0 z-10">
               <tr>
-                <td className="p-2">{Array.isArray(productData) ? productData.length : 0}</td>
-                <td colSpan={2} className="p-2 text-right">총 상품 수</td>
-                <td className="p-2">{Array.isArray(productData) ? productData.length : 0}</td>
+                <td className="p-2">
+                  {Array.isArray(productData) ? productData.length : 0}
+                </td>
+                <td colSpan={2} className="p-2 text-right">
+                  총 상품 수
+                </td>
+                <td className="p-2">
+                  {Array.isArray(productData) ? productData.length : 0}
+                </td>
                 <td colSpan={2}></td>
               </tr>
             </tfoot>
