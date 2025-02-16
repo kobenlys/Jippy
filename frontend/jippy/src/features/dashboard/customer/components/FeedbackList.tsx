@@ -12,7 +12,7 @@ const FeedbackList: React.FC<FeedbackListProps> = ({ storeId, selectedCategory }
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
-  // 계산
+  // 페이지네이션 계산
   const totalItems = feedbacks.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIdx = (currentPage - 1) * itemsPerPage;
@@ -20,7 +20,6 @@ const FeedbackList: React.FC<FeedbackListProps> = ({ storeId, selectedCategory }
 
   const handleDelete = (feedbackId: number) => {
     deleteFeedback(feedbackId);
-    // 삭제 후 현재 페이지에 남은 항목이 없으면 이전 페이지로 이동하는 등의 추가 로직 가능
   };
 
   const goToPage = (page: number) => {
@@ -30,7 +29,7 @@ const FeedbackList: React.FC<FeedbackListProps> = ({ storeId, selectedCategory }
 
   const handleItemsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setItemsPerPage(Number(e.target.value));
-    setCurrentPage(1); // 항목 수 변경 시 첫 페이지부터 다시 보여주기
+    setCurrentPage(1);
   };
 
   return (
@@ -38,8 +37,8 @@ const FeedbackList: React.FC<FeedbackListProps> = ({ storeId, selectedCategory }
       {loading && <p className="text-gray-500">로딩중...</p>}
       {error && <p className="text-red-500">오류: {error}</p>}
       {!loading && totalItems === 0 && <p className="text-gray-700">피드백이 없습니다.</p>}
-      
-      {/* 피드백 리스트 */}
+
+      {/* 피드백 카드 리스트 */}
       <div className="space-y-4">
         {currentItems.map((fb: Feedback) => (
           <div

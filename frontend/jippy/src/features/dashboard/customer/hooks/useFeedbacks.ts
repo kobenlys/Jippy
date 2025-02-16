@@ -13,8 +13,8 @@ const useFeedbacks = (storeId: number, category: string | null) => {
       setError(null);
       try {
         const endpoint = category
-          ? `/api/feedback/${storeId}/select/${category}`
-          : `/api/feedback/${storeId}/select`;
+          ? `${process.env.NEXT_PUBLIC_API_URL}/api/feedback/${storeId}/select/${category}`
+          : `${process.env.NEXT_PUBLIC_API_URL}/api/feedback/${storeId}/select`;
         const res = await fetch(endpoint);
         if (!res.ok) throw new Error('피드백 조회에 실패했습니다.');
         const json = await res.json();
