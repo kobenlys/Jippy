@@ -5,6 +5,7 @@ import {
   ProductSize,
   ProductTypeLabel,
   ProductSizeLabel,
+  AVAILABLE_SIZES,
 } from "@/redux/types/product";
 import { useState } from "react";
 import Image from "next/image";
@@ -78,48 +79,52 @@ const ProductOptionModal = ({
   if (!firstProduct) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-xs w-full !z-50">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      className="w-[320px] !max-w-[320px] !h-auto !z-50"
+    >
       <div className="bg-white shadow-lg rounded-lg overflow-hidden">
         {/* 헤더 */}
-        <div className="bg-jippy-brown py-2.5 text-center">
-          <h2 className="text-base font-medium text-white">상세 옵션</h2>
+        <div className="bg-jippy-brown py-3 text-center">
+          <h2 className="text-lg font-medium text-white">상세 옵션</h2>
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="p-6 space-y-6">
           {/* 상품 정보 */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {firstProduct.image && (
-              <div className="relative w-12 h-12 flex-shrink-0">
+              <div className="relative w-16 h-16 flex-shrink-0">
                 <Image
                   src={firstProduct.image}
                   alt={firstProduct.name}
                   fill
-                  sizes="48px"
+                  sizes="64px"
                   className="object-cover rounded-lg"
                 />
               </div>
             )}
             <div>
-              <p className="font-medium text-sm">{firstProduct.name}</p>
-              <p className="text-jippy-brown text-sm">
+              <p className="font-medium text-base">{firstProduct.name}</p>
+              <p className="text-jippy-brown text-base mt-1">
                 {firstProduct.price.toLocaleString()}원
               </p>
             </div>
           </div>
 
           {/* 상품 타입 */}
-          <div className="space-y-1.5">
-            <p className="text-sm text-gray-600">상품 타입</p>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-2">
+            <p className="text-base font-medium text-gray-700">상품 타입</p>
+            <div className="grid grid-cols-2 gap-3">
               {[ProductType.HOT, ProductType.ICE].map((type) => (
                 <button
                   key={type}
                   onClick={() => handleTypeSelect(type)}
-                  className={`py-2 rounded-lg border text-sm transition-colors
+                  className={`py-3 rounded-lg border text-base font-medium transition-colors
                     ${
                       selectedType === type
-                        ? "bg-jippy-orange text-white border-orange"
-                        : "bg-white text-gray-700 border-gray-300"
+                        ? "bg-jippy-orange text-white border-jippy-orange"
+                        : "bg-white text-gray-700 border-gray-300 hover:border-jippy-orange"
                     }`}
                 >
                   {ProductTypeLabel[type]}
@@ -129,18 +134,18 @@ const ProductOptionModal = ({
           </div>
 
           {/* 상품 사이즈 */}
-          <div className="space-y-1.5">
-            <p className="text-sm text-gray-600">상품 사이즈</p>
-            <div className="grid grid-cols-3 gap-2">
+          <div className="space-y-2">
+            <p className="text-base font-medium text-gray-700">상품 사이즈</p>
+            <div className="grid grid-cols-3 gap-3">
               {[ProductSize.S, ProductSize.M, ProductSize.L].map((size) => (
                 <button
                   key={size}
                   onClick={() => handleSizeSelect(size)}
-                  className={`py-2 rounded-lg border text-sm transition-colors
+                  className={`py-3 rounded-lg border text-base font-medium transition-colors
                     ${
                       selectedSize === size
-                        ? "bg-jippy-orange text-white border-orange"
-                        : "bg-white text-gray-700 border-gray-300"
+                        ? "bg-jippy-orange text-white border-jippy-orange"
+                        : "bg-white text-gray-700 border-gray-300 hover:border-jippy-orange"
                     }`}
                 >
                   {ProductSizeLabel[size]}
@@ -149,19 +154,21 @@ const ProductOptionModal = ({
             </div>
           </div>
 
-          {/* 버튼 */}
-          <button
-            onClick={handleConfirm}
-            className="w-full py-2.5 border border-brown text-brown rounded-lg text-sm font-medium"
-          >
-            확인
-          </button>
-          <button
-            onClick={onClose}
-            className="w-full py-2.5 bg-gray-100 text-gray-800 rounded-lg text-sm font-medium"
-          >
-            취소
-          </button>
+          {/* 버튼 그룹 */}
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <button
+              onClick={handleConfirm}
+              className="py-3.5 bg-jippy-brown text-white rounded-lg text-base font-medium transition-colors hover:bg-jippy-brown/90"
+            >
+              확인
+            </button>
+            <button
+              onClick={onClose}
+              className="py-3.5 bg-gray-100 text-gray-800 rounded-lg text-base font-medium transition-colors hover:bg-gray-200"
+            >
+              취소
+            </button>
+          </div>
         </div>
       </div>
     </Modal>
