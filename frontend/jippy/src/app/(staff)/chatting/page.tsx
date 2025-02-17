@@ -12,12 +12,14 @@ import useUserInfo from "@/utils/useUserInfo";
 import { ChevronLeft, User } from 'lucide-react';
 import useChatMemberCount from "@/features/chat/hooks/useChatMemberCount";
 import { useRouter } from "next/navigation";
+import { usePwaFCM } from "@/features/pwachatting/hooks/pwaUseFCM";
 
 const getCookieValue = (name: string): string | null => {
   if (typeof document === "undefined") return null;
-  
+
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
+
   if (parts.length === 2) {
     return parts.pop()?.split(';').shift() || null;
   }
@@ -43,6 +45,8 @@ const ChattingPage: React.FC = () => {
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [showChatList, setShowChatList] = useState<boolean>(true);
 
+  usePwaFCM();
+
   useEffect(() => {
     dispatch(fetchChatList(userId));
   }, [userId, dispatch]);
@@ -57,12 +61,12 @@ const ChattingPage: React.FC = () => {
         setShowChatList(true);
       }
       const encodedStoreIdList = getCookieValue('storeIdList');
-        const userId = getCookieValue('userId');
+      const userId = getCookieValue('userId');
 
-        if (!encodedStoreIdList || !userId) {
-          router.push("/login");
-          return;
-        }
+      if (!encodedStoreIdList || !userId) {
+        router.push("/login");
+        return;
+      }
     };
 
     handleResize();
