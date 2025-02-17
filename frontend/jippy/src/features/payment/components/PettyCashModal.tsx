@@ -75,7 +75,7 @@ export default function PettyCashModal({
     setRequestStartTime(Date.now());
 
     try {
-      console.log("QR Payments 요청 시작:", new Date().toISOString());
+      // console.log("QR Payments 요청 시작:", new Date().toISOString());
 
       const today = new Date();
       const startDate = new Date(today.setHours(0, 0, 0, 0)).toISOString();
@@ -91,18 +91,18 @@ export default function PettyCashModal({
           type: "QR",
         });
 
-      console.log("요청 URL:", url);
+      // console.log("요청 URL:", url);
 
       const response = await fetch(url);
-      console.log("응답 상태:", response.status);
+      // console.log("응답 상태:", response.status);
 
       if (!response.ok) {
         throw new Error(`QR 결제 내역 요청 실패: ${response.status}`);
       }
 
       const result = await response.json();
-      console.log("데이터 수신 완료:", Date.now() - requestStartTime!, "ms");
-      console.log("받은 데이터 크기:", JSON.stringify(result).length, "bytes");
+      // console.log("데이터 수신 완료:", Date.now() - requestStartTime!, "ms");
+      // console.log("받은 데이터 크기:", JSON.stringify(result).length, "bytes");
 
       if (!result.success) {
         throw new Error(
@@ -131,17 +131,17 @@ export default function PettyCashModal({
     setRequestStartTime(Date.now());
 
     try {
-      console.log("Cash Data 요청 시작:", new Date().toISOString());
+      // console.log("Cash Data 요청 시작:", new Date().toISOString());
 
       const url = `${process.env.NEXT_PUBLIC_API_URL}/api/cash/${storeId}/select`;
-      console.log("요청 URL:", url);
+      // console.log("요청 URL:", url);
 
       const response = await fetch(url);
-      console.log("응답 상태:", response.status);
+      // console.log("응답 상태:", response.status);
 
       if (!response.ok) {
         if (response.status === 404 || response.status === 500) {
-          console.log("데이터 없음 응답");
+          // console.log("데이터 없음 응답");
           setCashData(null);
           setModifiedCash(null);
           return;
@@ -150,8 +150,8 @@ export default function PettyCashModal({
       }
 
       const result = await response.json();
-      console.log("데이터 수신 완료:", Date.now() - requestStartTime!, "ms");
-      console.log("받은 데이터 크기:", JSON.stringify(result).length, "bytes");
+      // console.log("데이터 수신 완료:", Date.now() - requestStartTime!, "ms");
+      // console.log("받은 데이터 크기:", JSON.stringify(result).length, "bytes");
 
       if (!result.success) {
         throw new Error(
@@ -162,7 +162,7 @@ export default function PettyCashModal({
       setCashData(result.data);
       setModifiedCash(result.data);
     } catch (error) {
-      console.error("Cash data fetch error:", error);
+      // console.error("Cash data fetch error:", error);
       setError(
         error instanceof Error
           ? error.message
@@ -281,11 +281,11 @@ export default function PettyCashModal({
   };
 
   useEffect(() => {
-    console.log("Effect 실행 - 상태:", {
-      isOpen,
-      activeTab,
-      storeId,
-    });
+    // console.log("Effect 실행 - 상태:", {
+    //   isOpen,
+    //   activeTab,
+    //   storeId,
+    // });
 
     if (isOpen) {
       if (activeTab === "cash") {

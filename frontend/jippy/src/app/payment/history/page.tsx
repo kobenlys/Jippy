@@ -12,6 +12,7 @@ import {
 
 export default function PaymentHistoryPage() {
   const [selectedPayment, setSelectedPayment] = useState<PaymentDetailType | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [historyFilter, setHistoryFilter] = useState<"all" | "success" | "cancel">("all");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,17 +47,17 @@ export default function PaymentHistoryPage() {
         throw new Error("결제 상세 정보를 불러오는데 실패했습니다");
       }
  
-      console.log('API 응답 원본:', result.data);
-      console.log('변환 전 상태:', result.data.paymentStatus);
+      // console.log("API 응답 원본:", result.data);
+      // console.log("변환 전 상태:", result.data.paymentStatus);
  
       const transformedPayment = {
         ...result.data,
-        paymentStatus: result.data.paymentStatus === 'PURCHASE' ? '완료' : 
-                      result.data.paymentStatus === 'CANCEL' ? '취소' : 
+        paymentStatus: result.data.paymentStatus === "PURCHASE" ? "완료" : 
+                      result.data.paymentStatus === "CANCEL" ? "취소" : 
                       result.data.paymentStatus
       };
  
-      console.log('변환 후 상태:', transformedPayment);
+      // console.log("변환 후 상태:", transformedPayment);
       
       setSelectedPayment(transformedPayment);
     } catch (error) {

@@ -101,34 +101,34 @@ const POSPage = () => {
         },
       };
 
-      console.log('=== 현금 결제 요청 시작 ===');
-      console.log('Request Body:', JSON.stringify(paymentRequest, null, 2));
+      console.log("=== 현금 결제 요청 시작 ===");
+      console.log("Request Body:", JSON.stringify(paymentRequest, null, 2));
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payment/cash/confirm`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(paymentRequest),
       });
 
       const responseData = await response.json();
-      console.log('결제 응답 데이터:', responseData);
+      console.log("결제 응답 데이터:", responseData);
 
       if (!response.ok) {
-        throw new Error(responseData?.message || '현금 결제 처리에 실패했습니다');
+        throw new Error(responseData?.message || "현금 결제 처리에 실패했습니다");
       }
 
       if (responseData.success) {
-        console.log('현금 결제 성공, 결제 내역 추가 시작');
+        console.log("현금 결제 성공, 결제 내역 추가 시작");
         
         // 결제 내역 추가 API 호출
         const historyResponse = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/add?storeId=${request.storeId}`,
           {
-            method: 'POST',
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
               paymentType: "CASH",
@@ -140,28 +140,28 @@ const POSPage = () => {
         );
 
         const historyData = await historyResponse.json();
-        console.log('결제 내역 추가 응답:', historyData);
+        console.log("결제 내역 추가 응답:", historyData);
 
         if (!historyResponse.ok || !historyData.success) {
-          console.error('결제 내역 추가 실패:', historyData);
-          throw new Error('결제 내역 추가에 실패했습니다');
+          console.error("결제 내역 추가 실패:", historyData);
+          throw new Error("결제 내역 추가에 실패했습니다");
         }
 
-        console.log('결제 내역 추가 성공');
+        console.log("결제 내역 추가 성공");
         handleCancelOrder();
       } else {
-        throw new Error(responseData.message || '현금 결제 처리에 실패했습니다');
+        throw new Error(responseData.message || "현금 결제 처리에 실패했습니다");
       }
 
-      console.log('=== 현금 결제 프로세스 완료 ===');
+      // console.log("=== 현금 결제 프로세스 완료 ===");
     } catch (error) {
-      console.error("=== 현금 결제 오류 상세 ===");
+      // console.error("=== 현금 결제 오류 상세 ===");
       if (error instanceof Error) {
-        console.error('Error name:', error.name);
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
+        // console.error("Error name:", error.name);
+        // console.error("Error message:", error.message);
+        // console.error("Error stack:", error.stack);
       } else {
-        console.error('Unknown error:', error);
+        // console.error("Unknown error:", error);
       }
       alert("결제 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
       throw error;

@@ -33,7 +33,7 @@ const HistoryDetail = ({ payment, onPaymentStatusChange }: HistoryDetailProps) =
       }
     };
 
-    console.log('Sending QR refund request:', qrRequest);
+    console.log("Sending QR refund request:", qrRequest);
 
     try {
       // 결제 상태 변경 API 호출
@@ -51,8 +51,8 @@ const HistoryDetail = ({ payment, onPaymentStatusChange }: HistoryDetailProps) =
 
       if (!statusResponse.ok) {
         const errorData = await statusResponse.json();
-        console.error('Status change error details:', errorData);
-        throw new Error(errorData.errors?.[0]?.reason || errorData.message || 'QR 결제 상태 변경에 실패했습니다');
+        console.error("Status change error details:", errorData);
+        throw new Error(errorData.errors?.[0]?.reason || errorData.message || "QR 결제 상태 변경에 실패했습니다");
       }
 
       // 상태 변경 후 잠시 대기
@@ -62,26 +62,26 @@ const HistoryDetail = ({ payment, onPaymentStatusChange }: HistoryDetailProps) =
       const cancelResponse = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/payment/qrcode/cancel`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(qrRequest),
         }
       );
 
       if (!cancelResponse.ok) {
         const errorData = await cancelResponse.json();
-        if (errorData.code === 'C-006') {
-          console.log('Payment already cancelled or processing...');
+        if (errorData.code === "C-006") {
+          console.log("Payment already cancelled or processing...");
           return cancelResponse;
         }
-        throw new Error(errorData.errors?.[0]?.reason || errorData.message || 'QR 환불 처리에 실패했습니다');
+        throw new Error(errorData.errors?.[0]?.reason || errorData.message || "QR 환불 처리에 실패했습니다");
       }
 
       return cancelResponse;
     } catch (error) {
-      console.error('QR refund error:', error);
-      if (error instanceof Error && error.message.includes('존재하지 않는 결제기록')) {
-        console.log('Payment record not found, assuming success...');
+      console.error("QR refund error:", error);
+      if (error instanceof Error && error.message.includes("존재하지 않는 결제기록")) {
+        console.log("Payment record not found, assuming success...");
         return new Response(null, { status: 200 });
       }
       throw error;
@@ -139,7 +139,7 @@ const HistoryDetail = ({ payment, onPaymentStatusChange }: HistoryDetailProps) =
 
       if (!cancelResponse.ok) {
         if (cancelResponse.status === 404) {
-          console.log('Payment already cancelled or processing...');
+          console.log("Payment already cancelled or processing...");
           return cancelResponse;
         }
         throw new Error("현금 환불 처리에 실패했습니다");
@@ -150,9 +150,9 @@ const HistoryDetail = ({ payment, onPaymentStatusChange }: HistoryDetailProps) =
       
       return cancelResponse;
     } catch (error) {
-      console.error('Cash refund error:', error);
-      if (error instanceof Error && error.message.includes('존재하지 않는 결제기록')) {
-        console.log('Payment record not found, assuming success...');
+      console.error("Cash refund error:", error);
+      if (error instanceof Error && error.message.includes("존재하지 않는 결제기록")) {
+        console.log("Payment record not found, assuming success...");
         return new Response(null, { status: 200 });
       }
       throw error;
@@ -186,7 +186,7 @@ const HistoryDetail = ({ payment, onPaymentStatusChange }: HistoryDetailProps) =
 
       if (!updateResponse.ok) throw new Error("시재 업데이트에 실패했습니다");
     } catch (error) {
-      console.error('Cash balance update error:', error);
+      console.error("Cash balance update error:", error);
       throw error;
     }
   };
