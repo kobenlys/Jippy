@@ -34,8 +34,10 @@ const useFeedbacks = (storeId: number, category: string | null) => {
   }, [storeId, category]);
 
   const deleteFeedback = async (feedbackId: number) => {
+    const confirmed = window.confirm('리뷰를 삭제하시겠습니까?');
+    if (!confirmed) return;
     try {
-      const res = await fetch(`/api/feedback/${storeId}/delete/${feedbackId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/feedback/${storeId}/delete/${feedbackId}`, {
         method: 'DELETE',
       });
       if (!res.ok) throw new Error('삭제에 실패했습니다.');

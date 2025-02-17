@@ -85,6 +85,6 @@ public class FeedbackController {
             @Parameter(description = "삭제할 피드백 ID") @PathVariable Long feedbackId
     ) {
         feedbackService.deleteFeedback(storeId, feedbackId);
-        return ApiResponse.success(null);
+        return ApiResponse.success(HttpStatus.OK);
     }
 }
