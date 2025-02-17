@@ -6,7 +6,7 @@ import axios from "axios";
 import { useState } from "react";
 
 // 페이지를 동적으로 처리하도록 설정
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 // 실제 결제 처리를 담당하는 컴포넌트
 const PaymentSuccessContent = () => {
@@ -60,7 +60,7 @@ const PaymentSuccessContent = () => {
         localStorage.removeItem("orderData");
         
         setTimeout(() => {
-          router.push('/order');
+          router.push("/order");
         }, 3000);
       }
     } catch (err) {

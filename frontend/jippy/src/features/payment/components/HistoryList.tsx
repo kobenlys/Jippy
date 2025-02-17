@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { PaymentHistoryItem, PaymentHistoryDetail } from '@/features/payment/types/history';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { PaymentHistoryItem, PaymentHistoryDetail } from "@/features/payment/types/history";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -22,35 +22,76 @@ interface PaymentApiResponse extends PaymentHistoryItem {
 interface HistoryListProps {
   onSelectPayment: (payment: PaymentHistoryDetail) => void;
   onPaymentStatusChange?: (payment: PaymentHistoryDetail) => void;
-  filter?: 'all' | 'success' | 'cancel';
+  filter?: "all" | "success" | "cancel";
 }
+
+interface FilterTabProps {
+  currentFilter: "all" | "success" | "cancel";
+  onFilterChange: (filter: "all" | "success" | "cancel") => void;
+}
+
+const FilterTabs = ({ currentFilter, onFilterChange }: FilterTabProps) => (
+  <div className="flex space-x-2 mb-4">
+    <button
+      onClick={() => onFilterChange("all")}
+      className={`px-4 py-2 transition-colors ${
+        currentFilter === "all"
+          ? "border-b-2 border-orange-500 text-orange-600 font-medium"
+          : "text-gray-500 hover:text-gray-700"
+      }`}
+    >
+      전체
+    </button>
+    <button
+      onClick={() => onFilterChange("success")}
+      className={`px-4 py-2 transition-colors ${
+        currentFilter === "success"
+          ? "border-b-2 border-orange-500 text-orange-600 font-medium"
+          : "text-gray-500 hover:text-gray-700"
+      }`}
+    >
+      결제완료
+    </button>
+    <button
+      onClick={() => onFilterChange("cancel")}
+      className={`px-4 py-2 transition-colors ${
+        currentFilter === "cancel"
+          ? "border-b-2 border-orange-500 text-orange-600 font-medium"
+          : "text-gray-500 hover:text-gray-700"
+      }`}
+    >
+      결제취소
+    </button>
+  </div>
+);
 
 const fetchFromAPI = async <T,>(url: string, options?: RequestInit): Promise<T> => {
   const response = await fetch(url, {
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     ...options,
   });
 
   if (!response.ok) {
-    throw new Error('API 요청에 실패했습니다');
+    throw new Error("API 요청에 실패했습니다");
   }
 
   const result: ApiResponse<T> = await response.json();
   return result.data;
 };
 
-export default function PaymentHistoryList({
+const PaymentHistoryList = ({
   onSelectPayment,
   onPaymentStatusChange,
-  filter = 'all',
-}: HistoryListProps) {
+  filter = "all",
+}: HistoryListProps) => {
+  const [currentFilter, setCurrentFilter] = useState<"all" | "success" | "cancel">(filter);
   const [payments, setPayments] = useState<PaymentHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPaymentDetail, setSelectedPaymentDetail] = useState<PaymentHistoryDetail | null>(null);
   const itemsPerPage = 10;
@@ -63,7 +104,7 @@ export default function PaymentHistoryList({
 
     try {
       if (!process.env.NEXT_PUBLIC_API_URL) {
-        throw new Error('API URL이 설정되지 않았습니다.');
+        throw new Error("API URL이 설정되지 않았습니다.");
       }
 
       const baseUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history`;
@@ -72,25 +113,23 @@ export default function PaymentHistoryList({
       });
 
       let url;
-      switch (filter) {
-        case 'success':
+      switch (currentFilter) {
+        case "success":
           url = `${baseUrl}/list/success?${params}`;
           break;
-        case 'cancel':
+        case "cancel":
           url = `${baseUrl}/list/cancel?${params}`;
           break;
         default:
           url = `${baseUrl}/list?${params}`;
       }
 
-      console.log('Fetching payments from:', url);
-
       const data = await fetchFromAPI<PaymentApiResponse[]>(url);
 
       const mappedData = data.map((payment) => ({
         ...payment,
-        paymentStatus: payment.paymentStatus === 'PURCHASE' || payment.paymentStatus === '구매' ? '완료' : 
-                      payment.paymentStatus === 'CANCEL' || payment.paymentStatus === '취소' ? '취소' : 
+        paymentStatus: payment.paymentStatus === "PURCHASE" || payment.paymentStatus === "구매" ? "완료" : 
+                      payment.paymentStatus === "CANCEL" || payment.paymentStatus === "취소" ? "취소" : 
                       payment.paymentStatus
       }));
 
@@ -99,26 +138,26 @@ export default function PaymentHistoryList({
       const errorMessage =
         err instanceof Error
           ? err.message
-          : '결제 내역을 불러오는 중 알 수 없는 오류가 발생했습니다.';
+          : "결제 내역을 불러오는 중 알 수 없는 오류가 발생했습니다.";
 
       setError(errorMessage);
       setPayments([]);
     } finally {
       setLoading(false);
     }
-  }, [filter, storeId]);
+  }, [currentFilter, storeId]);
 
   const fetchPaymentDetail = useCallback(
     async (uuid: string): Promise<PaymentHistoryDetail | null> => {
       try {
         if (!process.env.NEXT_PUBLIC_API_URL) {
-          throw new Error('API URL이 설정되지 않았습니다.');
+          throw new Error("API URL이 설정되지 않았습니다.");
         }
 
         const data = await fetchFromAPI<PaymentApiResponse>(
           `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/detail`,
           {
-            method: 'POST',
+            method: "POST",
             body: JSON.stringify({
               storeId: storeId,
               paymentUUID: uuid,
@@ -128,37 +167,60 @@ export default function PaymentHistoryList({
 
         const transformedData: PaymentHistoryDetail = {
           ...data,
-          paymentStatus: data.paymentStatus === 'PURCHASE' ? '완료' : 
-                        data.paymentStatus === 'CANCEL' ? '취소' : 
+          paymentStatus: data.paymentStatus === "PURCHASE" ? "완료" : 
+                        data.paymentStatus === "CANCEL" ? "취소" : 
                         data.paymentStatus,
           buyProduct: data.buyProduct || []
         };
 
         return transformedData;
       } catch (err) {
-        console.error('결제 상세 정보 조회 실패:', err);
+        console.error("결제 상세 정보 조회 실패:", err);
         return null;
       }
     },
     [storeId]
   );
 
+  const handleFilterChange = (newFilter: "all" | "success" | "cancel") => {
+    setCurrentFilter(newFilter);
+    setCurrentPage(1);
+    setSelectedPaymentDetail(null);
+  };
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handlePaymentStatusUpdate = useCallback((updatedPayment: PaymentHistoryDetail) => {
-    setPayments(prevPayments => 
-      prevPayments.map(payment => 
-        payment.uuid === updatedPayment.uuid 
-          ? { ...payment, paymentStatus: updatedPayment.paymentStatus }
-          : payment
-      )
-    );
-
-    if (selectedPaymentDetail?.uuid === updatedPayment.uuid) {
-      setSelectedPaymentDetail(updatedPayment);
-    }
-
+    // 상태 업데이트를 하나의 배치로 처리
+    setSelectedPaymentDetail(updatedPayment);
     onPaymentStatusChange?.(updatedPayment);
+    
+    // fetchPayments 호출 대신 현재 상태를 직접 업데이트
+    if (currentFilter === "success" && updatedPayment.paymentStatus === "취소") {
+      // 완료 목록에서 보고 있을 때 취소된 항목 제거
+      setPayments(prevPayments => 
+        prevPayments.filter(payment => payment.uuid !== updatedPayment.uuid)
+      );
+    } else if (currentFilter === "cancel" && updatedPayment.paymentStatus === "완료") {
+      // 취소 목록에서 보고 있을 때 완료된 항목 제거
+      setPayments(prevPayments => 
+        prevPayments.filter(payment => payment.uuid !== updatedPayment.uuid)
+      );
+    } else {
+      // 전체 목록이거나 상태가 현재 필터와 일치할 때는 항목 업데이트
+      setPayments(prevPayments => 
+        prevPayments.map(payment => 
+          payment.uuid === updatedPayment.uuid 
+            ? { ...payment, paymentStatus: updatedPayment.paymentStatus }
+            : payment
+        )
+      );
+    }
+  }, [currentFilter, onPaymentStatusChange]);
+  
+  // useEffect는 하나만 유지
+  useEffect(() => {
     fetchPayments();
-  }, [selectedPaymentDetail, fetchPayments, onPaymentStatusChange]);
+  }, [fetchPayments, currentFilter]);
 
   const handlePaymentSelect = async (payment: PaymentHistoryItem) => {
     try {
@@ -168,19 +230,19 @@ export default function PaymentHistoryList({
         onSelectPayment(result);
       }
     } catch (error) {
-      console.error('결제 상세 정보 조회 실패:', error);
+      console.error("결제 상세 정보 조회 실패:", error);
     }
   };
 
-  useEffect(() => {
-    fetchPayments();
-  }, [fetchPayments]);
+  // useEffect(() => {
+  //   fetchPayments();
+  // }, [fetchPayments]);
 
-  useEffect(() => {
-    if (selectedPaymentDetail && selectedPaymentDetail.paymentStatus === '취소') {
-      handlePaymentStatusUpdate(selectedPaymentDetail);
-    }
-  }, [selectedPaymentDetail, handlePaymentStatusUpdate]);
+  // useEffect(() => {
+  //   if (selectedPaymentDetail && selectedPaymentDetail.paymentStatus === "취소") {
+  //     handlePaymentStatusUpdate(selectedPaymentDetail);
+  //   }
+  // }, [selectedPaymentDetail, handlePaymentStatusUpdate]);
 
   const filteredAndPaginatedPayments = useMemo(() => {
     let filtered = [...payments];
@@ -225,8 +287,9 @@ export default function PaymentHistoryList({
 
   return (
     <div className="bg-white shadow rounded-lg w-full max-w-6xl mx-auto">
-      <div className="p-4 border-b">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+      <div className="p-4">
+        <FilterTabs currentFilter={currentFilter} onFilterChange={handleFilterChange} />
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center border-b pb-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
             <label htmlFor="startDate" className="text-gray-600 whitespace-nowrap">
               시작일:
@@ -255,7 +318,10 @@ export default function PaymentHistoryList({
       </div>
 
       {loading ? (
-        <div className="text-center py-4">결제 내역을 불러오는 중...</div>
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+          <p className="mt-2 text-gray-600">결제 내역을 불러오는 중...</p>
+        </div>
       ) : error ? (
         <div className="text-red-500 text-center py-4">{error}</div>
       ) : filteredAndPaginatedPayments.length === 0 ? (
@@ -279,9 +345,8 @@ export default function PaymentHistoryList({
                   <tr
                     key={payment.uuid}
                     onClick={() => handlePaymentSelect(payment)}
-                    className={`hover:bg-orange-50 cursor-pointer border-b ${
-                      selectedPaymentDetail?.uuid === payment.uuid ? 'bg-orange-100' : ''
-                    }`}
+                    className={`hover:bg-orange-50 cursor-pointer border-b transition-colors
+                      ${selectedPaymentDetail?.uuid === payment.uuid ? "bg-orange-100" : ""}`}
                   >
                     <td className="px-4 py-2 whitespace-nowrap">
                       {new Date(payment.createdAt).toLocaleString()}
@@ -294,13 +359,13 @@ export default function PaymentHistoryList({
                     </td>
                     <td className="px-4 py-2 text-center whitespace-nowrap">
                       <span
-                        className={`px-2 py-1 rounded-full text-sm
+                        className={`px-2 py-1 rounded-full text-sm transition-colors
                         ${
-                          payment.paymentStatus === '완료'
-                            ? 'bg-green-100 text-green-800'
-                            : payment.paymentStatus === '취소'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-gray-100 text-gray-800'
+                          payment.paymentStatus === "완료"
+                            ? "bg-green-100 text-green-800"
+                            : payment.paymentStatus === "취소"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {payment.paymentStatus}
@@ -316,16 +381,16 @@ export default function PaymentHistoryList({
             <button
               onClick={() => handlePageChange(1)}
               disabled={currentPage === 1}
-              className="px-2 sm:px-3 py-1 rounded border disabled:opacity-50 text-sm sm:text-base"
+              className="px-2 sm:px-3 py-1 rounded border disabled:opacity-50 text-sm sm:text-base transition-opacity"
             >
-              {'<<'}
+              {"<<"}
             </button>
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
               className="px-2 sm:px-3 py-1 rounded border disabled:opacity-50 text-sm sm:text-base"
             >
-              {'<'}
+              {"<"}
             </button>
 
             <span className="mx-2 sm:mx-4 text-sm sm:text-base">
@@ -337,18 +402,20 @@ export default function PaymentHistoryList({
               disabled={currentPage === totalPages}
               className="px-2 sm:px-3 py-1 rounded border disabled:opacity-50 text-sm sm:text-base"
             >
-              {'>'}
+              {">"}
             </button>
             <button
               onClick={() => handlePageChange(totalPages)}
               disabled={currentPage === totalPages}
               className="px-2 sm:px-3 py-1 rounded border disabled:opacity-50 text-sm sm:text-base"
             >
-              {'>>'}
+              {">>"}
             </button>
           </div>
         </div>
       )}
     </div>
   );
-}
+};
+
+export default PaymentHistoryList;
