@@ -76,8 +76,16 @@ export default function PaymentHistoryList({
           }
         );
 
-        onSelectPayment(data);
-        return data;
+        // 상태값 변환 추가
+        const transformedData = {
+          ...data,
+          paymentStatus: data.paymentStatus === 'PURCHASE' ? '완료' : 
+                        data.paymentStatus === 'CANCEL' ? '취소' : 
+                        data.paymentStatus
+        };
+
+        onSelectPayment(transformedData);
+        return transformedData;
       } catch (err) {
         console.error("결제 상세 정보 조회 실패:", err);
         throw err;
@@ -96,25 +104,36 @@ export default function PaymentHistoryList({
         throw new Error("API URL이 설정되지 않았습니다.");
       }
 
-      let url = `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/`;
-
-      switch (filter) {
-        case "success":
-          url += "list/success";
-          break;
-        case "cancel":
-          url += "list/cancel";
-          break;
-        default:
-          url += "list";
-      }
-
+      const baseUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history`;
       const params = new URLSearchParams({
         storeId: storeId.toString(),
       });
 
-      const data = await fetchFromAPI(`${url}?${params.toString()}`);
-      setPayments(data || []);
+      let url;
+      switch (filter) {
+        case "success":
+          url = `${baseUrl}/list/success?${params}`;  // 구매(완료) 상태만 조회
+          break;
+        case "cancel":
+          url = `${baseUrl}/list/cancel?${params}`;   // 취소 상태만 조회
+          break;
+        default:
+          url = `${baseUrl}/list?${params}`;         // 전체 조회
+      }
+
+      console.log('Fetching payments from:', url); // 디버깅용 로그
+
+      const data = await fetchFromAPI(url);
+
+      // 백엔드 상태값('PURCHASE', 'CANCEL')을 화면 표시용('완료', '취소')으로 변환
+      const mappedData = data.map((payment: any) => ({
+        ...payment,
+        paymentStatus: payment.paymentStatus === 'PURCHASE' ? '완료' : 
+                      payment.paymentStatus === 'CANCEL' ? '취소' : 
+                      payment.paymentStatus
+      }));
+
+      setPayments(mappedData || []);
     } catch (err) {
       const errorMessage =
         err instanceof Error

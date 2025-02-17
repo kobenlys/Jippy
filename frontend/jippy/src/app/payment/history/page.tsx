@@ -23,7 +23,7 @@ export default function PaymentHistoryPage() {
   const fetchPaymentDetail = async (storeId: number, paymentUUID: string) => {
     setIsLoading(true);
     setError(null);
-
+ 
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/detail`,
@@ -38,18 +38,31 @@ export default function PaymentHistoryPage() {
           }),
         }
       );
-
+ 
       if (!response.ok) {
         throw new Error("결제 상세 정보를 불러오는데 실패했습니다");
       }
-
+ 
       const result: ApiResponse<PaymentDetailType> = await response.json();
-
+ 
       if (!result.success) {
         throw new Error("결제 상세 정보를 불러오는데 실패했습니다");
       }
-
-      setSelectedPayment(result.data);
+ 
+      // 로그 추가
+      console.log('API 응답 원본:', result.data);
+      console.log('변환 전 상태:', result.data.paymentStatus);
+ 
+      const transformedPayment = {
+        ...result.data,
+        paymentStatus: result.data.paymentStatus === 'PURCHASE' ? '완료' : 
+                      result.data.paymentStatus === 'CANCEL' ? '취소' : 
+                      result.data.paymentStatus
+      };
+ 
+      console.log('변환 후 상태:', transformedPayment);
+      
+      setSelectedPayment(transformedPayment);
     } catch (error) {
       setError("알 수 없는 오류가 발생했습니다");
       console.log(error);
