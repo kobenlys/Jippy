@@ -7,44 +7,40 @@ import MLAnalysis from '@/features/dashboard/customer/components/MLAnalysis';
 
 const CustomerDashboardPage = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-    // 클라이언트 사이드에서만 실행하도록 변경
-    
-    const [storeId, setStoreId] = useState<number | null>(null);
-    const router = useRouter();
+  const [storeId, setStoreId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true); // ✅ 로딩 상태 추가
+  const router = useRouter();
 
-    useEffect(() => {
-      if (typeof document !== "undefined") {
-        const cookieValue = document.cookie
-          .split("; ")
-          .find((cookie) => cookie.startsWith("selectStoreId="))
-          ?.split("=")[1];
-  
-        const parsedStoreId = cookieValue ? parseInt(cookieValue, 10) : null;
-  
-        if (!parsedStoreId || isNaN(parsedStoreId)) {
-          router.push("/owner/dashboard");
-        } else {
-          setStoreId(parsedStoreId);
-        }
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      const cookieValue = document.cookie
+        .split("; ")
+        .find((cookie) => cookie.startsWith("selectStoreId="))
+        ?.split("=")[1];
+
+      const parsedStoreId = cookieValue ? parseInt(cookieValue, 10) : null;
+
+      console.log("parsedStoreId: ", parsedStoreId);
+
+      if (!parsedStoreId || isNaN(parsedStoreId)) {
+        router.replace("/owner/dashboard");
+      } else {
+        setStoreId(parsedStoreId);
       }
-    }, [router]);
-  
-    if (storeId === null) {
-    router.replace("/owner/dashboard");
-    return null;
+      setLoading(false); // ✅ storeId가 설정된 후 로딩 종료
+    }
+  }, [router]);
+
+  // ✅ storeId가 설정되기 전에 화면에 아무것도 표시하지 않음
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-gray-500 text-lg">로딩 중...</p>
+      </div>
+    );
   }
 
-
-  // 버튼 스타일 (선택 시 핵심 색상 #F27B39 적용)
-  const buttonClass = (active: boolean) =>
-    `px-4 py-2 rounded border transition-colors ${
-      active
-        ? 'bg-[#F27B39] text-white'
-        : 'bg-white text-gray-700 hover:bg-gray-100'
-    }`;
-
   return (
-    // 내부 래퍼에 높이를 지정하여 <main class="mt-16"> 아래에서 스크롤되도록 함
     <div style={{ height: 'calc(100vh - 64px)' }} className="flex flex-col md:flex-row">
       {/* 왼쪽 컬럼: 고객 피드백 */}
       <div className="md:w-1/2 p-4 md:p-6 border-r flex flex-col">
@@ -84,7 +80,7 @@ const CustomerDashboardPage = () => {
         </div>
         {/* 스크롤 가능한 콘텐츠 영역 */}
         <div className="flex-grow overflow-y-auto no-scrollbar">
-          <FeedbackList storeId={storeId} selectedCategory={selectedCategory} />
+          {storeId !== null && <FeedbackList storeId={storeId} selectedCategory={selectedCategory} />}
         </div>
       </div>
 
@@ -92,11 +88,17 @@ const CustomerDashboardPage = () => {
       <div className="md:w-1/2 p-4 md:p-6 flex flex-col">
         <h2 className="text-2xl font-bold mb-4">피드백 분석</h2>
         <div className="flex-grow overflow-y-auto no-scrollbar">
-          <MLAnalysis storeId={storeId} />
+          {storeId !== null && <MLAnalysis storeId={storeId} />}
         </div>
       </div>
     </div>
   );
 };
+
+// 버튼 스타일 함수
+const buttonClass = (active: boolean) =>
+  `px-4 py-2 rounded border transition-colors ${
+    active ? 'bg-[#F27B39] text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+  }`;
 
 export default CustomerDashboardPage;
