@@ -14,25 +14,25 @@ import {
 import { OrderPayment } from "@/features/order/components/OrderSummary";
 import { CashPaymentModal } from "@/features/order/components/CashPaymentModal";
 
-interface CashPaymentRequest {
-  storeId: number;
-  totalCost: number;
-  paymentType: "CASH" | "QRCODE";
-  productList: Array<{
-    productId: number;
-    quantity: number;
-  }>;
-  cashRequest: {
-    fifty_thousand_won: number;
-    ten_thousand_won: number;
-    five_thousand_won: number;
-    one_thousand_won: number;
-    five_hundred_won: number;
-    one_hundred_won: number;
-    fifty_won: number;
-    ten_won: number;
-  };
-}
+// interface CashPaymentRequest {
+//   storeId: number;
+//   totalCost: number;
+//   paymentType: "CASH" | "QRCODE";
+//   productList: Array<{
+//     productId: number;
+//     quantity: number;
+//   }>;
+//   cashRequest: {
+//     fifty_thousand_won: number;
+//     ten_thousand_won: number;
+//     five_thousand_won: number;
+//     one_thousand_won: number;
+//     five_hundred_won: number;
+//     one_hundred_won: number;
+//     fifty_won: number;
+//     ten_won: number;
+//   };
+// }
 
 const POSPage = () => {
   const router = useRouter();

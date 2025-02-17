@@ -3,11 +3,43 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { PaymentHistoryItem, PaymentHistoryDetail } from '@/features/payment/types/history';
 
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+interface PaymentApiResponse extends PaymentHistoryItem {
+  buyProduct?: Array<{
+    productId: number;
+    productName: string;
+    productCategoryId: number;
+    productQuantity: number;
+    price: number;
+  }>;
+}
+
 interface HistoryListProps {
   onSelectPayment: (payment: PaymentHistoryDetail) => void;
   onPaymentStatusChange?: (payment: PaymentHistoryDetail) => void;
   filter?: 'all' | 'success' | 'cancel';
 }
+
+const fetchFromAPI = async <T,>(url: string, options?: RequestInit): Promise<T> => {
+  const response = await fetch(url, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    ...options,
+  });
+
+  if (!response.ok) {
+    throw new Error('API 요청에 실패했습니다');
+  }
+
+  const result: ApiResponse<T> = await response.json();
+  return result.data;
+};
 
 export default function PaymentHistoryList({
   onSelectPayment,
@@ -25,37 +57,6 @@ export default function PaymentHistoryList({
 
   const storeId = 1;
 
-  // 공통 API 호출 함수 (fetch 방식 통일)
-  const fetchFromAPI = async (url: string, options?: RequestInit) => {
-    try {
-      const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        ...options,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `API 호출 실패. 상태 코드: ${response.status}, 메시지: ${errorText}`
-        );
-      }
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.message || 'API 호출에 실패했습니다.');
-      }
-
-      return result.data;
-    } catch (err) {
-      console.error('API 호출 중 오류:', err);
-      throw err;
-    }
-  };
-
-  // 결제 내역 조회 함수
   const fetchPayments = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -84,9 +85,9 @@ export default function PaymentHistoryList({
 
       console.log('Fetching payments from:', url);
 
-      const data = await fetchFromAPI(url);
+      const data = await fetchFromAPI<PaymentApiResponse[]>(url);
 
-      const mappedData = data.map((payment: any) => ({
+      const mappedData = data.map((payment) => ({
         ...payment,
         paymentStatus: payment.paymentStatus === 'PURCHASE' || payment.paymentStatus === '구매' ? '완료' : 
                       payment.paymentStatus === 'CANCEL' || payment.paymentStatus === '취소' ? '취소' : 
@@ -107,15 +108,14 @@ export default function PaymentHistoryList({
     }
   }, [filter, storeId]);
 
-  // 결제 상세 정보 조회 함수
   const fetchPaymentDetail = useCallback(
-    async (uuid: string) => {
+    async (uuid: string): Promise<PaymentHistoryDetail | null> => {
       try {
         if (!process.env.NEXT_PUBLIC_API_URL) {
           throw new Error('API URL이 설정되지 않았습니다.');
         }
 
-        const data = await fetchFromAPI(
+        const data = await fetchFromAPI<PaymentApiResponse>(
           `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/detail`,
           {
             method: 'POST',
@@ -126,25 +126,24 @@ export default function PaymentHistoryList({
           }
         );
 
-        const transformedData = {
+        const transformedData: PaymentHistoryDetail = {
           ...data,
           paymentStatus: data.paymentStatus === 'PURCHASE' ? '완료' : 
                         data.paymentStatus === 'CANCEL' ? '취소' : 
-                        data.paymentStatus
+                        data.paymentStatus,
+          buyProduct: data.buyProduct || []
         };
 
-        onSelectPayment(transformedData);
         return transformedData;
       } catch (err) {
         console.error('결제 상세 정보 조회 실패:', err);
-        throw err;
+        return null;
       }
     },
-    [onSelectPayment, storeId]
+    [storeId]
   );
 
-  // 결제 상태 업데이트 함수
-  const handlePaymentStatusChange = useCallback((updatedPayment: PaymentHistoryDetail) => {
+  const handlePaymentStatusUpdate = useCallback((updatedPayment: PaymentHistoryDetail) => {
     setPayments(prevPayments => 
       prevPayments.map(payment => 
         payment.uuid === updatedPayment.uuid 
@@ -161,13 +160,27 @@ export default function PaymentHistoryList({
     fetchPayments();
   }, [selectedPaymentDetail, fetchPayments, onPaymentStatusChange]);
 
-  useEffect(() => {
-    console.log('Current API URL:', process.env.NEXT_PUBLIC_API_URL);
-  }, []);
+  const handlePaymentSelect = async (payment: PaymentHistoryItem) => {
+    try {
+      const result = await fetchPaymentDetail(payment.uuid);
+      if (result) {
+        setSelectedPaymentDetail(result);
+        onSelectPayment(result);
+      }
+    } catch (error) {
+      console.error('결제 상세 정보 조회 실패:', error);
+    }
+  };
 
   useEffect(() => {
     fetchPayments();
   }, [fetchPayments]);
+
+  useEffect(() => {
+    if (selectedPaymentDetail && selectedPaymentDetail.paymentStatus === '취소') {
+      handlePaymentStatusUpdate(selectedPaymentDetail);
+    }
+  }, [selectedPaymentDetail, handlePaymentStatusUpdate]);
 
   const filteredAndPaginatedPayments = useMemo(() => {
     let filtered = [...payments];
@@ -205,18 +218,6 @@ export default function PaymentHistoryList({
 
     return Math.ceil(filteredCount / itemsPerPage);
   }, [payments, startDate, endDate]);
-
-  const handlePaymentSelect = async (payment: PaymentHistoryItem) => {
-    try {
-      const result = await fetchPaymentDetail(payment.uuid);
-      if (result) {
-        setSelectedPaymentDetail(result);
-        onSelectPayment(result);
-      }
-    } catch (error) {
-      console.error('결제 상세 정보 조회 실패:', error);
-    }
-  };
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
