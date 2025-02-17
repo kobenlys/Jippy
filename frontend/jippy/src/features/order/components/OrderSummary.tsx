@@ -30,22 +30,42 @@ export const OrderPayment: FC<OrderPaymentProps> = ({
   // 컴포넌트 레벨에서 safeCurrentOrder 정의
   const safeCurrentOrder = currentOrder || [];
 
-  // types 정리 후 수정 예정정
+  // types 정리 후 수정 예정
   const formatOrderItemName = (item: OrderItem) => {
     if (!item) return '';
   
     try {
-      // 숫자 enum 값을 직접 사용
-      const sizeEnum = Number(item.size) as ProductSize;
-      const typeEnum = Number(item.type) as ProductType;
+      // 문자열 값을 enum으로 변환하기 위한 타입 가드 함수들
+      const getSizeEnum = (size: unknown): ProductSize => {
+        switch (size) {
+          case 'S': return ProductSize.S;
+          case 'M': return ProductSize.M;
+          case 'L': return ProductSize.L;
+          case 'F': return ProductSize.F;
+          default: return ProductSize.M;
+        }
+      };
   
-      if (sizeEnum === ProductSize.F || typeEnum === ProductType.EXTRA) {
+      const getTypeEnum = (type: unknown): ProductType => {
+        switch (type) {
+          case 'ICE': return ProductType.ICE;
+          case 'HOT': return ProductType.HOT;
+          case 'EXTRA': return ProductType.EXTRA;
+          default: return ProductType.ICE;
+        }
+      };
+  
+      const sizeValue = getSizeEnum(item.size);
+      const typeValue = getTypeEnum(item.type);
+  
+      if (sizeValue === ProductSize.F || typeValue === ProductType.EXTRA) {
         return item.name;
       }
   
-      return `[${ProductSizeLabel[sizeEnum]}] ${item.name} (${ProductTypeLabel[typeEnum]})`;
+      return `[${ProductSizeLabel[sizeValue]}] ${item.name} (${ProductTypeLabel[typeValue]})`;
+  
     } catch (error) {
-      console.error('Error formatting order item name:', error);
+      console.error(error);
       return item.name;
     }
   };
