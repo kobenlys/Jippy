@@ -44,11 +44,11 @@ const denominationMap = {
   ten_won: { value: 10, label: "10원" },
 };
 
-export default function PettyCashModal({
+const PettyCashModal = ({
   isOpen,
   onClose,
   storeId,
-}: PettyCashModalProps) {
+}: PettyCashModalProps) => {
   const [activeTab, setActiveTab] = useState<"cash" | "qr">("cash");
   const [cashData, setCashData] = useState<CashData | null>(null);
   const [modifiedCash, setModifiedCash] = useState<CashData | null>(null);
@@ -502,4 +502,6 @@ export default function PettyCashModal({
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default PettyCashModal;

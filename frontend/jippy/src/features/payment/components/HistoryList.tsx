@@ -81,11 +81,11 @@ const fetchFromAPI = async <T,>(url: string, options?: RequestInit): Promise<T> 
   return result.data;
 };
 
-export default function PaymentHistoryList({
+const PaymentHistoryList = ({
   onSelectPayment,
   onPaymentStatusChange,
   filter = "all",
-}: HistoryListProps) {
+}: HistoryListProps) => {
   const [currentFilter, setCurrentFilter] = useState<"all" | "success" | "cancel">(filter);
   const [payments, setPayments] = useState<PaymentHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -416,4 +416,6 @@ export default function PaymentHistoryList({
       )}
     </div>
   );
-}
+};
+
+export default PaymentHistoryList;

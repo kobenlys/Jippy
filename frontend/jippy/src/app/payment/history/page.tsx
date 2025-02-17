@@ -10,7 +10,7 @@ import {
   ApiResponse,
 } from "@/features/payment/types/history";
 
-export default function PaymentHistoryPage() {
+const PaymentHistoryPage = () => {
   const [selectedPayment, setSelectedPayment] = useState<PaymentDetailType | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [historyFilter, setHistoryFilter] = useState<"all" | "success" | "cancel">("all");
@@ -137,4 +137,6 @@ export default function PaymentHistoryPage() {
       </div>
     </div>
   );
-}
+};
+
+export default PaymentHistoryPage;
