@@ -70,15 +70,15 @@ public class CalendarService {
 
         return groupedSchedules.entrySet().stream()
                 .map(entry -> {
-                    Integer storeUserStaffId = entry.getKey();
                     List<Calendar> staffCalendars = entry.getValue();
+                    Integer staffId = staffCalendars.getFirst().getStoreUserStaff().getUserStaff().getId();
                     String staffName = staffCalendars.getFirst().getStoreUserStaff().getUserStaff().getName();
 
                     List<ScheduleResponse> schedules = staffCalendars.stream()
                             .map(ScheduleResponse::new)
                             .collect(Collectors.toList());
 
-                    return new StaffScheduleResponse(storeUserStaffId, staffName, schedules);
+                    return new StaffScheduleResponse(staffId, staffName, schedules);
                 })
                 .collect(Collectors.toList());
     }
