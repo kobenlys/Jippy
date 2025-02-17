@@ -197,7 +197,7 @@ const CategoryList = ({
   
     } catch (error) {
       console.error("Error deleting category:", error);
-      alert(`카테고리 삭제 중 오류가 발생했습니다: ${error.message}`);
+      alert(`카테고리 삭제 중 오류가 발생했습니다: ${(error as Error).message}`);
     }
   };
 
