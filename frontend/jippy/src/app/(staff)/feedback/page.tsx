@@ -65,7 +65,11 @@ const FeedbackPage = () => {
                 );
             }
 
-            setFeedbacks(responseData.data);
+            const sortedFeedbacks = responseData.data.sort((a, b) => {
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+
+            setFeedbacks(sortedFeedbacks);
         } catch (error) {
             setError("피드백을 불러오는데 실패했습니다");
             console.error("피드백 로딩 실패: ", error);

@@ -9,6 +9,7 @@ import {
 import { useSwipeable } from 'react-swipeable';
 import { ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Trash2, Check } from "lucide-react";
 
 const getCookieValue = (name: string): string | null => {
     const value = `; ${document.cookie}`;
@@ -36,28 +37,12 @@ const TodoItem = ({ todo, onToggle, onDelete }: TodoItemProps) => {
     return (
         <div className="relative overflow-hidden">
             <div
-                className={`
-                    absolute right-0 top-0 bottom-0 
-                    flex items-center 
-                    bg-red-500 text-white 
-                    w-[80px]
-                `}
-            >
-                <button
-                    onClick={handleDeleteClick}
-                    className="w-full h-full flex items-center justify-center"
-                >
-                    삭제
-                </button>
-            </div>
-
-            <div
                 {...handlers}
                 className={`
                     bg-white border-b last:border-b-0
                     cursor-pointer hover:bg-gray-50 
                     transition-all duration-300 ease-in-out
-                    ${isSwipeOpen ? '-translate-x-[80px]' : 'translate-x-0'}
+                    ${isSwipeOpen ? '-translate-x-[60px]' : 'translate-x-0'}
                 `}
             >
                 <div className="py-3">
@@ -84,17 +69,19 @@ const TodoItem = ({ todo, onToggle, onDelete }: TodoItemProps) => {
                 className={`
                     absolute right-0 top-0 bottom-0 
                     flex items-center 
-                    bg-red-500 text-white 
-                    w-[80px] 
-                    transition-opacity duration-300
-                    ${isSwipeOpen ? 'opacity-100' : 'opacity-0'}
+                    bg-white
+                    w-[60px] 
+                    transition-all duration-300
+                    border-l
+                    ${isSwipeOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}
                 `}
             >
                 <button
                     onClick={handleDeleteClick}
-                    className="w-full h-full flex items-center justify-center"
+                    className="w-full h-full flex items-center justify-center hover:bg-gray-50"
+                    aria-label="삭제"
                 >
-                    삭제
+                    <Trash2 className="text-red-500" size={22} />
                 </button>
             </div>
         </div>
@@ -172,7 +159,12 @@ const TodoPage = () => {
             }
 
             const data = await response.json();
-            setTodos(data);
+
+            const sortedTodos = data.sort((a: Todo, b: Todo) => {
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+
+            setTodos(sortedTodos);
         } catch (error: unknown) {
             console.error('할 일 목록 로딩 실패:', error);
             setError('할 일 목록을 불러오는데 실패 했습니다');
@@ -340,9 +332,10 @@ const TodoPage = () => {
                                 />
                                 <button
                                     onClick={handleAddTodo}
-                                    className="px-4 py-2 bg-[#ff5c00] text-white rounded hover:bg-[#ff4400] transition-colors"
+                                    className="w-10 h-10 bg-[#ff5c00] text-white rounded flex items-center justify-center hover:bg-[#ff4400] transition-colors"
+                                    aria-label="할 일 추가"
                                 >
-                                    확인
+                                    <Check size={20}/>
                                 </button>
                             </div>
                         )}
