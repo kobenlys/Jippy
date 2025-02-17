@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent } from "react";
+import React, { useState } from "react";
 import { StaffScheduleData } from "../types/calendar";
 
 interface Schedule {
@@ -39,6 +39,23 @@ const ScheduleChangeModal: React.FC<ScheduleChangeModalProps> = ({
       endTime: schedule.endTime,
     })) || [];
 
+  const days = ["일", "월", "화", "수", "목", "금", "토"] as const;
+
+  const handleDateChange = (date: string) => {
+    setNewDate(date);
+    const dayIndex = new Date(date).getDay();
+    const dayName = days[dayIndex];
+    const schedule = schedules.find((s) => s.dayOfWeek === dayName);
+
+    if (schedule) {
+      setSelectedSchedule(schedule);
+      setNewStartTime(schedule.startTime);
+      setNewEndTime(schedule.endTime);
+    } else {
+      setSelectedSchedule(null);
+    }
+  };
+
   const handleNext = (): void => {
     if (step === 1 && selectedSchedule) {
       setStep(2);
@@ -78,31 +95,27 @@ const ScheduleChangeModal: React.FC<ScheduleChangeModalProps> = ({
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  변경할 근무 일정
+                  변경할 날짜
                 </label>
 
-                <select
-                  className="w-full p-2 pr-8 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23666666\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e')] bg-no-repeat bg-[right_8px_center] bg-[length:1.2em]"
-                  value={selectedSchedule?.id || ""}
-                  onChange={(e) => {
-                    const schedule = schedules.find(
-                      (s) => s.id === e.target.value
-                    );
-                    setSelectedSchedule(schedule || null);
-                  }}
-                >
-                  <option value="">근무 일정을 선택하세요</option>
-                  {schedules.map((schedule) => (
-                    <option
-                      key={schedule.id}
-                      value={schedule.id}
-                      className="hover:bg-blue-100"
-                    >
-                      {schedule.day}요일 ({schedule.time})
-                    </option>
-                  ))}
-                </select>
+                <input
+                  type="date"
+                  className="w-full"
+                  value={newDate}
+                  onChange={(e) => handleDateChange(e.target.value)}
+                />
               </div>
+              {newDate && !selectedSchedule && (
+                <div className="text-sm text-red-500">
+                  선택한 날짜에 근무 일정이 없습니다.
+                </div>
+              )}
+              {selectedSchedule && (
+                <div className="text-sm text-gray-500">
+                  현재 근무 시간: {selectedSchedule.day}요일{" "}
+                  {selectedSchedule.time}
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -112,12 +125,9 @@ const ScheduleChangeModal: React.FC<ScheduleChangeModalProps> = ({
                 </label>
                 <input
                   type="date"
-                  className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300"
+                  className="w-full"
                   value={newDate}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setNewDate(e.target.value)
-                  }
-                  placeholder="연도-월-일"
+                  onChange={(e) => setNewDate(e.target.value)}
                 />
               </div>
               <div className="flex gap-4">
@@ -127,12 +137,9 @@ const ScheduleChangeModal: React.FC<ScheduleChangeModalProps> = ({
                   </label>
                   <input
                     type="time"
-                    className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300"
+                    className="w-full"
                     value={newStartTime}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                      setNewStartTime(e.target.value)
-                    }
-                    placeholder="-- --:--"
+                    onChange={(e) => setNewStartTime(e.target.value)}
                   />
                 </div>
                 <div className="flex-1">
@@ -141,12 +148,9 @@ const ScheduleChangeModal: React.FC<ScheduleChangeModalProps> = ({
                   </label>
                   <input
                     type="time"
-                    className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300"
+                    className="w-full"
                     value={newEndTime}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                      setNewEndTime(e.target.value)
-                    }
-                    placeholder="-- --:--"
+                    onChange={(e) => setNewDate(e.target.value)}
                   />
                 </div>
               </div>
