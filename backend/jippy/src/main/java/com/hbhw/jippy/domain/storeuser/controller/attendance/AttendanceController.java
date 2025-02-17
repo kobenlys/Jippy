@@ -1,7 +1,9 @@
 package com.hbhw.jippy.domain.storeuser.controller.attendance;
 
 import com.hbhw.jippy.domain.storeuser.dto.request.attendance.AttendanceRequest;
+import com.hbhw.jippy.domain.storeuser.dto.request.attendance.ChangeScheduleRequest;
 import com.hbhw.jippy.domain.storeuser.dto.request.attendance.TempChangeRequest;
+import com.hbhw.jippy.domain.storeuser.dto.response.attendance.ChangeScheduleInfoResponse;
 import com.hbhw.jippy.domain.storeuser.dto.response.attendance.CheckInResponse;
 import com.hbhw.jippy.domain.storeuser.dto.response.attendance.CheckOutResponse;
 import com.hbhw.jippy.domain.storeuser.dto.response.attendance.TempChangeResponse;
@@ -42,4 +44,21 @@ public class AttendanceController {
         TempChangeResponse response = attendanceService.changeTempSchedule(storeId, staffId, request);
         return ApiResponse.success(response);
     }
+
+    @Operation(summary = "임시 스케줄 변경 요청", description = "직원의 스케줄을 저장 합니다")
+    @PostMapping("/{storeId}/tempChange/{staffId}/request")
+    public ApiResponse<?> requestChangeSchedule(@RequestBody ChangeScheduleRequest changeScheduleRequest, @PathVariable Integer storeId, @PathVariable Integer staffId){
+        attendanceService.addChangeSchedule(changeScheduleRequest, storeId, staffId);
+        return ApiResponse.success(HttpStatus.OK);
+    }
+
+    @Operation(summary = "임시 스케줄 조회", description = "직원의 스케줄을 조회 합니다")
+    @GetMapping("/{storeId}/tempChange/list")
+    public ApiResponse<ChangeScheduleInfoResponse> fetchRequestSchedule(@PathVariable Integer storeId){
+        ChangeScheduleInfoResponse response = ChangeScheduleInfoResponse.builder()
+                .requestSchedule(attendanceService.fetchChangeSchedule(storeId))
+                .build();
+        return ApiResponse.success(HttpStatus.OK, response);
+    }
+
 }

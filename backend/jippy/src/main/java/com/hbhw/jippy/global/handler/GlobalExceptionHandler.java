@@ -101,6 +101,7 @@ public class GlobalExceptionHandler {
     protected ResponseEntity<ErrorResponse> handlerException(Exception e) {
         final ErrorResponse errorResponse = ErrorResponse.of(CommonErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
         log.error(e.getClass().getName());
+        log.error(e.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
