@@ -1,5 +1,5 @@
 import { StaffScheduleData } from "@/features/calendar/types/calendar";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import staffApi from "./staffApi";
 
 interface UseStaffScheduleReturn {
@@ -14,7 +14,7 @@ const useStaffSchedule = (storeId: number): UseStaffScheduleReturn => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSchedule = async () => {
+  const fetchSchedule = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -33,11 +33,11 @@ const useStaffSchedule = (storeId: number): UseStaffScheduleReturn => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [storeId]);
 
   useEffect(() => {
     fetchSchedule();
-  }, [storeId, fetchSchedule]);
+  }, [fetchSchedule]);
 
   return {
     data,

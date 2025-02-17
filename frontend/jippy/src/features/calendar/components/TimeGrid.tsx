@@ -1,3 +1,5 @@
+"use client";
+
 import { TimeSlot } from "../types/calendar";
 
 interface TimeGridProps {

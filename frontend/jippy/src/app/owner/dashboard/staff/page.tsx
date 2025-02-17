@@ -10,6 +10,17 @@ import StoreSalaryCard from "@/features/dashboard/staff/components/StoreSalaryCa
 import WorkingStaffCard from "@/features/dashboard/staff/components/WorkingStaffCard";
 import NoticeList from "@/features/notifications/components/NoticeList";
 import TodoList from "@/features/todo/components/TodoList";
+import LoadingSpinner from "@/features/common/components/ui/LoadingSpinner";
+import ScheduleChangeList from "@/features/dashboard/staff/components/ScheduleChangeList";
+
+const getCookieValue = (key: string) => {
+  return (
+    document.cookie
+      .split("; ")
+      .find((cookie) => cookie.startsWith(`${key}=`))
+      ?.split("=")[1] ?? null
+  );
+};
 
 const StaffDashboardPage = () => {
   const [storeId, setStoreId] = useState<number | null>(null);
@@ -18,31 +29,27 @@ const StaffDashboardPage = () => {
 
   useEffect(() => {
     if (typeof document !== "undefined") {
-      const cookieValue = document.cookie
-        .split("; ")
-        .find((cookie) => cookie.startsWith("selectStoreId="))
-        ?.split("=")[1];
-
-      const parsedStoreId = cookieValue ? parseInt(cookieValue, 10) : null;
+      const parsedStoreId = Number(getCookieValue("selectStoreId"));
+      const ownerName = getCookieValue("userName");
+      const decodedName = ownerName ? decodeURIComponent(ownerName) : "";
 
       if (!parsedStoreId || isNaN(parsedStoreId)) {
         router.push("/owner/dashboard");
       } else {
         setStoreId(parsedStoreId);
+        setOwnerName(decodedName);
       }
-
-      const ownerName = document.cookie
-        .split("; ")
-        .find((cookie) => cookie.startsWith("userName="))
-        ?.split("=")[1];
-
-      const decodedName = ownerName ? decodeURIComponent(ownerName) : "";
-      setOwnerName(decodedName);
     }
   }, [router]);
 
+  // useEffect(() => {
+  // }, [storeId]);
+
+  // useEffect(() => {
+  // }, [ownerName]);
+
   if (storeId === null) {
-    return null;
+    return <LoadingSpinner />;
   }
 
   return (
@@ -59,6 +66,9 @@ const StaffDashboardPage = () => {
       </div>
       <div className="mt-8">
         <StaffScheduleCard storeId={storeId} />
+      </div>
+      <div className="mt-8">
+        <ScheduleChangeList storeId={storeId} />
       </div>
       <div className="mt-8">
         <NoticeList storeId={storeId} ownerName={ownerName} />

@@ -1,5 +1,8 @@
+"use client";
+
 import React, { useState } from "react";
 import { StaffScheduleData } from "../types/calendar";
+import { useRouter } from "next/router";
 
 interface Schedule {
   id: string;
@@ -16,11 +19,21 @@ interface ScheduleChangeModalProps {
   scheduleData: StaffScheduleData | null;
 }
 
+const getCookieValue = (name: string): string | null => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    return parts.pop()?.split(";").shift() || null;
+  }
+  return null;
+};
+
 const ScheduleChangeModal: React.FC<ScheduleChangeModalProps> = ({
   isOpen,
   onClose,
   scheduleData,
 }) => {
+  const router = useRouter();
   const [step, setStep] = useState<number>(1);
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(
     null
@@ -28,6 +41,7 @@ const ScheduleChangeModal: React.FC<ScheduleChangeModalProps> = ({
   const [newDate, setNewDate] = useState<string>("");
   const [newStartTime, setNewStartTime] = useState<string>("");
   const [newEndTime, setNewEndTime] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const schedules =
     scheduleData?.schedules.map((schedule) => ({
@@ -43,32 +57,81 @@ const ScheduleChangeModal: React.FC<ScheduleChangeModalProps> = ({
 
   const handleDateChange = (date: string) => {
     setNewDate(date);
-    const dayIndex = new Date(date).getDay();
-    const dayName = days[dayIndex];
-    const schedule = schedules.find((s) => s.dayOfWeek === dayName);
+    if (step === 1) {
+      const dayIndex = new Date(date).getDay();
+      const dayName = days[dayIndex];
+      const schedule = schedules.find((s) => s.dayOfWeek === dayName);
 
-    if (schedule) {
-      setSelectedSchedule(schedule);
-      setNewStartTime(schedule.startTime);
-      setNewEndTime(schedule.endTime);
-    } else {
-      setSelectedSchedule(null);
+      if (schedule) {
+        setSelectedSchedule(schedule);
+        setNewStartTime(schedule.startTime);
+        setNewEndTime(schedule.endTime);
+      } else {
+        setSelectedSchedule(null);
+      }
     }
   };
 
-  const handleNext = (): void => {
+  const submitScheduleChange = async () => {
+    try {
+      setIsSubmitting(true);
+
+      const encodedStoreIdList = getCookieValue("storeIdList");
+      const userId = getCookieValue("userId");
+
+      if (!encodedStoreIdList || !userId) {
+        router.push("/login");
+        return;
+      }
+
+      const decodedStoreIdList = decodeURIComponent(encodedStoreIdList);
+      const storeIdList = JSON.parse(decodedStoreIdList);
+      const storeId = storeIdList[0];
+
+      const beforeDate = selectedSchedule ? newDate : "";
+      const requestData = {
+        beforeYear: beforeDate,
+        beforeCheckIn: selectedSchedule?.startTime || "",
+        beforeCheckOut: selectedSchedule?.endTime || "",
+        newYear: newDate,
+        newCheckIn: newStartTime,
+        newCheckOut: newEndTime,
+      };
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/attendance/${storeId}/tempChange/${userId}/request`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestData),
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("근무 변경 요청에 실패했습니다.");
+      }
+
+      alert("근무 변경 요청이 성공적으로 전송되었습니다.");
+      handleClose();
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "근무 변경 요청에 실패했습니다."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleNext = async (): Promise<void> => {
     if (step === 1 && selectedSchedule) {
       setStep(2);
     } else if (step === 2) {
-      console.log({
-        originalSchedule: selectedSchedule,
-        newDate,
-        newStartTime,
-        newEndTime,
-      });
-
-      alert("근무 변경 요청이 전송되었습니다.");
-      handleClose();
+      await submitScheduleChange();
     }
   };
 
@@ -173,10 +236,10 @@ const ScheduleChangeModal: React.FC<ScheduleChangeModalProps> = ({
           </button>
           <button
             onClick={handleNext}
-            disabled={step === 1 && !selectedSchedule}
+            disabled={(step === 1 && !selectedSchedule) || isSubmitting}
             className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:opacity-50 disabled:hover:bg-orange-500"
           >
-            {step === 1 ? "다음" : "요청하기"}
+            {isSubmitting ? "처리 중..." : step === 1 ? "다음" : "요청하기"}
           </button>
         </div>
       </div>

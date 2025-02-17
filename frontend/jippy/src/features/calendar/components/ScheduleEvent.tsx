@@ -1,3 +1,5 @@
+"use client";
+
 import { ScheduleEvent as ScheduleEventType } from "../types/calendar";
 
 interface ScheduleEventProps {

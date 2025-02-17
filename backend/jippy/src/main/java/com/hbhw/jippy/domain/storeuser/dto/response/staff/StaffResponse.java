@@ -14,7 +14,7 @@ public class StaffResponse {
     private StaffSalaryType staffSalaryType;
 
     public StaffResponse(StoreUserStaff storeUserStaff) {
-        this.staffId = storeUserStaff.getUserStaff().getId();
+        this.staffId = storeUserStaff.getId();
         this.staffName = storeUserStaff.getUserStaff().getName();
         this.staffType = storeUserStaff.getStaffType();
         this.staffSalary = storeUserStaff.getStaffSalary();

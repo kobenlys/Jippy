@@ -14,15 +14,6 @@ import CalendarHeader from "@/features/calendar/components/CalendarHeader";
 import { Clock } from "lucide-react";
 import ScheduleChangeModal from "@/features/calendar/components/ScheduleChangeModal";
 
-const getCookieValue = (name: string): string | null => {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) {
-    return parts.pop()?.split(";").shift() || null;
-  }
-  return null;
-};
-
 const CalendarPage = () => {
   const router = useRouter();
   const [scheduleData, setScheduleData] = useState<StaffScheduleData | null>(
@@ -35,6 +26,34 @@ const CalendarPage = () => {
 
   const days = ["일", "월", "화", "수", "목", "금", "토"] as const;
 
+  const getCookieValue = (name: string): string | null => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+      return parts.pop()?.split(";").shift() || null;
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const encodedStoreIdList = getCookieValue("storeIdList");
+        const userId = getCookieValue("userId");
+
+        if (!encodedStoreIdList || !userId) {
+          router.push("/(user)/login");
+          return;
+        }
+      } catch (error) {
+        console.error("사용자 정보 조회 중 오류:", error);
+        router.push("/(user)/login");
+      }
+    };
+
+    fetchUserData();
+  }, [router]);
+
   useEffect(() => {
     const fetchSchedule = async () => {
       try {
@@ -43,10 +62,7 @@ const CalendarPage = () => {
         const encodedStoreIdList = getCookieValue("storeIdList");
         const userId = getCookieValue("userId");
 
-        if (!encodedStoreIdList || !userId) {
-          router.push("/login");
-          return;
-        }
+        if (!encodedStoreIdList || !userId) return;
 
         const decodedStoreIdList = decodeURIComponent(encodedStoreIdList);
         const storeIdList = JSON.parse(decodedStoreIdList);
