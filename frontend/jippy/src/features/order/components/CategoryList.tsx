@@ -1,0 +1,242 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { fetchCategories } from "@/redux/slices/categorySlice";
+import { Button } from "@/features/common/components/ui/button";
+import CategoryItem from "./CategoryItem";
+import CategoryModals from "./CategoryModal";
+
+interface CategoryListProps {
+  selectedCategory: string;
+  onCategorySelect: (categoryName: string, categoryId: number | -1) => void;
+}
+
+const CategoryList = ({
+  selectedCategory,
+  onCategorySelect,
+}: CategoryListProps) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const currentShopId = useSelector(
+    (state: RootState) => state.shop.currentShop?.id
+  );
+  const { categories } = useSelector((state: RootState) => state.category);
+
+  // State
+  const [isActionModalOpen, setIsActionModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<{
+    id: number;
+    categoryName: string;
+  } | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(
+    null
+  );
+  const [isCreateMode, setIsCreateMode] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
+  const [updatedCategoryName, setUpdatedCategoryName] = useState("");
+  const [touchStartTime, setTouchStartTime] = useState(0);
+
+  const fetchCategoriesData = useCallback(async () => {
+    if (currentShopId) {
+      await dispatch(fetchCategories(currentShopId));
+    }
+  }, [dispatch, currentShopId]);
+
+  useEffect(() => {
+    fetchCategoriesData();
+  }, [fetchCategoriesData]);
+
+  const handleTouchStart = (category: { id: number; categoryName: string }) => {
+    if (category.id === 0) return;
+    setTouchStartTime(Date.now());
+    handleLongPressStart(category);
+  };
+
+  const handleTouchEnd = () => {
+    const touchDuration = Date.now() - touchStartTime;
+    handleLongPressEnd();
+
+    if (touchDuration < 1000) {
+      setIsEditMode(false);
+      setIsActionModalOpen(false);
+      setEditingCategory(null);
+    }
+  };
+
+  const handleLongPressStart = (category: {
+    id: number;
+    categoryName: string;
+  }) => {
+    if (category.id === 0) return;
+
+    const timer = setTimeout(() => {
+      setIsEditMode(true);
+      setEditingCategory(category);
+      setIsActionModalOpen(true);
+    }, 1000);
+    setLongPressTimer(timer);
+  };
+
+  const handleLongPressEnd = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+  };
+
+  const handleCreateCategory = async () => {
+    if (!currentShopId || !newCategoryName.trim()) return;
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/category/${currentShopId}/create`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ categoryName: newCategoryName.trim() }),
+        }
+      );
+      if (!response.ok) throw new Error("Failed to create category");
+      await fetchCategoriesData();
+      setNewCategoryName("");
+      setIsCreateMode(false);
+    } catch (error) {
+      console.error("Error creating category:", error);
+    }
+  };
+
+  const handleUpdateCategory = async () => {
+    if (!currentShopId || !editingCategory || !updatedCategoryName.trim())
+      return;
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/category/${currentShopId}/update/${editingCategory.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ categoryName: updatedCategoryName.trim() }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to update category");
+
+      await fetchCategoriesData();
+      setIsUpdateMode(false);
+      setIsActionModalOpen(false);
+      setIsEditMode(false);
+      setUpdatedCategoryName("");
+      setEditingCategory(null);
+    } catch (error) {
+      console.error("Error updating category:", error);
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId: number) => {
+    if (!currentShopId || categoryId === 0) return;
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/category/${currentShopId}/delete/${categoryId}`,
+        { method: "DELETE" }
+      );
+      if (!response.ok) throw new Error("Failed to delete category");
+      await fetchCategoriesData();
+      setIsActionModalOpen(false);
+      setIsEditMode(false);
+    } catch (error) {
+      console.error("Error deleting category:", error);
+    }
+  };
+
+  const handleCategoryClick = (category: {
+    id: number;
+    categoryName: string;
+  }) => {
+    if (isEditMode) {
+      setIsEditMode(false);
+      setIsActionModalOpen(false);
+      setEditingCategory(null);
+    }
+    if (category.id === 0) {
+      onCategorySelect(category.categoryName, -1);
+    } else {
+      onCategorySelect(category.categoryName, category.id);
+    }
+  };
+
+  // Only show "전체" category and additional categories if currentShopId exists
+  const displayCategories = currentShopId
+    ? [{ id: 0, categoryName: "전체" }, ...categories]
+    : [{ id: 0, categoryName: "전체" }];
+
+  return (
+    <>
+      <div className="w-full overflow-x-auto">
+        <div className="w-full min-w-0">
+          <div className="flex gap-[12px] no-scrollbar">
+            {displayCategories.map((category) => (
+              <CategoryItem
+                key={category.id}
+                id={category.id}
+                name={category.categoryName}
+                isSelected={selectedCategory === category.categoryName}
+                isEditMode={isEditMode}
+                onSelect={() => handleCategoryClick(category)}
+                onLongPress={() => handleTouchStart(category)}
+                onPressEnd={handleTouchEnd}
+              />
+            ))}
+            <Button
+              onClick={() => setIsCreateMode(true)}
+              variant="orangeBorder"
+              className="w-[85px] h-[50px] rounded-[15px] font-semibold text-xl flex-shrink-0 mt-0"
+            >
+              +
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <CategoryModals
+        isActionModalOpen={isActionModalOpen}
+        isCreateMode={isCreateMode}
+        isUpdateMode={isUpdateMode}
+        editingCategory={editingCategory}
+        newCategoryName={newCategoryName}
+        updatedCategoryName={updatedCategoryName}
+        onCloseActionModal={() => {
+          setIsActionModalOpen(false);
+          setIsEditMode(false);
+          setEditingCategory(null);
+        }}
+        onCloseCreateModal={() => {
+          setIsCreateMode(false);
+          setNewCategoryName("");
+        }}
+        onCloseUpdateModal={() => {
+          setIsUpdateMode(false);
+          setUpdatedCategoryName("");
+          setEditingCategory(null);
+        }}
+        onCreateCategory={handleCreateCategory}
+        onUpdateCategory={handleUpdateCategory}
+        onDeleteCategory={handleDeleteCategory}
+        onNewCategoryNameChange={setNewCategoryName}
+        onUpdatedCategoryNameChange={setUpdatedCategoryName}
+        onStartUpdate={() => {
+          setIsUpdateMode(true);
+          setUpdatedCategoryName(editingCategory?.categoryName || "");
+          setIsActionModalOpen(false);
+        }}
+      />
+    </>
+  );
+};
+
+export default CategoryList;
