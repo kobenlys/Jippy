@@ -18,6 +18,7 @@ import com.hbhw.jippy.global.error.BusinessException;
 import com.hbhw.jippy.utils.DateTimeUtils;
 import com.hbhw.jippy.utils.UUIDProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import java.io.IOException;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductService {
@@ -189,8 +191,13 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public Product getProduct(Integer storeId, Long productId) {
-        Optional<Product> product = productRepository.findByIdAndStoreId(productId, storeId);
-        return product.orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "상품이 존재하지 않습니다."));
+        try{
+            Optional<Product> product = productRepository.findByIdAndStoreId(productId, storeId);
+            return product.orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "상품이 존재하지 않습니다."));
+        }catch (BusinessException e){
+            log.error("상품 조회 실패 - storeId: {}, productId: {}, error: {}", storeId, productId, e.getMessage());
+            throw e;
+        }
     }
 
     /**

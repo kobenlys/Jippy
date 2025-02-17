@@ -140,8 +140,13 @@ public class StockStatusService {
     public void updateBatchStockStatus(Integer storeId, List<StockUpdateInfo> updates) {
         Map<String, StockUpdateInfo> mergedUpdates = new HashMap<>();
 
+        if (updates.isEmpty()) {
+            return;
+        }
+
         for (StockUpdateInfo update : updates) {
             String stockName = update.getItem().getStockName();
+            System.out.println(update.item.getStockName());
 
             if (mergedUpdates.containsKey(stockName)) {
                 mergedUpdates.computeIfPresent(stockName, (k, existing) -> StockUpdateInfo.builder()
@@ -161,8 +166,9 @@ public class StockStatusService {
 
         for (StockUpdateInfo update : mergedUpdates.values()) {
             StockStatusRedis currentStatus = currentStatuses.get(update.getItem().getStockName());
-
             if (currentStatus == null) {
+                System.out.println(update);
+
                 StockStatusRedis newStatus = StockStatusRedis.builder()
                         .initialStock(update.getItem().getStockTotalValue())
                         .soldStock(update.getDecreaseAmount())
@@ -175,6 +181,7 @@ public class StockStatusService {
                 checkLowStock(newStatus);
                 batchUpdates.put(update.getItem().getStockName(), newStatus);
             } else {
+                System.out.println("11111X");
                 int newSoldStock = currentStatus.getSoldStock() + update.getDecreaseAmount();
                 StockStatusRedis updatedStatus = StockStatusRedis.builder()
                         .initialStock(currentStatus.getInitialStock())
