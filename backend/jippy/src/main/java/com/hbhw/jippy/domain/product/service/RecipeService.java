@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -46,6 +47,10 @@ public class RecipeService {
         Product productEntity = productService.getProduct(storeId, productId);
         Recipe recipeEntity = getRecipe(productId);
         return recipeEntity.getIngredient();
+    }
+
+    public Optional<Recipe> getRecipeOrEmpty(Long productId) {
+        return recipeRepository.findByProductId(productId);
     }
 
     public Recipe getRecipe(Long productId) {

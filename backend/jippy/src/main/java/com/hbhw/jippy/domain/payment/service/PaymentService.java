@@ -31,10 +31,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -66,8 +65,11 @@ public class PaymentService {
     public void qrCodePaymentConfirm(ConfirmQrCodePaymentRequest confirmQrCodePaymentRequest) {
         try {
             HttpResponse<String> response = tossPaymentConfirm(confirmQrCodePaymentRequest);
+            log.info("TossServerConfirm - OK");
             basePaymentConfirm(confirmQrCodePaymentRequest, PaymentType.QRCODE, confirmQrCodePaymentRequest.getPaymentKey());
+            log.info("basePayment - OK");
         } catch (Exception e) {
+            log.error("Error : 결제 실패 : {}", e.getClass().getName());
             throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "결제서버와 연결이 불가능합니다. 다시 시도해 주세요");
         }
     }
@@ -105,18 +107,24 @@ public class PaymentService {
         List<StockStatusService.StockUpdateInfo> stockUpdateInfoList = new ArrayList<>();
 
         for (PaymentProductInfoRequest product : confirmPaymentRequest.getProductList()) {
-            Recipe recipeEntity = recipeService.getRecipe(product.getProductId());
+            Optional<Recipe> recipeEntity = recipeService.getRecipeOrEmpty(product.getProductId());
+            if (recipeEntity.isEmpty()) {
+                continue;
+            }
 
-            for (Ingredient ingredient : recipeEntity.getIngredient()) {
+            for (Ingredient ingredient : recipeEntity.get().getIngredient()) {
                 InventoryItem beforeInventory = new InventoryItem();
-
+                boolean isMatch = false;
                 for (InventoryItem item : inventoryItemList) {
                     if (ingredient.getName().equals(item.getStockName())) {
                         beforeInventory = item;
+                        isMatch = true;
                         break;
                     }
                 }
-
+                if(!isMatch){
+                    continue;
+                }
                 InventoryItem newInventoryItem = InventoryItem.builder()
                         .stock(beforeInventory.getStock())
                         .stockName(beforeInventory.getStockName())
