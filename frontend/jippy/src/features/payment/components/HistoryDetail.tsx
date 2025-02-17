@@ -29,79 +29,66 @@ const HistoryDetail = ({ payment, onPaymentStatusChange }: HistoryDetailProps) =
   console.log("받은 payment 데이터:", payment);
   console.log("결제 상태:", payment?.paymentStatus);
 
-  const handleCashRefund = async (payment: PaymentHistoryDetail) => {
-    try {
-      // 결제 상태 변경 API 호출
-      const statusResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/change/status`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            storeId: 1,
-            paymentUUID: payment.uuid
-          }),
-        }
-      );
-  
-      if (!statusResponse.ok) {
-        const errorData = await statusResponse.json();
-        throw new Error(errorData.message || "결제 상태 변경에 실패했습니다");
-      }
-  
-      const statusResult = await statusResponse.json();
-      if (!statusResult.success) {
-        throw new Error(statusResult.message || "결제 상태 변경에 실패했습니다");
-      }
-  
-      // 현금 환불 API 호출
-      const cashRequest = {
-        paymentUUIDRequest: {
+// handleCashRefund 함수 수정
+const handleCashRefund = async (payment: PaymentHistoryDetail) => {
+  try {
+    // 결제 상태 변경 API 호출
+    const statusResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/change/status`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           storeId: 1,
           paymentUUID: payment.uuid
-        },
-        cashRequest: {
-          fifty_thousand_won: 0,
-          ten_thousand_won: 0,
-          five_thousand_won: 0,
-          one_thousand_won: 0,
-          five_hundred_won: 0,
-          one_hundred_won: 0,
-          fifty_won: 0,
-          ten_won: 0
-        }
-      };
-  
-      console.log("Sending cash refund request:", cashRequest);
-  
-      const cancelResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/payment/cash/cancel`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(cashRequest),
-        }
-      );
-  
-      if (!cancelResponse.ok) {
-        const errorData = await cancelResponse.json();
-        throw new Error(errorData.message || "현금 환불 처리에 실패했습니다");
+        }),
       }
-  
-      const cancelResult = await cancelResponse.json();
-      if (!cancelResult.success) {
-        throw new Error(cancelResult.message || "현금 환불 처리에 실패했습니다");
-      }
-  
-      // 시재 차감 처리
-      await updateCashBalance(payment.totalCost);
-      
-      return statusResult;
-    } catch (error) {
-      console.error('Cash refund error:', error);
-      throw error;
+    );
+
+    if (!statusResponse.ok) {
+      throw new Error("결제 상태 변경에 실패했습니다");
     }
-  };
+
+    // 현금 환불 API 호출
+    const cashRequest = {
+      paymentUUIDRequest: {
+        storeId: 1,
+        paymentUUID: payment.uuid
+      },
+      cashRequest: {
+        fifty_thousand_won: 0,
+        ten_thousand_won: 0,
+        five_thousand_won: 0,
+        one_thousand_won: 0,
+        five_hundred_won: 0,
+        one_hundred_won: 0,
+        fifty_won: 0,
+        ten_won: 0
+      }
+    };
+
+    console.log("Sending cash refund request:", cashRequest);
+
+    const cancelResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/payment/cash/cancel`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cashRequest),
+      }
+    );
+
+    if (!cancelResponse.ok) {
+      throw new Error("현금 환불 처리에 실패했습니다");
+    }
+
+    // 시재 차감 처리
+    await updateCashBalance(payment.totalCost);
+  } catch (error) {
+    console.error('Cash refund error:', error);
+    throw error;
+  }
+};
 
   // QR 환불 처리
   const handleQRRefund = async (payment: PaymentHistoryDetail) => {
@@ -117,10 +104,10 @@ const HistoryDetail = ({ payment, onPaymentStatusChange }: HistoryDetailProps) =
     try {
       // 결제 상태 변경 API 호출
       const statusResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/payment/change-status`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/change/status`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             storeId: 1,
             paymentUUID: payment.uuid
@@ -186,46 +173,38 @@ const HistoryDetail = ({ payment, onPaymentStatusChange }: HistoryDetailProps) =
     if (!updateResponse.ok) throw new Error("시재 업데이트에 실패했습니다");
   };
 
-  // 환불 처리 메인 함수
-  const handleRefund = async () => {
-    if (!payment) return;
-    if (!confirm("정말 환불하시겠습니까?")) return;
+// handleRefund 함수 수정
+const handleRefund = async () => {
+  if (!payment) return;
+  if (!confirm("정말 환불하시겠습니까?")) return;
 
-    setIsLoading(true);
-    setError(null);
+  setIsLoading(true);
+  setError(null);
 
-    try {
-      let response;
-      
-      if (payment.paymentType === "현금") {
-        response = await handleCashRefund(payment);
-      } else if (payment.paymentType === "QR코드") {
-        response = await handleQRRefund(payment);
-      } else {
-        throw new Error("지원하지 않는 결제 수단입니다");
-      }
-
-      const result = await response.json();
-      if (!result.success) {
-        throw new Error(result.message || "환불 처리에 실패했습니다");
-      }
-
-      // 결제 상태를 "취소"로 업데이트
-      const updatedPayment = {
-        ...payment,
-        paymentStatus: "취소"  // displayStatus -> paymentStatus로 수정
-      };
-
-      onPaymentStatusChange(updatedPayment);
-
-      alert("환불이 완료되었습니다");
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "환불 처리 중 오류가 발생했습니다");
-      console.error(error);
-    } finally {
-      setIsLoading(false);
+  try {
+    if (payment.paymentType === "현금") {
+      await handleCashRefund(payment);
+    } else if (payment.paymentType === "QR코드") {
+      await handleQRRefund(payment);
+    } else {
+      throw new Error("지원하지 않는 결제 수단입니다");
     }
-  };
+
+    // 결제 상태를 "취소"로 업데이트
+    const updatedPayment = {
+      ...payment,
+      paymentStatus: "취소"
+    };
+
+    onPaymentStatusChange(updatedPayment);
+    alert("환불이 완료되었습니다");
+  } catch (error) {
+    setError(error instanceof Error ? error.message : "환불 처리 중 오류가 발생했습니다");
+    console.error(error);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   if (payment === null) {
     return (
