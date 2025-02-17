@@ -78,91 +78,62 @@ export default function PaymentHistoryPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 max-w-7xl">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">결제 내역</h1>
-        <button
-          onClick={() => setIsCashModalOpen(true)}
-          className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors duration-200"
-        >
-          정산
-        </button>
-      </div>
-
-      <div className="mb-6 flex flex-wrap gap-2">
-        <button
-          onClick={() => setHistoryFilter("all")}
-          className={`px-4 py-2 rounded-lg transition-colors duration-200 text-sm sm:text-base ${
-            historyFilter === "all"
-              ? "bg-orange-500 text-white hover:bg-orange-600"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          전체 내역
-        </button>
-        <button
-          onClick={() => setHistoryFilter("success")}
-          className={`px-4 py-2 rounded-lg transition-colors duration-200 text-sm sm:text-base ${
-            historyFilter === "success"
-              ? "bg-orange-500 text-white hover:bg-orange-600"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          결제 성공
-        </button>
-        <button
-          onClick={() => setHistoryFilter("cancel")}
-          className={`px-4 py-2 rounded-lg transition-colors duration-200 text-sm sm:text-base ${
-            historyFilter === "cancel"
-              ? "bg-orange-500 text-white hover:bg-orange-600"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          결제 취소
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-7">
-          <PaymentHistoryList
-            filter={historyFilter}
-            onSelectPayment={(payment: PaymentHistoryItem) => {
-              fetchPaymentDetail(1, payment.uuid);
-            }}
-            onPaymentStatusChange={handlePaymentStatusChange}
-          />
+    <div className="min-h-screen flex justify-center items-start py-8">
+      <div className="container px-4 max-w-7xl">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">결제 내역</h1>
+          <button
+            onClick={() => setIsCashModalOpen(true)}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors duration-200"
+          >
+            정산
+          </button>
         </div>
-
-        <div className="lg:col-span-5">
-          <div className="bg-white rounded-lg shadow p-4 h-full">
-            {isLoading ? (
-              <div className="flex justify-center items-center h-48">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500" />
-              </div>
-            ) : error ? (
-              <div className="text-red-500 p-4 text-center bg-red-50 rounded-lg">
-                <p className="font-medium">오류 발생</p>
-                <p className="text-sm mt-1">{error}</p>
-              </div>
-            ) : selectedPayment ? (
-              <PaymentHistoryDetail 
-                payment={selectedPayment}
-                onPaymentStatusChange={handlePaymentStatusChange}
-              />
-            ) : (
-              <div className="text-gray-500 text-center py-12">
-                결제 내역을 선택해주세요
-              </div>
-            )}
+  
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+          <div className="lg:col-span-7 h-full">
+            <PaymentHistoryList
+              filter={historyFilter}
+              onSelectPayment={(payment: PaymentHistoryItem) => {
+                fetchPaymentDetail(1, payment.uuid);
+              }}
+              onPaymentStatusChange={handlePaymentStatusChange}
+            />
+          </div>
+  
+          <div className="lg:col-span-5">
+            <div className="bg-white rounded-lg shadow p-4 h-full flex justify-center items-center">
+              {isLoading ? (
+                <div className="flex justify-center items-center h-48">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500" />
+                </div>
+              ) : error ? (
+                <div className="text-red-500 p-4 text-center bg-red-50 rounded-lg">
+                  <p className="font-medium">오류 발생</p>
+                  <p className="text-sm mt-1">{error}</p>
+                </div>
+              ) : selectedPayment ? (
+                <div className="w-full flex justify-center">
+                  <PaymentHistoryDetail 
+                    payment={selectedPayment}
+                    onPaymentStatusChange={handlePaymentStatusChange}
+                  />
+                </div>
+              ) : (
+                <div className="text-gray-500 text-center py-12">
+                  결제 내역을 선택해주세요
+                </div>
+              )}
+            </div>
           </div>
         </div>
+  
+        <PettyCashModal
+          isOpen={isCashModalOpen}
+          onClose={() => setIsCashModalOpen(false)}
+          storeId={1}
+        />
       </div>
-
-      <PettyCashModal
-        isOpen={isCashModalOpen}
-        onClose={() => setIsCashModalOpen(false)}
-        storeId={1}
-      />
     </div>
   );
 }
