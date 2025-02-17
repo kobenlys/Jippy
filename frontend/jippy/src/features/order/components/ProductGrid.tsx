@@ -6,9 +6,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { fetchProducts } from "@/redux/slices/productSlice";
 import { ProductDetailResponse } from "@/redux/types/product";
-import ProductRegistrationModal from "./ProductRegistrationModal";
+// import ProductRegistrationModal from "./ProductRegistrationModal";
 import ProductOptionModal from "./ProductOptionModal";
-import { Plus } from "lucide-react";
+// import { Plus } from "lucide-react";
 import CategoryList from "./CategoryList";
 
 interface ProductGridProps {
@@ -20,7 +20,7 @@ interface ProductGridProps {
 const ProductGrid = ({
   onProductSelect,
   onAddProduct,
-  showAddButton = true,
+  // showAddButton = true,
 }: ProductGridProps) => {
   const dispatch = useDispatch<AppDispatch>();
   const [selectedProduct, setSelectedProduct] = useState<
@@ -29,7 +29,7 @@ const ProductGrid = ({
   const [isOptionModalOpen, setIsOptionModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("전체");
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | -1>(-1);
-  const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
+  // const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
   const DEFAULT_IMAGE_PATH = "/images/ProductPlaceholder.png";
 
   const currentShop = useSelector((state: RootState) => state.shop.currentShop);
@@ -165,14 +165,14 @@ const ProductGrid = ({
             </div>
           )}
 
-          {showAddButton && (
+          {/* {showAddButton && (
             <div
               onClick={() => setIsRegistrationModalOpen(true)}
               className="bg-white rounded-lg shadow-md p-4 flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
             >
               <Plus className="w-12 h-12 text-gray-500" />
             </div>
-          )}
+          )} */}
         </div>
       </div>
 
@@ -188,10 +188,10 @@ const ProductGrid = ({
         />
       )}
 
-      <ProductRegistrationModal
+      {/* <ProductRegistrationModal
         isOpen={isRegistrationModalOpen}
         onClose={() => setIsRegistrationModalOpen(false)}
-      />
+      /> */}
     </div>
   );
 };

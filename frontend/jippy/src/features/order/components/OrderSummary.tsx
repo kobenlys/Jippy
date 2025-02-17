@@ -5,6 +5,7 @@ import { Button } from "@/features/common/components/ui/button";
 import { Card } from "@/features/common/components/ui/card/Card";
 import { OrderItem, PaymentMethod } from "@/features/order/types/pos";
 import { PaymentMethodSelector } from "./PaymentMethodSelector";
+import { ProductSize, ProductType, ProductSizeLabel, ProductTypeLabel } from '@/redux/types/product';
 
 interface OrderPaymentProps {
   currentOrder: OrderItem[];
@@ -17,7 +18,7 @@ interface OrderPaymentProps {
 }
 
 export const OrderPayment: FC<OrderPaymentProps> = ({
-  currentOrder,
+  currentOrder = [],
   onQuantityChange,
   calculateTotal,
   paymentMethod,
@@ -25,6 +26,50 @@ export const OrderPayment: FC<OrderPaymentProps> = ({
   onPaymentSubmit,
   onCancelOrder,
 }) => {
+
+  // 컴포넌트 레벨에서 safeCurrentOrder 정의
+  const safeCurrentOrder = currentOrder || [];
+
+  // types 정리 후 수정 예정
+  const formatOrderItemName = (item: OrderItem) => {
+    if (!item) return '';
+  
+    try {
+      // 문자열 값을 enum으로 변환하기 위한 타입 가드 함수들
+      const getSizeEnum = (size: unknown): ProductSize => {
+        switch (size) {
+          case 'S': return ProductSize.S;
+          case 'M': return ProductSize.M;
+          case 'L': return ProductSize.L;
+          case 'F': return ProductSize.F;
+          default: return ProductSize.M;
+        }
+      };
+  
+      const getTypeEnum = (type: unknown): ProductType => {
+        switch (type) {
+          case 'ICE': return ProductType.ICE;
+          case 'HOT': return ProductType.HOT;
+          case 'EXTRA': return ProductType.EXTRA;
+          default: return ProductType.ICE;
+        }
+      };
+  
+      const sizeValue = getSizeEnum(item.size);
+      const typeValue = getTypeEnum(item.type);
+  
+      if (sizeValue === ProductSize.F || typeValue === ProductType.EXTRA) {
+        return item.name;
+      }
+  
+      return `[${ProductSizeLabel[sizeValue]}] ${item.name} (${ProductTypeLabel[typeValue]})`;
+  
+    } catch (error) {
+      console.error(error);
+      return item.name;
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex-none bg-white p-4 border-b w-full flex justify-center items-center">
@@ -38,17 +83,17 @@ export const OrderPayment: FC<OrderPaymentProps> = ({
       <div className="flex-1 flex flex-col space-y-4 p-4 bg-white">
         <Card className="flex-1">
           <div className="p-4 h-full overflow-y-auto">
-            {currentOrder.length === 0 ? (
+            {safeCurrentOrder.length === 0 ? (
               <p className="text-muted-foreground">주문 항목이 없습니다.</p>
             ) : (
               <ul className="space-y-2">
-                {currentOrder.map((item) => (
+                {safeCurrentOrder.map((item) => (
                   <li
                     key={item.id}
                     className="flex justify-between items-center py-2 border-b border-border last:border-0"
                   >
                     <div className="flex flex-col">
-                      <span className="font-medium">{item.name}</span>
+                      <span className="font-medium">{formatOrderItemName(item)}</span>
                       <span className="text-sm text-muted-foreground">
                         {item.price.toLocaleString()}원
                       </span>

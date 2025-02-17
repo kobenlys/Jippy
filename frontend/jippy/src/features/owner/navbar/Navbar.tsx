@@ -98,7 +98,7 @@ const Navbar = () => {
       <div className={styles.container}>
         <div className={styles.wrapper}>
           <div className={styles.logo}>
-            <Link href="/confirm" className={styles.logoText}>
+            <Link href="/owner/dashboard" className={styles.logoText}>
               Jippy
             </Link>
           </div>
