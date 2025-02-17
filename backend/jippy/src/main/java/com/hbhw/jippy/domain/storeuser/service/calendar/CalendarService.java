@@ -70,24 +70,24 @@ public class CalendarService {
 
         return groupedSchedules.entrySet().stream()
                 .map(entry -> {
-                    Integer storeUserStaffId = entry.getKey();
                     List<Calendar> staffCalendars = entry.getValue();
+                    Integer staffId = staffCalendars.getFirst().getStoreUserStaff().getUserStaff().getId();
                     String staffName = staffCalendars.getFirst().getStoreUserStaff().getUserStaff().getName();
 
                     List<ScheduleResponse> schedules = staffCalendars.stream()
                             .map(ScheduleResponse::new)
                             .collect(Collectors.toList());
 
-                    return new StaffScheduleResponse(storeUserStaffId, staffName, schedules);
+                    return new StaffScheduleResponse(staffId, staffName, schedules);
                 })
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public StaffScheduleResponse getSchedule(Integer storeId, Integer staffId) {
-        StoreUserStaff staff = storeStaffRepository.findById(staffId)
+        List<StoreUserStaff> storeUserStaffList = storeStaffRepository.findAllByUserStaffId(staffId)
                 .orElseThrow(() -> new NoSuchElementException("매장의 직원 정보를 찾을 수 없습니다."));
-
+        StoreUserStaff staff = storeUserStaffList.getFirst();
         if (!staff.getStore().getId().equals(storeId)) {
             throw new NoSuchElementException("매장을 찾을 수 없습니다.");
         }

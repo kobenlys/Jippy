@@ -11,7 +11,7 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 public class StaffScheduleResponse {
-    private final Integer storeUserStaffId;
+    private final Integer staffId;
     private final String staffName;
     private final List<ScheduleResponse> schedules;
 }
