@@ -1,6 +1,6 @@
 // app/owner/dashboard/product/ProductChart.tsx
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Bar } from "react-chartjs-2";
 import { ChartData } from "chart.js";
 import "chart.js/auto";
@@ -15,9 +15,7 @@ type ProductSalesItem = {
 };
 
 const ProductChart: React.FC<ProductChartProps> = ({ storeId }) => {
-  // viewType: "recent" for 최근 30일, "monthly" for 월별 데이터
   const [viewType, setViewType] = useState<"recent" | "monthly">("recent");
-  // 월별 선택용
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [selectedMonth, setSelectedMonth] = useState<string>(
@@ -26,15 +24,13 @@ const ProductChart: React.FC<ProductChartProps> = ({ storeId }) => {
   const [chartData, setChartData] = useState<ChartData<"bar"> | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // 최근 30일 데이터 fetch
-  const fetchRecentData = async () => {
+  const fetchRecentData = useCallback(async () => {
     setLoading(true);
     try {
       const today = new Date();
       const startDate = new Date();
       startDate.setDate(today.getDate() - 30);
-      // API expects yyyy-MM
-      const startStr = startDate.toISOString().slice(0, 7);
+      const startStr = startDate.toISOString().slice(0, 7); // yyyy-MM
       const endStr = today.toISOString().slice(0, 7);
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/product/${storeId}/fetch/all?startDate=${startStr}&endDate=${endStr}`
@@ -59,10 +55,9 @@ const ProductChart: React.FC<ProductChartProps> = ({ storeId }) => {
               backgroundColor: "#F27B39",
               borderColor: "#F27B39",
               borderWidth: 1,
-              // 추가할 속성들
-              hoverBackgroundColor: "#D35F1D", // hover 시 더 진한 색상
-              borderRadius: 8, // 모서리를 둥글게
-              barThickness: "flex", // 자동으로 적절한 두께 조정
+              hoverBackgroundColor: "#D35F1D",
+              borderRadius: 8,
+              barThickness: "flex",
             },
           ],
         });
@@ -71,14 +66,13 @@ const ProductChart: React.FC<ProductChartProps> = ({ storeId }) => {
       console.error("Error fetching recent data:", error);
     }
     setLoading(false);
-  };
+  }, [storeId]);
 
-  // 월별 데이터 fetch (선택한 연도와 월 사용)
-  const fetchMonthlyData = async () => {
+  const fetchMonthlyData = useCallback(async () => {
     setLoading(true);
     try {
       const startDate = `${selectedYear}-${selectedMonth}`; // yyyy-MM
-      const endDate = startDate; // 동일 월
+      const endDate = startDate;
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/product/${storeId}/fetch/all?startDate=${startDate}&endDate=${endDate}`
       );
@@ -110,23 +104,15 @@ const ProductChart: React.FC<ProductChartProps> = ({ storeId }) => {
       console.error("Error fetching monthly data:", error);
     }
     setLoading(false);
-  };
+  }, [storeId, selectedYear, selectedMonth]);
 
-  // viewType 또는 월별 선택값 변경 시 데이터를 새로 가져옵니다.
   useEffect(() => {
     if (viewType === "recent") {
       fetchRecentData();
     } else {
       fetchMonthlyData();
     }
-  }, [
-    storeId,
-    viewType,
-    selectedYear,
-    selectedMonth,
-    fetchMonthlyData,
-    fetchRecentData,
-  ]);
+  }, [storeId, viewType, selectedYear, selectedMonth, fetchRecentData, fetchMonthlyData]);
 
   return (
     <div className="w-full overflow-x-auto">
@@ -197,14 +183,8 @@ const ProductChart: React.FC<ProductChartProps> = ({ storeId }) => {
             options={{
               responsive: true,
               maintainAspectRatio: false,
-              plugins: {
-                legend: { position: "top" },
-              },
-              scales: {
-                y: {
-                  beginAtZero: true,
-                },
-              },
+              plugins: { legend: { position: "top" } },
+              scales: { y: { beginAtZero: true } },
             }}
           />
         </div>
