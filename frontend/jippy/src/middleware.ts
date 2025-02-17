@@ -2,9 +2,25 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 export function middleware(request: NextRequest) {
-  // console.log("Middleware 실행됨!");
-  // console.log("현재 경로:", request.nextUrl.pathname);
-  
+  const { nextUrl, cookies } = request;
+  const urlPath = nextUrl.pathname;
+  const staffType = cookies.get("staffType")?.value;
+  const loginType = cookies.get("loginType")?.value;
+
+  // 쿠키로 권한 확인
+  console.log("I'm in middleware");
+  if (!staffType || !loginType) {
+    return NextResponse.redirect(new URL("/login", request.url)); // ✅ 로그인 페이지로 리디렉트
+  }
+
+  // /owner/dashboard로 접근하는 경우
+  if (urlPath.startsWith("/owner")) {
+    console.log(staffType + " " + loginType + " " + urlPath);
+    if (staffType !== "OWNER" || loginType !== "OWNER") {
+      return NextResponse.redirect(new URL("/error", request.url));
+    }
+  }
+
   const userAgent = request.headers.get("user-agent");
   // console.log("User Agent:", userAgent);
   
@@ -23,6 +39,7 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/(staff)",      // staff 정확히 일치
-    "/(staff)/:path*" // staff의 하위 경로
+    "/(staff)/:path*", // staff의 하위 경로
+    "/owner/:path*"
   ]
 }

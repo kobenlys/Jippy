@@ -73,8 +73,6 @@ const JippyPage = () => {
             </Link>
           </Button>
         )}
-
-        {!isAuthenticated && <p>또는</p>}
         
         {isAuthenticated ? (
           <Button 
