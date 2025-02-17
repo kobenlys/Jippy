@@ -1,8 +1,12 @@
 // @/features/dashboard/product/components/ProductForm.tsx
 "use client";
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
 import RecipeForm from "./RecipeForm";
-import Image from "next/image";
+
+interface Category {
+  id: number;
+  categoryName: string;
+}
 
 interface ProductItem {
   id: number;
@@ -23,14 +27,10 @@ interface ProductFormProps {
   onClose: () => void;
 }
 
-const ProductForm: React.FC<ProductFormProps> = ({
-  mode,
-  productData,
-  onClose,
-}) => {
+const ProductForm: React.FC<ProductFormProps> = ({ mode, productData, onClose }) => {
   const [product, setProduct] = useState<ProductItem>({
     id: productData?.id || 0,
-    storeId: productData?.storeId || 1, // 기본 storeId 1
+    storeId: productData?.storeId || 1,
     productCategoryId: productData?.productCategoryId || 0,
     name: productData?.name || "",
     price: productData?.price || 0,
@@ -41,6 +41,62 @@ const ProductForm: React.FC<ProductFormProps> = ({
     totalSold: productData?.totalSold || 0,
   });
 
+  // 카테고리 관리
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState<string>("");
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/category/${product.storeId}/select`
+        );
+        const json = await response.json();
+        if (json.success) {
+          setCategories(json.data);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    fetchCategories();
+  }, [product.storeId]);
+
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) return;
+    try {
+      // 카테고리 생성 API (예시)
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/category/${product.storeId}/create`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            categoryName: newCategoryName.trim(),
+            storeId: product.storeId,
+          }),
+        }
+      );
+      const json = await response.json();
+      if (json.success) {
+        alert("새 카테고리가 추가되었습니다.");
+        // 카테고리 목록 갱신
+        const response2 = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/category/${product.storeId}/select`
+        );
+        const json2 = await response2.json();
+        if (json2.success) {
+          setCategories(json2.data);
+        }
+        setNewCategoryName("");
+      } else {
+        alert("카테고리 추가에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("Error adding category:", error);
+    }
+  };
+
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [createdProductId, setCreatedProductId] = useState<number | null>(null);
 
@@ -48,7 +104,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setImageFile(file);
-      // 미리보기용 URL 생성
       const previewUrl = URL.createObjectURL(file);
       setProduct({ ...product, image: previewUrl });
     }
@@ -56,14 +111,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const storeId = product.storeId.toString();
+    const storeIdStr = product.storeId.toString();
     const url =
       mode === "create"
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/product/${storeId}/create`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/product/${storeId}/update/${product.id}`;
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/product/${storeIdStr}/create`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/product/${storeIdStr}/update/${product.id}`;
 
     const formData = new FormData();
-    // 생성 모드와 수정 모드에 따라 JSON 데이터를 key 이름을 다르게 보냅니다.
     if (mode === "create") {
       formData.append(
         "createProduct",
@@ -100,8 +154,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
         )
       );
     }
-
-    // 이미지 파일이 있다면 FormData에 추가
     if (imageFile) {
       formData.append("image", imageFile);
     }
@@ -114,11 +166,39 @@ const ProductForm: React.FC<ProductFormProps> = ({
       const jsonResponse = await response.json();
       if (jsonResponse.success) {
         if (mode === "create") {
-          alert("상품이 등록되었습니다.");
-          // 새로 생성된 상품의 id가 반환되었다고 가정
-          setCreatedProductId(jsonResponse.data.id);
-          setProduct((prev) => ({ ...prev, id: jsonResponse.data.id }));
-          // 모달은 닫지 않고 레시피 등록 폼을 보여줍니다.
+          alert("상품이 등록되었습니다. 밑으로 가서 레시피를 등록하세요.");
+          const newId = jsonResponse.data?.id;
+          if (newId) {
+            setCreatedProductId(newId);
+            setProduct((prev) => ({ ...prev, id: newId }));
+          } else {
+            // product id가 응답에 없다면, 제품 목록에서 등록된 상품 찾기
+            try {
+              const listRes = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/product/${product.storeId}/select`
+              );
+              const listJson = await listRes.json();
+              if (listJson.success && Array.isArray(listJson.data)) {
+                const found = listJson.data.find(
+                  (p: ProductItem) =>
+                    p.name === product.name &&
+                    p.price === product.price &&
+                    p.productCategoryId === product.productCategoryId
+                );
+                if (found && found.id) {
+                  setCreatedProductId(found.id);
+                  setProduct((prev) => ({ ...prev, id: found.id }));
+                } else {
+                  alert("상품 등록 후 새로 생성된 제품을 찾을 수 없습니다.");
+                  return;
+                }
+              }
+            } catch (error) {
+              console.error("Error fetching product list:", error);
+              return;
+            }
+          }
+          // 등록 후 레시피 폼을 계속 보여줍니다.
         } else {
           alert("상품이 수정되었습니다.");
           onClose();
@@ -134,7 +214,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
   return (
     <>
-      {/* 상품 등록/수정 폼 */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block mb-1">상품명</label>
@@ -194,19 +273,37 @@ const ProductForm: React.FC<ProductFormProps> = ({
           </select>
         </div>
         <div>
-          <label className="block mb-1">카테고리 ID</label>
-          <input
-            type="number"
+          <label className="block mb-1">상품 카테고리</label>
+          <select
             value={product.productCategoryId}
             onChange={(e) =>
-              setProduct({
-                ...product,
-                productCategoryId: parseInt(e.target.value),
-              })
+              setProduct({ ...product, productCategoryId: parseInt(e.target.value) })
             }
             className="w-full border p-2 rounded"
-            required
-          />
+          >
+            <option value={0}>-- 선택하세요 --</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.categoryName}
+              </option>
+            ))}
+          </select>
+          <div className="mt-2 flex gap-2">
+            <input
+              type="text"
+              placeholder="새 카테고리명"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              className="border p-2 rounded flex-1"
+            />
+            <button
+              type="button"
+              onClick={handleAddCategory}
+              className="bg-blue-500 text-white px-3 py-2 rounded"
+            >
+              추가
+            </button>
+          </div>
         </div>
         <div>
           <label className="block mb-1">상품 이미지 첨부</label>
@@ -219,7 +316,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           />
           {imageFile && (
             <div className="mt-2">
-              <Image
+              <img
                 src={product.image}
                 alt="미리보기"
                 className="max-h-40 object-contain border"
@@ -245,14 +342,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
         </button>
       </form>
 
-      {/* 상품 등록 후 또는 수정 시 레시피 등록/수정 폼 */}
       {(mode === "edit" || (mode === "create" && createdProductId)) && (
         <div className="mt-8">
           <h3 className="text-xl font-semibold mb-4">레시피 등록/수정</h3>
-          <RecipeForm
-            productId={mode === "create" ? createdProductId! : product.id}
-            mode={mode}
-          />
+          <RecipeForm productId={mode === "create" ? createdProductId! : product.id} mode={mode} />
         </div>
       )}
     </>

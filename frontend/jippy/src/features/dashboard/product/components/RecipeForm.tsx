@@ -18,16 +18,15 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ productId, mode }) => {
     { name: "", amount: 0, unit: "" },
   ]);
 
-  // edit 모드인 경우 기존 레시피 데이터를 불러옵니다.
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
-        const storeId = "1";
+        const storeId = 1;
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/recipe/list/ingredient?storeId=${storeId}&productId=${productId}`
         );
         const json = await response.json();
-        if (json.success && json.data) {
+        if (json.success && json.data && json.data.length > 0) {
           setIngredients(json.data);
         }
       } catch (error) {
@@ -58,24 +57,40 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ productId, mode }) => {
 
   const handleSubmitRecipe = async (e: React.FormEvent) => {
     e.preventDefault();
-    const url =
-      mode === "create"
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/recipe/create`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/recipe/update`;
+    const isEmptyRecipe = ingredients.every((ing) => ing.name === "");
+    let url = "";
+    let method = "";
+    if (mode === "create" || (mode === "edit" && isEmptyRecipe)) {
+      url = `${process.env.NEXT_PUBLIC_API_URL}/api/recipe/create`;
+      method = "POST";
+    } else {
+      url = `${process.env.NEXT_PUBLIC_API_URL}/api/recipe/update`;
+      method = "PUT";
+    }
     const payload = {
       productId,
       updatedAt: new Date().toISOString(),
       ingredient: ingredients,
     };
     try {
-      const response = await fetch(url, {
-        method: mode === "create" ? "POST" : "PUT",
+      let response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      if (response.status === 404 && method === "PUT") {
+        response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/recipe/create`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
       const jsonResponse = await response.json();
       if (jsonResponse.success) {
         alert("레시피가 저장되었습니다.");
+        window.location.reload();
+      } else {
+        alert("레시피 저장에 실패했습니다.");
       }
     } catch (error) {
       console.error("Error saving recipe:", error);
@@ -85,16 +100,20 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ productId, mode }) => {
   const handleDeleteRecipe = async () => {
     if (confirm("레시피를 삭제하시겠습니까?")) {
       try {
-        const storeId = "1";
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/recipe/delete`, {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ productId, storeId: parseInt(storeId) }),
-        });
+        const storeId = 1;
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/recipe/delete`,
+          {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ productId, storeId }),
+          }
+        );
         const jsonResponse = await response.json();
         if (jsonResponse.success) {
           alert("레시피가 삭제되었습니다.");
           setIngredients([{ name: "", amount: 0, unit: "" }]);
+          window.location.reload();
         }
       } catch (error) {
         console.error("Error deleting recipe:", error);
@@ -110,9 +129,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ productId, mode }) => {
             type="text"
             placeholder="재료명"
             value={ingredient.name}
-            onChange={(e) =>
-              handleIngredientChange(index, "name", e.target.value)
-            }
+            onChange={(e) => handleIngredientChange(index, "name", e.target.value)}
             className="border p-2 rounded flex-1"
             required
           />
@@ -120,9 +137,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ productId, mode }) => {
             type="number"
             placeholder="수량"
             value={ingredient.amount || ""}
-            onChange={(e) =>
-              handleIngredientChange(index, "amount", e.target.value)
-            }
+            onChange={(e) => handleIngredientChange(index, "amount", e.target.value)}
             className="border p-2 rounded w-20"
             required
           />
@@ -130,9 +145,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ productId, mode }) => {
             type="text"
             placeholder="단위"
             value={ingredient.unit}
-            onChange={(e) =>
-              handleIngredientChange(index, "unit", e.target.value)
-            }
+            onChange={(e) => handleIngredientChange(index, "unit", e.target.value)}
             className="border p-2 rounded w-20"
             required
           />

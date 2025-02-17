@@ -109,8 +109,7 @@ public class FeedbackService {
      * 피드백 삭제 (점주 권한)
      */
     public void deleteFeedback(int storeId, Long feedbackId) {
-        Feedback feedback = feedbackRepository.findById(feedbackId)
-                .orElseThrow(() -> new RuntimeException("해당 피드백이 존재하지 않습니다."));
+        Feedback feedback = feedbackRepository.findByStoreIdAndId(storeId, feedbackId);
 
         // 다른 매장의 피드백을 지우지 못하도록 체크
         if (feedback.getStoreId() != storeId) {
