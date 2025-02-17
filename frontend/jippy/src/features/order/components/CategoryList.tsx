@@ -127,6 +127,18 @@ const CategoryList = ({
     if (!currentShopId || !editingCategory || !updatedCategoryName.trim())
       return;
 
+    // 중복 카테고리 체크 (자기 자신은 제외)
+    const isDuplicateCategory = categories.some(
+      category => 
+        category.id !== editingCategory.id && 
+        category.categoryName.trim() === updatedCategoryName.trim()
+    );
+
+    if (isDuplicateCategory) {
+      alert("이미 존재하는 카테고리 이름입니다.");
+      return;
+    }
+
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/category/${currentShopId}/update/${editingCategory.id}`,
