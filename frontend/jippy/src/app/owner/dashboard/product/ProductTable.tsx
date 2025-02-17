@@ -100,7 +100,7 @@ const ProductTable = () => {
                 <th className="p-2 text-left border-b w-20">가격</th>
                 <th className="p-2 text-left border-b w-20">상태</th>
                 <th className="p-2 text-left border-b w-28">이미지</th>
-                <th className="p-2 text-left border-b w-32">액션</th>
+                <th className="p-2 text-left border-b w-32">수정/삭제</th>
               </tr>
             </thead>
             <tbody>
@@ -122,7 +122,7 @@ const ProductTable = () => {
                         className="w-16 h-16 object-cover rounded"
                       />
                     </td>
-                    <td className="p-2 border-b flex gap-2">
+                    <td className="p-2 border-b">
                       <button
                         onClick={() => openEditModal(item)}
                         className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md transition-colors duration-200 text-sm flex items-center justify-center"

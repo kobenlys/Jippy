@@ -28,9 +28,9 @@ public class ProductController {
     @PostMapping("{storeId}/create")
     public ApiResponse<?> createProduct(@PathVariable("storeId") Integer storeId,
                                         @RequestPart("createProduct") CreateProductRequest createProductRequest,
-                                        @RequestPart("image") MultipartFile image) {
+                                        @RequestParam(value = "image", required = false) MultipartFile image) {
 
-        productService.createProduct(createProductRequest, image, storeId);
+         productService.createProduct(createProductRequest, image, storeId);
         return ApiResponse.success(HttpStatus.OK);
     }
 
@@ -54,7 +54,7 @@ public class ProductController {
             @PathVariable("storeId") Integer storeId,
             @PathVariable("productId") Long productId,
             @RequestPart("productUpdateRequest") ProductUpdateRequest productUpdateRequest,
-            @RequestPart(value = "image", required = false) MultipartFile image) {
+            @RequestParam(value = "image", required = false) MultipartFile image) {
         productService.modifyProduct(storeId, productId, productUpdateRequest, image);
         return ApiResponse.success(HttpStatus.OK);
     }
