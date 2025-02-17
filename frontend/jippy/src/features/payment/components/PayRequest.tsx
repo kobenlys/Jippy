@@ -7,8 +7,9 @@ import { Button } from "@/features/common/components/ui/button";
 import { useAppSelector } from "@/redux/hooks";
 // import type { OrderData } from "@/features/payment/types/payment";
 
+// test_ck_ma60RZblrqzQnGRxeeGz8wzYWBn1
 // test_ck_yZqmkKeP8gpJeNxBdjGd3bQRxB9l
-const TOSS_CLIENT_KEY = "test_ck_ma60RZblrqzQnGRxeeGz8wzYWBn1";
+const TOSS_CLIENT_KEY = "test_ck_yZqmkKeP8gpJeNxBdjGd3bQRxB9l";
 
 const generateRandomOrderId = () => {
   return "xxxx-xxxx-4xxx-yxxx-xxxxxx".replace(/[xy]/g, (c) => {
