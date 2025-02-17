@@ -30,21 +30,25 @@ export const OrderPayment: FC<OrderPaymentProps> = ({
   // 컴포넌트 레벨에서 safeCurrentOrder 정의
   const safeCurrentOrder = currentOrder || [];
 
+  // types 정리 후 수정 예정정
   const formatOrderItemName = (item: OrderItem) => {
-    // 안전한 타입 체크 추가
     if (!item) return '';
-
-    // 디버깅용 로그
-    console.log('주문 아이템:', item);
-
-    // enum 값으로 비교
-    if (item.size === ProductSize.F || item.type === ProductType.EXTRA) {
+  
+    try {
+      // 숫자 enum 값을 직접 사용
+      const sizeEnum = Number(item.size) as ProductSize;
+      const typeEnum = Number(item.type) as ProductType;
+  
+      if (sizeEnum === ProductSize.F || typeEnum === ProductType.EXTRA) {
+        return item.name;
+      }
+  
+      return `[${ProductSizeLabel[sizeEnum]}] ${item.name} (${ProductTypeLabel[typeEnum]})`;
+    } catch (error) {
+      console.error('Error formatting order item name:', error);
       return item.name;
     }
-  
-    // 레이블을 사용하여 표시
-    return `[${ProductSizeLabel[item.size]}] ${item.name} (${ProductTypeLabel[item.type]})`;
-};
+  };
 
   return (
     <div className="flex flex-col h-full">
