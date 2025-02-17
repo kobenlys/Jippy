@@ -85,9 +85,9 @@ public class CalendarService {
 
     @Transactional(readOnly = true)
     public StaffScheduleResponse getSchedule(Integer storeId, Integer staffId) {
-        StoreUserStaff staff = storeStaffRepository.findById(staffId)
+        List<StoreUserStaff> storeUserStaffList = storeStaffRepository.findAllByUserStaffId(staffId)
                 .orElseThrow(() -> new NoSuchElementException("매장의 직원 정보를 찾을 수 없습니다."));
-
+        StoreUserStaff staff = storeUserStaffList.getFirst();
         if (!staff.getStore().getId().equals(storeId)) {
             throw new NoSuchElementException("매장을 찾을 수 없습니다.");
         }
