@@ -89,6 +89,17 @@ const CategoryList = ({
 
   const handleCreateCategory = async () => {
     if (!currentShopId || !newCategoryName.trim()) return;
+
+      // 중복 카테고리 체크
+    const isDuplicateCategory = categories.some(
+      category => category.categoryName.trim() === newCategoryName.trim()
+    );
+
+    if (isDuplicateCategory) {
+      alert("이미 존재하는 카테고리 이름입니다.");
+      return;
+    }
+
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/category/${currentShopId}/create`,
@@ -100,7 +111,10 @@ const CategoryList = ({
           body: JSON.stringify({ categoryName: newCategoryName.trim() }),
         }
       );
-      if (!response.ok) throw new Error("Failed to create category");
+      if (!response.ok) {
+        throw new Error("Failed to create category");
+      }
+      
       await fetchCategoriesData();
       setNewCategoryName("");
       setIsCreateMode(false);
@@ -112,6 +126,18 @@ const CategoryList = ({
   const handleUpdateCategory = async () => {
     if (!currentShopId || !editingCategory || !updatedCategoryName.trim())
       return;
+
+    // 중복 카테고리 체크 (자기 자신은 제외)
+    const isDuplicateCategory = categories.some(
+      category => 
+        category.id !== editingCategory.id && 
+        category.categoryName.trim() === updatedCategoryName.trim()
+    );
+
+    if (isDuplicateCategory) {
+      alert("이미 존재하는 카테고리 이름입니다.");
+      return;
+    }
 
     try {
       const response = await fetch(
@@ -140,17 +166,38 @@ const CategoryList = ({
 
   const handleDeleteCategory = async (categoryId: number) => {
     if (!currentShopId || categoryId === 0) return;
+  
     try {
-      const response = await fetch(
+      // 카테고리 삭제 전 상품 존재 여부 확인 API 호출
+      const checkProductsResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/category/${currentShopId}/check-products/${categoryId}`
+      );
+  
+      const result = await checkProductsResponse.json();
+  
+      // 상품이 있는 경우 삭제 차단
+      if (result.hasProducts) {
+        alert(`이 카테고리에는 상품이 있어 삭제할 수 없습니다.`);
+        return;
+      }
+  
+      // 상품이 없으면 삭제 진행
+      const deleteResponse = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/category/${currentShopId}/delete/${categoryId}`,
         { method: "DELETE" }
       );
-      if (!response.ok) throw new Error("Failed to delete category");
+  
+      if (!deleteResponse.ok) {
+        throw new Error("카테고리 삭제에 실패했습니다.");
+      }
+  
       await fetchCategoriesData();
       setIsActionModalOpen(false);
       setIsEditMode(false);
+  
     } catch (error) {
       console.error("Error deleting category:", error);
+      alert(`카테고리 삭제 중 오류가 발생했습니다: ${(error as Error).message}`);
     }
   };
 
