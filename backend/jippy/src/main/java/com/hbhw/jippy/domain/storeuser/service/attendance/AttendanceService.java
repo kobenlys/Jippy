@@ -5,15 +5,19 @@ import com.hbhw.jippy.domain.store.entity.StoreCoordinates;
 import com.hbhw.jippy.domain.store.repository.StoreCoordinatesRepository;
 import com.hbhw.jippy.domain.store.repository.StoreRepository;
 import com.hbhw.jippy.domain.storeuser.dto.request.attendance.AttendanceRequest;
+import com.hbhw.jippy.domain.storeuser.dto.request.attendance.ChangeScheduleRequest;
 import com.hbhw.jippy.domain.storeuser.dto.request.attendance.TempChangeRequest;
+import com.hbhw.jippy.domain.storeuser.dto.response.attendance.ChangeScheduleResponse;
 import com.hbhw.jippy.domain.storeuser.dto.response.attendance.CheckInResponse;
 import com.hbhw.jippy.domain.storeuser.dto.response.attendance.CheckOutResponse;
 import com.hbhw.jippy.domain.storeuser.dto.response.attendance.TempChangeResponse;
+import com.hbhw.jippy.domain.storeuser.entity.attendance.ChangeSchedule;
 import com.hbhw.jippy.domain.storeuser.entity.calendar.Calendar;
 import com.hbhw.jippy.domain.storeuser.entity.staff.StoreUserStaff;
 import com.hbhw.jippy.domain.storeuser.entity.attendance.AttendanceStatus;
 import com.hbhw.jippy.domain.storeuser.entity.attendance.EmploymentStatus;
 import com.hbhw.jippy.domain.storeuser.enums.DayOfWeek;
+import com.hbhw.jippy.domain.storeuser.repository.attendance.AttendanceMongoRepository;
 import com.hbhw.jippy.domain.storeuser.repository.calendar.CalendarRepository;
 import com.hbhw.jippy.domain.storeuser.repository.staff.StoreStaffRepository;
 import com.hbhw.jippy.domain.storeuser.repository.attendance.AttendanceStatusRepository;
@@ -22,6 +26,7 @@ import com.hbhw.jippy.domain.user.entity.UserStaff;
 import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
 import com.hbhw.jippy.utils.DateTimeUtils;
+import com.hbhw.jippy.utils.UUIDProvider;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +37,8 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -46,6 +53,8 @@ public class AttendanceService {
     private final CalendarRepository calendarRepository;
     private final StoreCoordinatesRepository storeCoordinatesRepository;
     private final RedisTemplate<String, String> redisTemplate;
+    private final AttendanceMongoRepository attendanceMongoRepository;
+    private final UUIDProvider uuidProvider;
     private static final double EARTH_RADIUS = 6371e3; // 지구 반경 (미터 단위)
     private static final double ERROR_RANGE = 10.0;
 
@@ -148,7 +157,12 @@ public class AttendanceService {
         String value = request.getNewStartTime() + "|" + request.getNewEndTime();
         Duration ttl = Duration.between(LocalDateTime.now(), LocalDate.parse(request.getNewDate()).plusDays(1).atStartOfDay());
 
+        log.info(key);
+        log.info(value);
+        log.info(ttl.toString());
+
         redisTemplate.opsForValue().set(key, value, ttl);
+        attendanceMongoRepository.deleteRequestSchedule(request.getUuid());
 
         return TempChangeResponse.builder()
                 .storeUserStaffId(storeUserStaffId)
@@ -209,6 +223,53 @@ public class AttendanceService {
         // 기존 스케줄 반환
         return calendarRepository.findByStoreUserStaffAndDayOfWeek(staff, dayOfWeek)
                 .orElseThrow(() -> new NoSuchElementException("해당 요일의 스케줄을 찾을 수 없습니다."));
+    }
+
+    public void addChangeSchedule(ChangeScheduleRequest changeScheduleRequest, Integer storeId, Integer staffId) {
+        StoreUserStaff staff = storeStaffRepository.findByStoreIdAndUserStaffId(storeId, staffId)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재 하지 않는 직원입니다."));
+
+        ChangeSchedule changeSchedule = ChangeSchedule.builder()
+                .newCheckOut(changeScheduleRequest.getNewCheckOut())
+                .newCheckIn(changeScheduleRequest.getNewCheckIn())
+                .newYear(changeScheduleRequest.getNewYear())
+                .beforeCheckIn(changeScheduleRequest.getBeforeCheckIn())
+                .beforeCheckOut(changeScheduleRequest.getBeforeCheckOut())
+                .beforeYear(changeScheduleRequest.getBeforeYear())
+                .staffId(staffId)
+                .storeId(storeId)
+                .acceptStatus(false)
+                .uuid(uuidProvider.generateUUID())
+                .build();
+        attendanceMongoRepository.save(changeSchedule);
+    }
+
+    public List<ChangeScheduleResponse> fetchChangeSchedule(Integer storeId) {
+        List<StoreUserStaff> staffList = storeStaffRepository.findByStoreId(storeId)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재 하지 않는 직원입니다."));
+        List<ChangeScheduleResponse> response = new ArrayList<>();
+
+        for (StoreUserStaff staff : staffList) {
+            List<ChangeSchedule> changeScheduleList = attendanceMongoRepository.getStaffChangeSchedule(storeId, staff.getId(), false)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재 하지 않는 직원입니다."));
+
+            for (ChangeSchedule changeSchedule : changeScheduleList) {
+                ChangeScheduleResponse changeScheduleResponse = ChangeScheduleResponse.builder()
+                        .uuid(changeSchedule.getUuid())
+                        .staffId(changeSchedule.getStaffId())
+                        .staffName(staff.getUserStaff().getName())
+                        .beforeCheckIn(changeSchedule.getBeforeCheckIn())
+                        .beforeCheckOut(changeSchedule.getBeforeCheckOut())
+                        .beforeYear(changeSchedule.getBeforeYear())
+                        .newCheckIn(changeSchedule.getNewCheckIn())
+                        .newCheckOut(changeSchedule.getNewCheckOut())
+                        .newYear(changeSchedule.getNewYear())
+                        .build();
+
+                response.add(changeScheduleResponse);
+            }
+        }
+        return response;
     }
 
     /**

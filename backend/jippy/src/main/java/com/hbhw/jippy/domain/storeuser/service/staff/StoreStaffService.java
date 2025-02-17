@@ -12,6 +12,8 @@ import com.hbhw.jippy.domain.storeuser.entity.attendance.EmploymentStatus;
 import com.hbhw.jippy.domain.storeuser.entity.staff.StoreUserStaff;
 import com.hbhw.jippy.domain.storeuser.repository.attendance.EmploymentStatusRepository;
 import com.hbhw.jippy.domain.storeuser.repository.staff.StoreStaffRepository;
+import com.hbhw.jippy.global.code.CommonErrorCode;
+import com.hbhw.jippy.global.error.BusinessException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -67,7 +69,8 @@ public class StoreStaffService {
         String startDate = yearMonth + "-01 00:00:00";
         String endDate = YearMonth.parse(yearMonth).atEndOfMonth() + " 23:59:59";
 
-        List<StoreUserStaff> storeUserStaffList = storeStaffRepository.findByStoreId(storeId);
+        List<StoreUserStaff> storeUserStaffList = storeStaffRepository.findByStoreId(storeId)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND,"직원이 존재하지 않습니다."));
         log.info("Fetching earnings for storeId: {}", storeId);
 
         List<StaffEarnSalesResponse> staffEarnList = new ArrayList<>();
@@ -139,7 +142,9 @@ public class StoreStaffService {
      */
     public List<String> getAllChatMemberFcmTokens(Integer storeId) {
         // 1. 직원의 fcmToken 조회
-        List<String> fcmTokens = storeStaffRepository.findByStoreId(storeId).stream()
+        List<String> fcmTokens = storeStaffRepository.findByStoreId(storeId)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND,"직원이 존재하지 않습니다."))
+                .stream()
                 .map(staff -> staff.getUserStaff().getFcmToken())
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
