@@ -11,12 +11,14 @@ import {
 import PageTitle from "@/features/common/components/layout/title/PageTitle";
 import CalendarGrid from "@/features/calendar/components/CalendarGrid";
 import CalendarHeader from "@/features/calendar/components/CalendarHeader";
+import { Clock } from "lucide-react";
+import ScheduleChangeModal from "@/features/calendar/components/ScheduleChangeModal";
 
 const getCookieValue = (name: string): string | null => {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) {
-    return parts.pop()?.split(';').shift() || null;
+    return parts.pop()?.split(";").shift() || null;
   }
   return null;
 };
@@ -29,6 +31,7 @@ const CalendarPage = () => {
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const days = ["일", "월", "화", "수", "목", "금", "토"] as const;
 
@@ -37,8 +40,8 @@ const CalendarPage = () => {
       try {
         setIsLoading(true);
 
-        const encodedStoreIdList = getCookieValue('storeIdList');
-        const userId = getCookieValue('userId');
+        const encodedStoreIdList = getCookieValue("storeIdList");
+        const userId = getCookieValue("userId");
 
         if (!encodedStoreIdList || !userId) {
           router.push("/login");
@@ -140,16 +143,37 @@ const CalendarPage = () => {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <PageTitle />
-      <CalendarHeader />
-      <CalendarGrid
-        days={days}
-        timeSlots={timeSlots}
+    <>
+      <div className="flex flex-col h-full">
+        <PageTitle />
+        <CalendarHeader />
+        <CalendarGrid
+          days={days}
+          timeSlots={timeSlots}
+          scheduleData={scheduleData}
+          calculateEventPosition={calculateEventPosition}
+        />
+      </div>
+
+      <div
+        className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-white"
+        style={{ width: "412px" }}
+      >
+        <button
+          className="w-full flex items-center justify-center gap-2 py-3"
+          onClick={() => setIsModalOpen(true)}
+        >
+          <Clock size={18} />
+          근무 변경 요청하기
+        </button>
+      </div>
+
+      <ScheduleChangeModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         scheduleData={scheduleData}
-        calculateEventPosition={calculateEventPosition}
       />
-    </div>
+    </>
   );
 };
 
