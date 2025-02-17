@@ -119,8 +119,8 @@ export default function ShopsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      
       <h1 className="text-2xl font-bold mb-6">내 매장 목록</h1>
-
       {localError && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {localError}
@@ -135,17 +135,27 @@ export default function ShopsPage() {
         <div className="text-center text-gray-600">등록된 매장이 없습니다.</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {shops.map((shop) => (
-            <div
-              key={shop.id}
-              onClick={() => fetchShopDetail(shop.id)}
-              className="cursor-pointer block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
-            >
-              <h2 className="text-xl font-semibold mb-2">{shop.name}</h2>
-              <p className="text-gray-600">{shop.address}</p>
-            </div>
-          ))}
-        </div>
+  {shops.map((shop) => (
+    <div
+      key={shop.id}
+      onClick={() => fetchShopDetail(shop.id)}
+      className="cursor-pointer block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
+    >
+      <h2 className="text-xl font-semibold mb-2">{shop.name}</h2>
+      <p className="text-gray-600">{shop.address}</p>
+    </div>
+  ))}
+
+  {/* ✅ 매장 추가 버튼 */}
+  <div
+    onClick={() => router.push("/shop/create")}
+    className="cursor-pointer flex flex-col justify-center items-center p-6 bg-gray-100 rounded-lg shadow-md hover:shadow-lg transition-shadow border-2 border-dashed border-gray-400"
+  >
+    <span className="text-4xl">+</span>
+    <p className="text-gray-600 mt-2">매장 추가</p>
+  </div>
+</div>
+
       )}
     </div>
   );
