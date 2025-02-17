@@ -11,11 +11,8 @@ import {
 } from "@/features/payment/types/history";
 
 export default function PaymentHistoryPage() {
-  const [selectedPayment, setSelectedPayment] =
-    useState<PaymentDetailType | null>(null);
-  const [historyFilter, setHistoryFilter] = useState<
-    "all" | "success" | "cancel"
-  >("all");
+  const [selectedPayment, setSelectedPayment] = useState<PaymentDetailType | null>(null);
+  const [historyFilter, setHistoryFilter] = useState<"all" | "success" | "cancel">("all");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isCashModalOpen, setIsCashModalOpen] = useState(false);
@@ -23,7 +20,7 @@ export default function PaymentHistoryPage() {
   const fetchPaymentDetail = async (storeId: number, paymentUUID: string) => {
     setIsLoading(true);
     setError(null);
-
+ 
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/detail`,
@@ -38,24 +35,45 @@ export default function PaymentHistoryPage() {
           }),
         }
       );
-
+ 
       if (!response.ok) {
         throw new Error("결제 상세 정보를 불러오는데 실패했습니다");
       }
-
+ 
       const result: ApiResponse<PaymentDetailType> = await response.json();
-
+ 
       if (!result.success) {
         throw new Error("결제 상세 정보를 불러오는데 실패했습니다");
       }
-
-      setSelectedPayment(result.data);
+ 
+      console.log('API 응답 원본:', result.data);
+      console.log('변환 전 상태:', result.data.paymentStatus);
+ 
+      const transformedPayment = {
+        ...result.data,
+        paymentStatus: result.data.paymentStatus === 'PURCHASE' ? '완료' : 
+                      result.data.paymentStatus === 'CANCEL' ? '취소' : 
+                      result.data.paymentStatus
+      };
+ 
+      console.log('변환 후 상태:', transformedPayment);
+      
+      setSelectedPayment(transformedPayment);
     } catch (error) {
       setError("알 수 없는 오류가 발생했습니다");
       console.log(error);
       setSelectedPayment(null);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // 결제 상태 변경 처리 함수
+  const handlePaymentStatusChange = async (updatedPayment: PaymentDetailType) => {
+    setSelectedPayment(updatedPayment);
+    // 목록 새로고침을 위해 동일한 결제 내역 재조회
+    if (selectedPayment) {
+      await fetchPaymentDetail(1, selectedPayment.uuid);
     }
   };
 
@@ -111,6 +129,7 @@ export default function PaymentHistoryPage() {
             onSelectPayment={(payment: PaymentHistoryItem) => {
               fetchPaymentDetail(1, payment.uuid);
             }}
+            onPaymentStatusChange={handlePaymentStatusChange}
           />
         </div>
 
@@ -126,7 +145,10 @@ export default function PaymentHistoryPage() {
                 <p className="text-sm mt-1">{error}</p>
               </div>
             ) : selectedPayment ? (
-              <PaymentHistoryDetail payment={selectedPayment} />
+              <PaymentHistoryDetail 
+                payment={selectedPayment}
+                onPaymentStatusChange={handlePaymentStatusChange}
+              />
             ) : (
               <div className="text-gray-500 text-center py-12">
                 결제 내역을 선택해주세요

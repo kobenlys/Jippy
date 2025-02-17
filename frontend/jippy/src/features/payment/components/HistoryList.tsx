@@ -1,125 +1,105 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import {
-  PaymentHistoryItem,
-  PaymentHistoryDetail,
-} from "@/features/payment/types/history";
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { PaymentHistoryItem, PaymentHistoryDetail } from '@/features/payment/types/history';
+
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+interface PaymentApiResponse extends PaymentHistoryItem {
+  buyProduct?: Array<{
+    productId: number;
+    productName: string;
+    productCategoryId: number;
+    productQuantity: number;
+    price: number;
+  }>;
+}
 
 interface HistoryListProps {
   onSelectPayment: (payment: PaymentHistoryDetail) => void;
-  filter?: "all" | "success" | "cancel";
+  onPaymentStatusChange?: (payment: PaymentHistoryDetail) => void;
+  filter?: 'all' | 'success' | 'cancel';
 }
+
+const fetchFromAPI = async <T,>(url: string, options?: RequestInit): Promise<T> => {
+  const response = await fetch(url, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    ...options,
+  });
+
+  if (!response.ok) {
+    throw new Error('API 요청에 실패했습니다');
+  }
+
+  const result: ApiResponse<T> = await response.json();
+  return result.data;
+};
 
 export default function PaymentHistoryList({
   onSelectPayment,
-  filter = "all",
+  onPaymentStatusChange,
+  filter = 'all',
 }: HistoryListProps) {
   const [payments, setPayments] = useState<PaymentHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedPaymentDetail, setSelectedPaymentDetail] =
-    useState<PaymentHistoryDetail | null>(null);
+  const [selectedPaymentDetail, setSelectedPaymentDetail] = useState<PaymentHistoryDetail | null>(null);
   const itemsPerPage = 10;
 
   const storeId = 1;
 
-  // 공통 API 호출 함수 (fetch 방식 통일)
-  const fetchFromAPI = async (url: string, options?: RequestInit) => {
-    try {
-      const response = await fetch(url, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        ...options,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `API 호출 실패. 상태 코드: ${response.status}, 메시지: ${errorText}`
-        );
-      }
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.message || "API 호출에 실패했습니다.");
-      }
-
-      return result.data;
-    } catch (err) {
-      console.error("API 호출 중 오류:", err);
-      throw err;
-    }
-  };
-
-  // 결제 상세 정보 조회 함수
-  const fetchPaymentDetail = useCallback(
-    async (uuid: string) => {
-      try {
-        if (!process.env.NEXT_PUBLIC_API_URL) {
-          throw new Error("API URL이 설정되지 않았습니다.");
-        }
-
-        const data = await fetchFromAPI(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/detail`,
-          {
-            method: "POST",
-            body: JSON.stringify({
-              storeId: storeId,
-              paymentUUID: uuid,
-            }),
-          }
-        );
-
-        onSelectPayment(data);
-        return data;
-      } catch (err) {
-        console.error("결제 상세 정보 조회 실패:", err);
-        throw err;
-      }
-    },
-    [onSelectPayment, storeId]
-  );
-
-  // 결제 내역 조회 함수
   const fetchPayments = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
       if (!process.env.NEXT_PUBLIC_API_URL) {
-        throw new Error("API URL이 설정되지 않았습니다.");
+        throw new Error('API URL이 설정되지 않았습니다.');
       }
 
-      let url = `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/`;
-
-      switch (filter) {
-        case "success":
-          url += "list/success";
-          break;
-        case "cancel":
-          url += "list/cancel";
-          break;
-        default:
-          url += "list";
-      }
-
+      const baseUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history`;
       const params = new URLSearchParams({
         storeId: storeId.toString(),
       });
 
-      const data = await fetchFromAPI(`${url}?${params.toString()}`);
-      setPayments(data || []);
+      let url;
+      switch (filter) {
+        case 'success':
+          url = `${baseUrl}/list/success?${params}`;
+          break;
+        case 'cancel':
+          url = `${baseUrl}/list/cancel?${params}`;
+          break;
+        default:
+          url = `${baseUrl}/list?${params}`;
+      }
+
+      console.log('Fetching payments from:', url);
+
+      const data = await fetchFromAPI<PaymentApiResponse[]>(url);
+
+      const mappedData = data.map((payment) => ({
+        ...payment,
+        paymentStatus: payment.paymentStatus === 'PURCHASE' || payment.paymentStatus === '구매' ? '완료' : 
+                      payment.paymentStatus === 'CANCEL' || payment.paymentStatus === '취소' ? '취소' : 
+                      payment.paymentStatus
+      }));
+
+      setPayments(mappedData || []);
     } catch (err) {
       const errorMessage =
         err instanceof Error
           ? err.message
-          : "결제 내역을 불러오는 중 알 수 없는 오류가 발생했습니다.";
+          : '결제 내역을 불러오는 중 알 수 없는 오류가 발생했습니다.';
 
       setError(errorMessage);
       setPayments([]);
@@ -128,23 +108,85 @@ export default function PaymentHistoryList({
     }
   }, [filter, storeId]);
 
-  // 초기 API URL 로깅 (디버깅용)
-  useEffect(() => {
-    console.log("Current API URL:", process.env.NEXT_PUBLIC_API_URL);
-  }, []);
+  const fetchPaymentDetail = useCallback(
+    async (uuid: string): Promise<PaymentHistoryDetail | null> => {
+      try {
+        if (!process.env.NEXT_PUBLIC_API_URL) {
+          throw new Error('API URL이 설정되지 않았습니다.');
+        }
 
-  // 결제 내역 초기 로딩
+        const data = await fetchFromAPI<PaymentApiResponse>(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/detail`,
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              storeId: storeId,
+              paymentUUID: uuid,
+            }),
+          }
+        );
+
+        const transformedData: PaymentHistoryDetail = {
+          ...data,
+          paymentStatus: data.paymentStatus === 'PURCHASE' ? '완료' : 
+                        data.paymentStatus === 'CANCEL' ? '취소' : 
+                        data.paymentStatus,
+          buyProduct: data.buyProduct || []
+        };
+
+        return transformedData;
+      } catch (err) {
+        console.error('결제 상세 정보 조회 실패:', err);
+        return null;
+      }
+    },
+    [storeId]
+  );
+
+  const handlePaymentStatusUpdate = useCallback((updatedPayment: PaymentHistoryDetail) => {
+    setPayments(prevPayments => 
+      prevPayments.map(payment => 
+        payment.uuid === updatedPayment.uuid 
+          ? { ...payment, paymentStatus: updatedPayment.paymentStatus }
+          : payment
+      )
+    );
+
+    if (selectedPaymentDetail?.uuid === updatedPayment.uuid) {
+      setSelectedPaymentDetail(updatedPayment);
+    }
+
+    onPaymentStatusChange?.(updatedPayment);
+    fetchPayments();
+  }, [selectedPaymentDetail, fetchPayments, onPaymentStatusChange]);
+
+  const handlePaymentSelect = async (payment: PaymentHistoryItem) => {
+    try {
+      const result = await fetchPaymentDetail(payment.uuid);
+      if (result) {
+        setSelectedPaymentDetail(result);
+        onSelectPayment(result);
+      }
+    } catch (error) {
+      console.error('결제 상세 정보 조회 실패:', error);
+    }
+  };
+
   useEffect(() => {
     fetchPayments();
   }, [fetchPayments]);
 
-  // 필터링 및 페이지네이션 로직
+  useEffect(() => {
+    if (selectedPaymentDetail && selectedPaymentDetail.paymentStatus === '취소') {
+      handlePaymentStatusUpdate(selectedPaymentDetail);
+    }
+  }, [selectedPaymentDetail, handlePaymentStatusUpdate]);
+
   const filteredAndPaginatedPayments = useMemo(() => {
     let filtered = [...payments];
 
     filtered.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
     if (startDate || endDate) {
@@ -162,7 +204,6 @@ export default function PaymentHistoryList({
     return filtered.slice(startIndex, startIndex + itemsPerPage);
   }, [payments, startDate, endDate, currentPage]);
 
-  // 전체 페이지 수 계산
   const totalPages = useMemo(() => {
     const filteredCount = payments.filter((payment) => {
       if (!startDate && !endDate) return true;
@@ -178,34 +219,16 @@ export default function PaymentHistoryList({
     return Math.ceil(filteredCount / itemsPerPage);
   }, [payments, startDate, endDate]);
 
-  // 결제 항목 선택 핸들러
-  const handlePaymentSelect = async (payment: PaymentHistoryItem) => {
-    try {
-      const result = await fetchPaymentDetail(payment.uuid);
-      if (result) {
-        setSelectedPaymentDetail(result);
-        onSelectPayment(result);
-      }
-    } catch (error) {
-      console.error("결제 상세 정보 조회 실패:", error);
-    }
-  };
-
-  // 페이지 변경 핸들러
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
   };
 
   return (
     <div className="bg-white shadow rounded-lg w-full max-w-6xl mx-auto">
-      {/* 날짜 필터 섹션 유지 */}
       <div className="p-4 border-b">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
-            <label
-              htmlFor="startDate"
-              className="text-gray-600 whitespace-nowrap"
-            >
+            <label htmlFor="startDate" className="text-gray-600 whitespace-nowrap">
               시작일:
             </label>
             <input
@@ -217,10 +240,7 @@ export default function PaymentHistoryList({
             />
           </div>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
-            <label
-              htmlFor="endDate"
-              className="text-gray-600 whitespace-nowrap"
-            >
+            <label htmlFor="endDate" className="text-gray-600 whitespace-nowrap">
               종료일:
             </label>
             <input
@@ -234,7 +254,6 @@ export default function PaymentHistoryList({
         </div>
       </div>
 
-      {/* 결제 내역 테이블 섹션 유지 */}
       {loading ? (
         <div className="text-center py-4">결제 내역을 불러오는 중...</div>
       ) : error ? (
@@ -249,18 +268,10 @@ export default function PaymentHistoryList({
             <table className="w-full">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-4 py-2 text-left whitespace-nowrap">
-                    결제일시
-                  </th>
-                  <th className="px-4 py-2 text-right whitespace-nowrap">
-                    결제금액
-                  </th>
-                  <th className="px-4 py-2 text-center whitespace-nowrap">
-                    결제수단
-                  </th>
-                  <th className="px-4 py-2 text-center whitespace-nowrap">
-                    상태
-                  </th>
+                  <th className="px-4 py-2 text-left whitespace-nowrap">결제일시</th>
+                  <th className="px-4 py-2 text-right whitespace-nowrap">결제금액</th>
+                  <th className="px-4 py-2 text-center whitespace-nowrap">결제수단</th>
+                  <th className="px-4 py-2 text-center whitespace-nowrap">상태</th>
                 </tr>
               </thead>
               <tbody>
@@ -269,9 +280,7 @@ export default function PaymentHistoryList({
                     key={payment.uuid}
                     onClick={() => handlePaymentSelect(payment)}
                     className={`hover:bg-orange-50 cursor-pointer border-b ${
-                      selectedPaymentDetail?.uuid === payment.uuid
-                        ? "bg-orange-100"
-                        : ""
+                      selectedPaymentDetail?.uuid === payment.uuid ? 'bg-orange-100' : ''
                     }`}
                   >
                     <td className="px-4 py-2 whitespace-nowrap">
@@ -287,11 +296,11 @@ export default function PaymentHistoryList({
                       <span
                         className={`px-2 py-1 rounded-full text-sm
                         ${
-                          payment.paymentStatus === "완료"
-                            ? "bg-green-100 text-green-800"
-                            : payment.paymentStatus === "취소"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-800"
+                          payment.paymentStatus === '완료'
+                            ? 'bg-green-100 text-green-800'
+                            : payment.paymentStatus === '취소'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-gray-100 text-gray-800'
                         }`}
                       >
                         {payment.paymentStatus}
@@ -303,21 +312,20 @@ export default function PaymentHistoryList({
             </table>
           </div>
 
-          {/* 페이지네이션 섹션 유지 */}
           <div className="flex justify-center items-center gap-1 sm:gap-2 p-4 flex-wrap">
             <button
               onClick={() => handlePageChange(1)}
               disabled={currentPage === 1}
               className="px-2 sm:px-3 py-1 rounded border disabled:opacity-50 text-sm sm:text-base"
             >
-              {"<<"}
+              {'<<'}
             </button>
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
               className="px-2 sm:px-3 py-1 rounded border disabled:opacity-50 text-sm sm:text-base"
             >
-              {"<"}
+              {'<'}
             </button>
 
             <span className="mx-2 sm:mx-4 text-sm sm:text-base">
@@ -329,14 +337,14 @@ export default function PaymentHistoryList({
               disabled={currentPage === totalPages}
               className="px-2 sm:px-3 py-1 rounded border disabled:opacity-50 text-sm sm:text-base"
             >
-              {">"}
+              {'>'}
             </button>
             <button
               onClick={() => handlePageChange(totalPages)}
               disabled={currentPage === totalPages}
               className="px-2 sm:px-3 py-1 rounded border disabled:opacity-50 text-sm sm:text-base"
             >
-              {">>"}
+              {'>>'}
             </button>
           </div>
         </div>
