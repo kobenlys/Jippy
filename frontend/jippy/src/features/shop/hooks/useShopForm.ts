@@ -12,10 +12,11 @@ import type { RootState, AppDispatch } from "@/redux/store";
 export const useShopForm = () => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const user = useSelector((state: RootState) => state.user.profile);
-  const accessToken = useSelector((state: RootState) => state.user.accessToken);
-
   const { isLoading, error } = useSelector((state: RootState) => state.shop);
+  
+  // 상태 초기화
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [userId, setUserId] = useState<number | null>(null);
   const [formData, setFormData] = useState<FormData>({
     name: "",
     address: "",
@@ -25,18 +26,36 @@ export const useShopForm = () => {
     latitude: "",
     longitude: "",
   });
-
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isProcessingImage, setIsProcessingImage] = useState(false);
 
-  // 페이지가 처음 로드될 때 현재 위치 가져오기
+  // 쿠키에서 특정 값을 가져오는 함수
+  const getCookie = (name: string): string | null => {
+    if (typeof document === "undefined") return null;
+    const cookieValue = document.cookie
+      .split("; ")
+      .find((cookie) => cookie.startsWith(`${name}=`))
+      ?.split("=")[1];
+    return cookieValue || null;
+  };
+
+  // 쿠키 값 설정 useEffect
   useEffect(() => {
+    const token = getCookie("accessToken");
+    const userIdString = getCookie("userId");
+
+    setAccessToken(token);
+    setUserId(userIdString ? Number(userIdString) : null);
+  }, []);
+
+  // 현재 위치 가져오기 (쿠키 값이 설정된 후 실행)
+  useEffect(() => {
+    if (!userId || !accessToken) return; // 쿠키 값이 없으면 실행하지 않음
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          console.log(latitude);
-          console.log(longitude);
           setFormData((prev) => ({
             ...prev,
             latitude: latitude.toString(),
@@ -55,7 +74,7 @@ export const useShopForm = () => {
     } else {
       console.error("이 브라우저에서는 위치 정보를 지원하지 않습니다.");
     }
-  }, []);
+  }, [userId, accessToken]); // userId와 accessToken이 설정된 후 실행됨
 
   const validateForm = () => {
     const newErrors: FormErrors = {};
@@ -102,7 +121,7 @@ export const useShopForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!user?.id || !accessToken) {
+    if (!userId || !accessToken) {
       alert("로그인이 필요합니다.");
       router.push("/login");
       return;
@@ -114,16 +133,14 @@ export const useShopForm = () => {
       await dispatch(
         createShop({
           ...formData,
-          userOwnerId: Number(user.id),
+          userOwnerId: userId,
         })
       ).unwrap();
 
       alert("매장이 성공적으로 등록되었습니다");
       router.push("/shop");
     } catch (error) {
-      if (error) {
-        alert(error);
-      }
+      alert(error);
     }
   };
 

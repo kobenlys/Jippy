@@ -87,7 +87,6 @@ const CreateShopForm = () => {
         <Button
           variant="orange"
           disabled={isLoading || isProcessingImage}
-          onClick={handleSubmit}
           className="w-full mt-4"
         >
           {isLoading ? "등록 중..." : "매장 등록"}
