@@ -1,12 +1,39 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from "next/navigation";
 import FeedbackList from '@/features/dashboard/customer/components/FeedbackList';
 import MLAnalysis from '@/features/dashboard/customer/components/MLAnalysis';
 
 const CustomerDashboardPage = () => {
-  const storeId = 1; // 매장 선택 없이 고정
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    // 클라이언트 사이드에서만 실행하도록 변경
+    
+    const [storeId, setStoreId] = useState<number | null>(null);
+    const router = useRouter();
+
+    useEffect(() => {
+      if (typeof document !== "undefined") {
+        const cookieValue = document.cookie
+          .split("; ")
+          .find((cookie) => cookie.startsWith("selectStoreId="))
+          ?.split("=")[1];
+  
+        const parsedStoreId = cookieValue ? parseInt(cookieValue, 10) : null;
+  
+        if (!parsedStoreId || isNaN(parsedStoreId)) {
+          router.push("/owner/dashboard");
+        } else {
+          setStoreId(parsedStoreId);
+        }
+      }
+    }, [router]);
+  
+    if (storeId === null) {
+    router.replace("/owner/dashboard");
+    return null;
+  }
+
 
   // 버튼 스타일 (선택 시 핵심 색상 #F27B39 적용)
   const buttonClass = (active: boolean) =>

@@ -1,9 +1,6 @@
-// app/owner/dashboard/product/ProductTable.tsx
 "use client";
 
-import { RootState } from "@/redux/store";
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
 import ProductForm from "@/features/dashboard/product/components/ProductForm";
 
 interface ProductItem {
@@ -16,15 +13,14 @@ interface ProductItem {
   image: string;
 }
 
-const ProductTable = () => {
-  const productData = useSelector(
-    (state: RootState) => state.stock
-  ) as ProductItem[];
+interface ProductTableProps {
+  productData: ProductItem[]; // ✅ Redux 대신 Props로 데이터 받음
+}
+
+const ProductTable: React.FC<ProductTableProps> = ({ productData }) => {
   const [showFormModal, setShowFormModal] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
-  const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(
-    null
-  );
+  const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
 
   const handleDelete = async (storeId: number, productId: number) => {
     if (confirm("정말 삭제하시겠습니까?")) {
@@ -42,7 +38,7 @@ const ProductTable = () => {
         const jsonResponse = await response.json();
         if (jsonResponse.success) {
           alert("상품이 삭제되었습니다.");
-          window.location.reload();
+          window.location.reload(); // ✅ 삭제 후 새로고침 (리렌더링 유도)
         } else {
           alert("상품 삭제에 실패했습니다.");
         }
@@ -86,7 +82,7 @@ const ProductTable = () => {
         </button>
       </div>
 
-      {/* 테이블 컨테이너 (최대 높이 300px, 수직 스크롤) */}
+      {/* 테이블 컨테이너 */}
       <div className="bg-white rounded-lg shadow overflow-x-auto">
         <div
           className="min-w-full"
@@ -149,25 +145,11 @@ const ProductTable = () => {
                 </tr>
               )}
             </tbody>
-            <tfoot className="bg-orange-50 sticky bottom-0 z-10">
-              <tr>
-                <td className="p-2">
-                  {Array.isArray(productData) ? productData.length : 0}
-                </td>
-                <td colSpan={2} className="p-2 text-right">
-                  총 상품 수
-                </td>
-                <td className="p-2">
-                  {Array.isArray(productData) ? productData.length : 0}
-                </td>
-                <td colSpan={2}></td>
-              </tr>
-            </tfoot>
           </table>
         </div>
       </div>
 
-      {/* 모달: 상품 등록/수정 폼 (최대 너비 600px, 최대 높이 90vh, 내부 스크롤 적용) */}
+      {/* 상품 등록/수정 모달 */}
       {showFormModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50 overflow-y-auto">
           <div
