@@ -24,7 +24,9 @@ const useUserInfo = (): UserInfo => {
       };
 
       const encodedUserName = findCookie("userName");
-      const userName = encodedUserName ? decodeURIComponent(encodedUserName) : null;
+      const userName = encodedUserName
+        ? decodeURIComponent(encodedUserName)
+        : null;
 
       const userIdStr = findCookie("userId");
       const userId = userIdStr ? Number(userIdStr) : null;

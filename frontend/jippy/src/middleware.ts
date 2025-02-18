@@ -7,19 +7,35 @@ export function middleware(request: NextRequest) {
   const staffType = cookies.get("staffType")?.value;
   const loginType = cookies.get("loginType")?.value;
 
-  // 쿠키로 권한 확인
-  console.log("I'm in middleware");
+  console.log("I'm in middleware"); // 삭제 필요
   if (!staffType || !loginType) {
-    return NextResponse.redirect(new URL("/login", request.url)); // ✅ 로그인 페이지로 리디렉트
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (urlPath.startsWith("/owner")) {
-    console.log(staffType + " " + loginType + " " + urlPath);
-    if (staffType !== "OWNER" || loginType !== "OWNER") {
+  if (urlPath.startsWith("/owner") && loginType !== "OWNER") {
+    return NextResponse.redirect(new URL("/error", request.url));
+  } else if (urlPath.startsWith("/order") || urlPath.startsWith("/payment")) {
+    if (loginType !== "POS") {
       return NextResponse.redirect(new URL("/error", request.url));
     }
-  } else if (urlPath.startsWith("/order") || urlPath.startsWith("/payment")) {
-    if (staffType === "STAFF") {
+  } else if (
+    urlPath.startsWith("/attendance") ||
+    urlPath.startsWith("/calendar") ||
+    urlPath.startsWith("/chatting") ||
+    urlPath.startsWith("/feedback") ||
+    urlPath.startsWith("/notifications") ||
+    urlPath.startsWith("/signup/staff") ||
+    urlPath.startsWith("/todo")
+  ) {
+    if (loginType !== "STAFF") {
+      return NextResponse.redirect(new URL("/error", request.url));
+    }
+  } else if (urlPath.startsWith("/shop") && loginType === "STAFF") {
+    return NextResponse.redirect(new URL("/error", request.url));
+  } else if (urlPath.startsWith("/signup/owner") && staffType !== "OWNER") {
+    return NextResponse.redirect(new URL("/error", request.url));
+  } else if (urlPath.startsWith("/login") || urlPath.startsWith("/signup")) {
+    if (loginType) {
       return NextResponse.redirect(new URL("/error", request.url));
     }
   }
@@ -40,13 +56,18 @@ export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-// matcher를 staff 경로에만 적용하도록 확실히 설정
 export const config = {
   matcher: [
-    "/(staff)", // staff 정확히 일치
-    "/(staff)/:path*", // staff의 하위 경로
+    "/attendance",
+    "/calendar",
+    "/chatting",
+    "/feedback",
+    "/notifications",
+    "/signup/staff/:path*",
+    "/todo",
     "/owner/:path*",
     "/order/:path*",
     "/payment/:path*",
+    "/shop/:path*",
   ],
 };

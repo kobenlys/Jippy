@@ -35,10 +35,8 @@ const LoginPage = () => {
   };
 
   const handleRouting = () => {
-    if (isPos) {
-      router.replace("/order");
-    } else if (userType === "OWNER") {
-      router.replace("/owner/dashboard");
+    if (isPos || userType === "OWNER") {
+      router.replace("/shop");
     } else if (userType === "STAFF") {
       router.replace("/attendance");
     }
