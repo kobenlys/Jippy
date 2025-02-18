@@ -27,6 +27,7 @@ const StaffListCard = ({ storeId }: StaffListCardProps) => {
   if (!staffList) return <div>데이터가 없습니다.</div>;
 
   const handleStaffClick = (staff: StaffInfo) => {
+    console.log("Selectd staff:", staff);
     setSelectedStaff(staff);
     setIsModalOpen(true);
   };
@@ -67,7 +68,7 @@ const StaffListCard = ({ storeId }: StaffListCardProps) => {
         <div className="p-4 space-y-4">
           {staffList.map((staff) => (
             <div
-              key={staff.storeUserStaffId}
+              key={staff.staffId}
               className="p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
               onClick={() => handleStaffClick(staff)}
             >

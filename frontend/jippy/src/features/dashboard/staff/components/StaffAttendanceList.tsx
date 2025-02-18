@@ -43,15 +43,13 @@ const StaffAttendanceList = ({ storeId }: StaffAttendanceListProps) => {
     <div className="space-y-2 w-full">
       {staffList.map((staff) => (
         <div
-          key={staff.storeUserStaffId}
+          key={staff.staffId}
           className="border rounded-lg overflow-hidden bg-white"
         >
           <button
             onClick={() =>
               setOpenStaffId(
-                openStaffId === staff.storeUserStaffId
-                  ? null
-                  : staff.storeUserStaffId
+                openStaffId === staff.staffId ? null : staff.staffId
               )
             }
             className="w-full px-4 py-3 flex justify-between items-center hover:bg-gray-50 transition-colors"
@@ -70,25 +68,20 @@ const StaffAttendanceList = ({ storeId }: StaffAttendanceListProps) => {
               </span>
               <ChevronDown
                 className={`h-5 w-5 text-gray-500 transition-transform ${
-                  openStaffId === staff.storeUserStaffId
-                    ? "transform rotate-180"
-                    : ""
+                  openStaffId === staff.staffId ? "transform rotate-180" : ""
                 }`}
               />
             </div>
           </button>
           <div
             className={`transition-all duration-200 ease-in-out ${
-              openStaffId === staff.storeUserStaffId
+              openStaffId === staff.staffId
                 ? "max-h-[500px] opacity-100"
                 : "max-h-0 opacity-0 overflow-hidden"
             }`}
           >
             <div className="p-4 border-t">
-              <StaffAttendanceCard
-                storeId={storeId}
-                staffId={staff.storeUserStaffId}
-              />
+              <StaffAttendanceCard storeId={storeId} staffId={staff.staffId} />
             </div>
           </div>
         </div>

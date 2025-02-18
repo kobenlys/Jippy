@@ -103,10 +103,7 @@ const ScheduleCreateModal = ({
             >
               <option value={0}>직원을 선택하세요</option>
               {staffList.map((staff) => (
-                <option
-                  key={staff.storeUserStaffId}
-                  value={staff.storeUserStaffId}
-                >
+                <option key={staff.staffId} value={staff.staffId}>
                   {staff.staffName} ({staff.staffType})
                 </option>
               ))}

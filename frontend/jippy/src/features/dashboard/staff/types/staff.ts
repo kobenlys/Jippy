@@ -19,7 +19,7 @@ export type UpdateableStaffType = "MANAGER" | "STAFF";
 export type SalaryType = "시급" | "월급";
 
 export interface StaffInfo {
-  storeUserStaffId: number;
+  staffId: number;
   staffName: string;
   staffType: StaffType;
   staffSalary: number;

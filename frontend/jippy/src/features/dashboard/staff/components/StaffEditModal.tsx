@@ -43,6 +43,7 @@ const StaffEditModal = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Submitting with staffId", staff.staffId);
     setIsLoading(true);
 
     const updates: UpdateStaffRequest = {};
@@ -52,7 +53,7 @@ const StaffEditModal = ({
       updates.staffSalaryType = salaryType;
 
     try {
-      await onUpdate(staff.storeUserStaffId, updates);
+      await onUpdate(staff.staffId, updates);
       onClose();
     } catch (error) {
       console.error("Failed to update staff:", error);
@@ -71,7 +72,7 @@ const StaffEditModal = ({
 
     setIsLoading(true);
     try {
-      await onDelete(staff.storeUserStaffId);
+      await onDelete(staff.staffId);
       onClose();
     } catch (error) {
       console.error("Failed to delete staff:", error);
