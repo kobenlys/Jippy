@@ -101,8 +101,8 @@ const PaymentRequestComponent = () => {
                     <div key={index} className="grid grid-cols-12 text-center border-b border-gray-100">
                       <div className="py-3 col-span-2">{index + 1}</div>
                       <div className="py-3 pl-2 text-left col-span-4">{product.name}</div>
-                      <div className="py-3 col-span-2">{product.size === 'F' ? '' : product.size}</div>
-                      <div className="py-3 col-span-2">{product.type === 'EXTRA' ? '' : product.type}</div>
+                      <div className="py-3 col-span-2">{String(product.size) === 'F' ? '' : product.size}</div>
+                      <div className="py-3 col-span-2">{String(product.type) === 'EXTRA' ? '' : product.type}</div>
                       <div className="py-3 col-span-2">{product.quantity}개</div>
                     </div>
                   ))}
