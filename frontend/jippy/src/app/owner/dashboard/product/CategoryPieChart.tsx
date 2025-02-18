@@ -70,7 +70,8 @@ const CategoryPieChart: React.FC<CategoryPieChartProps> = ({ storeId }) => {
       const res = await fetch(url);
       const json = await res.json();
       if (json.success) {
-        const productSoldInfo: ProductSoldInfo[] = json.data.productSoldInfo || [];
+        const productSoldInfo: ProductSoldInfo[] =
+          json.data.productSoldInfo || [];
         const catTotals: Record<number, number> = {};
         productSoldInfo.forEach((item) => {
           const catId = item.productCategoryId;
@@ -124,47 +125,57 @@ const CategoryPieChart: React.FC<CategoryPieChartProps> = ({ storeId }) => {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4" style={{ color: "#F27B39" }}>
+      <h2 className="text-2xl font-bold mb-6 text-[#F27B39]">
         카테고리별 판매량
       </h2>
-      <div className="mb-4 flex items-center gap-4">
-        <label className="text-sm font-medium">연도:</label>
-        <select
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-          className="border p-1 rounded"
-        >
-          {Array.from({ length: 5 }, (_, i) => currentYear - i).map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
-        <label className="text-sm font-medium">월:</label>
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className="border p-1 rounded"
-        >
-          {[
-            { value: "01", label: "1월" },
-            { value: "02", label: "2월" },
-            { value: "03", label: "3월" },
-            { value: "04", label: "4월" },
-            { value: "05", label: "5월" },
-            { value: "06", label: "6월" },
-            { value: "07", label: "7월" },
-            { value: "08", label: "8월" },
-            { value: "09", label: "9월" },
-            { value: "10", label: "10월" },
-            { value: "11", label: "11월" },
-            { value: "12", label: "12월" },
-          ].map((m) => (
-            <option key={m.value} value={m.value}>
-              {m.label}
-            </option>
-          ))}
-        </select>
+
+      <div className="mb-6 flex items-center gap-6">
+        {/* 연도 선택 */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700">연도</label>
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            className="border p-2 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#F27B39] transition-all"
+          >
+            {Array.from({ length: 5 }, (_, i) => currentYear - i).map(
+              (year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              )
+            )}
+          </select>
+        </div>
+
+        {/* 월 선택 */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700">월</label>
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="border p-2 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#F27B39] transition-all"
+          >
+            {[
+              { value: "01", label: "1월" },
+              { value: "02", label: "2월" },
+              { value: "03", label: "3월" },
+              { value: "04", label: "4월" },
+              { value: "05", label: "5월" },
+              { value: "06", label: "6월" },
+              { value: "07", label: "7월" },
+              { value: "08", label: "8월" },
+              { value: "09", label: "9월" },
+              { value: "10", label: "10월" },
+              { value: "11", label: "11월" },
+              { value: "12", label: "12월" },
+            ].map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
       {loading ? (
         <p>Loading...</p>

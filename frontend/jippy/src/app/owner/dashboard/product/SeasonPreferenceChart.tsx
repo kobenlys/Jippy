@@ -29,14 +29,46 @@ interface SeasonPreferenceChartProps {
 
 const TOP_N_PRODUCTS = 10;
 
-const SeasonPreferenceChart: React.FC<SeasonPreferenceChartProps> = ({ storeId }) => {
+const SeasonPreferenceChart: React.FC<SeasonPreferenceChartProps> = ({
+  storeId,
+}) => {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [loading, setLoading] = useState(false);
-  const [lineChartData, setLineChartData] = useState<ChartData<"line"> | null>(null);
-  const [barChartData, setBarChartData] = useState<ChartData<"bar"> | null>(null);
-  const monthKeys = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
-  const monthLabels = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
+  const [lineChartData, setLineChartData] = useState<ChartData<"line"> | null>(
+    null
+  );
+  const [barChartData, setBarChartData] = useState<ChartData<"bar"> | null>(
+    null
+  );
+  const monthKeys = [
+    "jan",
+    "feb",
+    "mar",
+    "apr",
+    "may",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "oct",
+    "nov",
+    "dec",
+  ];
+  const monthLabels = [
+    "1월",
+    "2월",
+    "3월",
+    "4월",
+    "5월",
+    "6월",
+    "7월",
+    "8월",
+    "9월",
+    "10월",
+    "11월",
+    "12월",
+  ];
 
   const fetchMonthData = useCallback(async () => {
     setLoading(true);
@@ -89,7 +121,10 @@ const SeasonPreferenceChart: React.FC<SeasonPreferenceChartProps> = ({ storeId }
         productMap[item.productName] += item.soldCount;
       });
     });
-    const productArray = Object.entries(productMap).map(([name, total]) => ({ name, total }));
+    const productArray = Object.entries(productMap).map(([name, total]) => ({
+      name,
+      total,
+    }));
     productArray.sort((a, b) => b.total - a.total);
     const topProducts = productArray.slice(0, TOP_N_PRODUCTS);
     const barData: ChartData<"bar"> = {
@@ -115,7 +150,7 @@ const SeasonPreferenceChart: React.FC<SeasonPreferenceChartProps> = ({ storeId }
         상품별 시즌 선호도
       </h2>
       <div className="mb-4 flex items-center gap-4">
-        <label className="text-sm font-medium">연도 선택:</label>
+        <label className="text-sm font-medium">연도 </label>
         <select
           value={selectedYear}
           onChange={(e) => setSelectedYear(parseInt(e.target.value))}
@@ -133,7 +168,9 @@ const SeasonPreferenceChart: React.FC<SeasonPreferenceChartProps> = ({ storeId }
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="bg-gray-50 rounded p-4 shadow">
-            <h3 className="text-lg font-semibold mb-2 text-gray-700">월별 총 주문량</h3>
+            <h3 className="text-lg font-semibold mb-2 text-gray-700">
+              월별 총 주문량
+            </h3>
             {lineChartData ? (
               <div style={{ height: "300px" }}>
                 <Line
