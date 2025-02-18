@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import PaymentRequestComponent from "@/features/payment/components/PayRequest";
+import PaymentRequestComponent from "@/features/pos/payment/components/PayRequest";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { setOrderData } from "@/redux/slices/paymentSlice";
 
@@ -32,7 +32,11 @@ const PaymentRequestPage = () => {
     return <div className="flex justify-center items-center min-h-screen">로딩 중...</div>;
   }
 
-  return <PaymentRequestComponent />;
+  return (
+    <div className="h-full overflow-hidden justify-center items-center">
+      <PaymentRequestComponent />
+    </div>
+  );
 };
 
 export default PaymentRequestPage;

@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState } from "react";
 
 interface StockRegisterModalProps {
@@ -9,9 +10,11 @@ interface StockRegisterModalProps {
 
 const StockRegisterModal: React.FC<StockRegisterModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [stockName, setStockName] = useState("");
-  const [stockCount, setStockCount] = useState(0);
+  const [stockCount, setStockCount] = useState<number | undefined>(undefined);
   const [stockUnitSize, setStockUnitSize] = useState("");
-  const [stockUnit, setStockUnit] = useState("");
+  const [stockUnit, setStockUnit] = useState("g");
+
+  const unitOptions = ["kg", "g", "l", "ml", "개"];
 
   if (!isOpen) return null;
 
@@ -23,7 +26,7 @@ const StockRegisterModal: React.FC<StockRegisterModalProps> = ({ isOpen, onClose
           stockName,
           stock: [
             {
-              stockCount,
+              stockCount: stockCount || 0,
               stockUnitSize,
               stockUnit,
               isDisposal: false,
@@ -41,7 +44,7 @@ const StockRegisterModal: React.FC<StockRegisterModalProps> = ({ isOpen, onClose
       });
       if (!response.ok) throw new Error("재고 등록 실패");
       alert("재고 등록 성공");
-      onSuccess(); // 부모에서 새로고침 처리 (예: window.location.reload())
+      onSuccess();
       onClose();
     } catch (error) {
       console.error(error);
@@ -68,8 +71,9 @@ const StockRegisterModal: React.FC<StockRegisterModalProps> = ({ isOpen, onClose
             <label className="block mb-1">수량</label>
             <input
               type="number"
+              placeholder="0"
               value={stockCount}
-              onChange={(e) => setStockCount(Number(e.target.value))}
+              onChange={(e) => setStockCount(e.target.value ? Number(e.target.value) : undefined)}
               className="w-full border px-2 py-1 rounded"
               required
             />
@@ -78,7 +82,7 @@ const StockRegisterModal: React.FC<StockRegisterModalProps> = ({ isOpen, onClose
             <label className="block mb-1">용량</label>
             <input
               type="text"
-              placeholder="예: 100"
+              placeholder="0"
               value={stockUnitSize}
               onChange={(e) => setStockUnitSize(e.target.value)}
               className="w-full border px-2 py-1 rounded"
@@ -87,14 +91,18 @@ const StockRegisterModal: React.FC<StockRegisterModalProps> = ({ isOpen, onClose
           </div>
           <div className="mb-4">
             <label className="block mb-1">단위</label>
-            <input
-              type="text"
-              placeholder="예: g, ml, 개 등"
+            <select
               value={stockUnit}
               onChange={(e) => setStockUnit(e.target.value)}
               className="w-full border px-2 py-1 rounded"
               required
-            />
+            >
+              {unitOptions.map((unit) => (
+                <option key={unit} value={unit}>
+                  {unit}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="flex justify-end gap-2">
             <button type="button" onClick={onClose} className="px-4 py-2 rounded border">

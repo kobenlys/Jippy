@@ -7,17 +7,61 @@ import { useState } from "react";
 import staffApi from "../hooks/staffApi";
 import StaffEditModal from "./StaffEditModal";
 import { Card } from "@/features/common/components/ui/card/Card";
+import StaffAttendanceList from "./StaffAttendanceList";
 
 interface StaffListCardProps {
   storeId: number;
 }
 
+interface FilterTabProps {
+  currentFilter: "update" | "attendance";
+  onFilterChange: (filter: "update" | "attendance") => void;
+}
+
+const FilterTabs = ({ currentFilter, onFilterChange }: FilterTabProps) => (
+  <div className="flex">
+    <button
+      onClick={() => onFilterChange("update")}
+      className={`px-4 transition-colors ${
+        currentFilter === "update"
+          ? "bg-orange-100 text-orange-500 rounded-md text-lg font-semibold"
+          : "text-gray-500 hover:text-gray-700"
+      }`}
+    >
+      직원 목록
+    </button>
+    <button
+      onClick={() => onFilterChange("attendance")}
+      className={`px-4 transition-colors ${
+        currentFilter === "attendance"
+          ? "bg-orange-100 text-orange-500 rounded-md text-lg font-semibold"
+          : "text-gray-500 hover:text-gray-700"
+      }`}
+    >
+      근태 현황
+    </button>
+  </div>
+);
+
 const StaffListCard = ({ storeId }: StaffListCardProps) => {
-  const { data: staffList, isLoading, refreshList } = useStaffList(storeId);
+  const {
+    data: staffList,
+    isLoading,
+    error,
+    refreshList,
+  } = useStaffList(storeId);
+  const [currentFilter, setCurrentFilter] = useState<"update" | "attendance">(
+    "update"
+  );
   const [selectedStaff, setSelectedStaff] = useState<StaffInfo | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (isLoading) return null;
+
+  const handleFilterChange = (newFilter: "update" | "attendance") => {
+    setCurrentFilter(newFilter);
+    setSelectedStaff(null);
+  };
 
   const handleStaffClick = (staff: StaffInfo) => {
     setSelectedStaff(staff);
@@ -60,61 +104,63 @@ const StaffListCard = ({ storeId }: StaffListCardProps) => {
     return (
       <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
         <div className="p-6">
-          <h2 className="text-xl font-semibold text-[#3D3733] mb-4">
-            직원 목록
-          </h2>
-          <div className="py-12 flex flex-col items-center justify-center text-gray-500">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-12 w-12 mb-4 text-gray-300"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-            <p className="text-center mb-1">등록된 직원이 없습니다.</p>
+          <div className="flex items-center justify-between mb-4">
+            <FilterTabs
+              currentFilter={currentFilter}
+              onFilterChange={handleFilterChange}
+            />
+            <Users className="w-5 h-5 text-gray-400" />
           </div>
+          {currentFilter === "update" ? (
+            <div className="py-12 flex flex-col items-center justify-center text-gray-500">
+              <Users className="h-12 w-12 mb-4 text-gray-300" />
+              <p className="text-center mb-1">등록된 직원이 없습니다.</p>
+            </div>
+          ) : (
+            <StaffAttendanceList storeId={storeId} />
+          )}
         </div>
       </Card>
     );
   }
 
   return (
-    <>
-      <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-[#3D3733]">직원 목록</h2>
+    <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <FilterTabs
+            currentFilter={currentFilter}
+            onFilterChange={handleFilterChange}
+          />
+          {currentFilter === "update" && (
             <div className="flex items-center gap-2">
-              <span className="mr-2 px-2 py-1 bg-[#F27B39]/10 text-jippy-orange rounded-full text-[15px]">
+              <span className="px-2 py-1 bg-[#F27B39]/10 text-[#F27B39] rounded-full text-[15px]">
                 총 {staffList.length}명
               </span>
               <Users className="w-5 h-5 text-gray-400" />
             </div>
-          </div>
+          )}
+        </div>
 
+        {currentFilter === "update" ? (
           <div className="overflow-x-auto">
             <div className="max-h-[280px] overflow-y-auto pr-4">
               <table className="w-full">
                 <thead className="sticky top-0 bg-white z-10 shadow-[0px_1px_0px_0px_rgba(0,0,0,0.1)]">
-                  <th className="py-3 text-left text-[15px] font-medium text-gray-500 pl-2">
-                    이름
-                  </th>
-                  <th className="py-3 text-left text-[15px] font-medium text-gray-500">
-                    직원 구분
-                  </th>
-                  <th className="py-3 text-right text-[15px] font-medium text-gray-500">
-                    급여
-                  </th>
-                  <th className="py-3 text-right text-[15px] font-medium text-gray-500 pr-2">
-                    급여 타입
-                  </th>
+                  <tr>
+                    <th className="py-3 text-left text-[15px] font-medium text-gray-500 pl-2">
+                      이름
+                    </th>
+                    <th className="py-3 text-left text-[15px] font-medium text-gray-500">
+                      직원 구분
+                    </th>
+                    <th className="py-3 text-right text-[15px] font-medium text-gray-500">
+                      급여
+                    </th>
+                    <th className="py-3 text-right text-[15px] font-medium text-gray-500 pr-2">
+                      급여 타입
+                    </th>
+                  </tr>
                 </thead>
                 <tbody>
                   {staffList.map((staff) => (
@@ -128,12 +174,11 @@ const StaffListCard = ({ storeId }: StaffListCardProps) => {
                       </td>
                       <td className="py-4">
                         <span
-                          className={`px-2 py-1 rounded-full
-                        ${
-                          staff.staffType === "MANAGER"
-                            ? "bg-blue-50 text-blue-500"
-                            : "bg-gray-100 text-gray-500"
-                        }`}
+                          className={`px-2 py-1 rounded-full ${
+                            staff.staffType === "MANAGER"
+                              ? "bg-blue-50 text-blue-500"
+                              : "bg-gray-100 text-gray-500"
+                          }`}
                         >
                           {getStaffTypeDisplay(staff.staffType)}
                         </span>
@@ -150,8 +195,10 @@ const StaffListCard = ({ storeId }: StaffListCardProps) => {
               </table>
             </div>
           </div>
-        </div>
-      </Card>
+        ) : (
+          <StaffAttendanceList storeId={storeId} />
+        )}
+      </div>
 
       {selectedStaff && (
         <StaffEditModal
@@ -162,7 +209,7 @@ const StaffListCard = ({ storeId }: StaffListCardProps) => {
           onDelete={handleDeleteStaff}
         />
       )}
-    </>
+    </Card>
   );
 };
 

@@ -55,6 +55,7 @@ const PettyCashModal = ({
   const [qrPayments, setQrPayments] = useState<PaymentHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [requestStartTime, setRequestStartTime] = useState<number | null>(null);
   const [initialCash, setInitialCash] = useState<
     Omit<CashData, "id" | "store_id">
@@ -296,28 +297,23 @@ const PettyCashModal = ({
     }
   }, [isOpen, activeTab, storeId]);
 
-  // 로딩 시간이 3초를 초과하면 경고 표시
-  const isLongLoading =
-    requestStartTime && Date.now() - requestStartTime > 3000;
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] bg-white">
         <DialogHeader>
           <DialogTitle>시재 정산</DialogTitle>
+            <span className="text-sm text-gray-500 pt-2">
+              {new Date().toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+              })} 기준
+            </span>
         </DialogHeader>
-
-        {isLoading && (
-          <div className="text-sm text-gray-500">
-            로딩 시간:{" "}
-            {requestStartTime ? `${Date.now() - requestStartTime}ms` : "0ms"}
-            {isLongLoading && (
-              <div className="text-yellow-500">
-                ⚠️ 요청이 예상보다 오래 걸리고 있습니다
-              </div>
-            )}
-          </div>
-        )}
 
         <div className="mb-4">
           <div className="flex space-x-2 border-b">
@@ -353,79 +349,77 @@ const PettyCashModal = ({
             <p className="text-sm">{error}</p>
           </div>
         ) : activeTab === "qr" ? (
-          <div className="mt-4">
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4 font-medium text-gray-600">
-                <div>시간</div>
-                <div className="text-center">상태</div>
-                <div className="text-right">금액</div>
-              </div>
-              <div className="space-y-2">
-                {qrPayments.map((payment) => (
-                  <div key={payment.uuid} className="grid grid-cols-3 gap-4">
-                    <div>
-                      {new Date(payment.createdAt).toLocaleTimeString()}
-                    </div>
-                    <div className="text-center">{payment.paymentStatus}</div>
-                    <div className="text-right">
-                      {payment.totalCost.toLocaleString()}원
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="pt-4 border-t">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="font-semibold">총계</div>
-                  <div className="text-right font-semibold">
-                    {calculateQrTotal().toLocaleString()}원
-                  </div>
-                </div>
-              </div>
+            // <div className="justify-center items-center text-center text-xl font-semibold">
+            //   <p>총 주문 건수</p>
+            //   <p>{qrPayments.length.toLocaleString()} 건</p>
+            //   <br/>
+            //   <p>총 매출액</p>
+            //   <p>{calculateQrTotal().toLocaleString()}원</p>
+            // </div>
+            <div className="border rounded-md overflow-hidden">
+              <table className="w-full text-center">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="py-2 px-4 border-b border-r">주문 건수</th>
+                    <th className="py-2 px-4 border-b">총 매출액</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="py-3 px-4  border-r">{qrPayments.length.toLocaleString()} 건</td>
+                    <td className="py-3 px-4">
+                      {calculateQrTotal().toLocaleString()}원
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          </div>
         ) : !cashData ? (
           <div className="mt-4">
             <h3 className="text-lg font-semibold mb-4">초기 시재 입력</h3>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-gray-600">권종</div>
-              <div className="text-center">수량</div>
-              <div className="text-right">금액</div>
-              {Object.entries(denominationMap).map(
-                ([key, { label, value }]) => (
-                  <React.Fragment key={key}>
-                    <div>{label}</div>
-                    <div className="text-center">
-                      <input
-                        type="number"
-                        min="0"
-                        className="w-16 text-center border rounded-md"
-                        value={initialCash[key as keyof typeof initialCash]}
-                        onChange={(e) =>
-                          setInitialCash((prev) => ({
-                            ...prev,
-                            [key]: parseInt(e.target.value) || 0,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="text-right">
-                      {(
-                        initialCash[key as keyof typeof initialCash] * value
-                      ).toLocaleString()}
-                      원
-                    </div>
-                  </React.Fragment>
-                )
-              )}
-            </div>
-            <div className="mt-6 pt-4 border-t">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="font-semibold">총계</div>
-                <div className="text-right font-semibold">
-                  {calculateTotal(initialCash).toLocaleString()}원
-                </div>
-              </div>
-            </div>
+            <table className="w-full border-collapse text-center">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border px-4 py-2">권종</th>
+                  <th className="border px-4 py-2">수량</th>
+                  <th className="border px-4 py-2">금액</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(denominationMap).map(
+                  ([key, { label, value }]) => (
+                    <tr key={key}>
+                      <td className="border px-4 py-2">{label}</td>
+                      <td className="border px-4 py-2 text-center">
+                        <input
+                          type="number"
+                          min="0"
+                          className="w-16 text-center border rounded-md"
+                          value={initialCash[key as keyof typeof initialCash]}
+                          onChange={(e) =>
+                            setInitialCash((prev) => ({
+                              ...prev,
+                              [key]: parseInt(e.target.value) || 0,
+                            }))
+                          }
+                        />
+                      </td>
+                      <td className="border px-4 py-2 text-right">
+                        {(
+                          initialCash[key as keyof typeof initialCash] * value
+                        ).toLocaleString()}원
+                      </td>
+                    </tr>
+                  )
+                )}
+                <tr className="bg-gray-50 font-semibold">
+                  <td className="border px-4 py-3" colSpan={2}>총계</td>
+                  <td className="border px-4 py-3 text-right">
+                    {calculateTotal(initialCash).toLocaleString()}원
+                  </td>
+                </tr>
+              </tbody>
+            </table>
             <div className="mt-6 flex justify-end">
               <button
                 onClick={createInitialCash}
@@ -436,22 +430,25 @@ const PettyCashModal = ({
             </div>
           </div>
         ) : (
-          <div className="mt-4">
-            <div>
-              <h3 className="text-lg font-semibold mb-2">현금 정산</h3>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-gray-600">권종</div>
-                <div className="text-center">수량</div>
-                <div className="text-right">금액</div>
+          <div>
+            <table className="w-full border-collapse text-center rounded-md">
+              <thead>
+                <tr className="bg-gray-100 ">
+                  <th className="border px-4 py-2">화폐 단위</th>
+                  <th className="border px-4 py-2">수량</th>
+                  <th className="border px-4 py-2">금액</th>
+                </tr>
+              </thead>
+              <tbody>
                 {Object.entries(denominationMap).map(
                   ([key, { label, value }]) => (
-                    <React.Fragment key={key}>
-                      <div>{label}</div>
-                      <div className="text-center">
+                    <tr key={key}>
+                      <td className="border px-4 py-2">{label}</td>
+                      <td className="border px-4 py-2 text-center">
                         <input
                           type="number"
                           min="0"
-                          className="w-16 text-center border rounded-md"
+                          className="w-16 text-center rounded-md"
                           value={modifiedCash?.[key as keyof CashData] ?? 0}
                           onChange={(e) =>
                             handleModifiedCashChange(
@@ -460,30 +457,23 @@ const PettyCashModal = ({
                             )
                           }
                         />
-                      </div>
-                      <div className="text-right">
+                      </td>
+                      <td className="border px-4 py-2 text-right">
                         {(
                           (modifiedCash?.[key as keyof CashData] ?? 0) * value
-                        ).toLocaleString()}
-                        원
-                      </div>
-                    </React.Fragment>
+                        ).toLocaleString()}원
+                      </td>
+                    </tr>
                   )
                 )}
-              </div>
-            </div>
-
-            <div className="mt-6 pt-4 border-t">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="font-semibold">총계</div>
-                <div className="text-right font-semibold">
-                  {modifiedCash &&
-                    calculateTotal(modifiedCash).toLocaleString()}
-                  원
-                </div>
-              </div>
-            </div>
-
+                <tr className="bg-gray-50 font-semibold">
+                  <td className="border px-4 py-3" colSpan={2}>총계</td>
+                  <td className="border px-4 py-3 text-right">
+                    {modifiedCash && calculateTotal(modifiedCash).toLocaleString()}원
+                  </td>
+                </tr>
+              </tbody>
+            </table>
             <div className="mt-6 flex justify-end">
               <button
                 onClick={updateCashData}

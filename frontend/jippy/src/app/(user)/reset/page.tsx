@@ -2,6 +2,8 @@
 
 import { useState, FormEvent, ChangeEvent } from "react";
 import Link from "next/link";
+import styles from "@/app/page.module.css";
+import Button from "@/features/common/components/ui/button/Button";
 
 interface FormData {
   email: string;
@@ -47,7 +49,6 @@ const ResetPassword = () => {
       ...prev,
       [name]: value
     }));
-    // 입력 시 에러 메시지 초기화
     if (errors[name as keyof FormData]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }
@@ -82,7 +83,6 @@ const ResetPassword = () => {
         error: null
       });
       
-      // 폼 초기화
       setFormData({ email: "", userType: "OWNER" });
       
     } catch (error) {
@@ -95,8 +95,8 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-      <h2 className="text-xl font-bold mb-4">비밀번호 재발급</h2>
+    <form onSubmit={handleSubmit} className="flex flex-col items-center justify-center min-h-screen">
+      <h1 className={styles.subtitle}>비밀번호 재발급</h1>
       
       {resetState.message && (
         <p className="mb-4 text-sm text-green-500">
@@ -110,75 +110,60 @@ const ResetPassword = () => {
         </p>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">이메일</label>
+      <div className="flex gap-4 m-2">
+        <label className="flex items-center space-x-2 cursor-pointer">
           <input
-            type="email"
-            name="email"
-            value={formData.email}
+            type="radio"
+            name="userType"
+            value="OWNER"
+            checked={formData.userType === "OWNER"}
             onChange={handleChange}
-            className="mt-1 p-2 w-full border rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className="form-radio appearance-none relative h-5 w-5 border border-gray-300 rounded-full 
+             before:absolute before:inset-0 before:w-full before:h-full before:rounded-full before:border before:border-gray-300 
+             checked:before:border-[#F27B39] checked:after:absolute checked:after:inset-[4px] checked:after:bg-[#F27B39] 
+             checked:after:rounded-full"
           />
-          {errors.email && (
-            <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-          )}
-        </div>
+          <span>점주</span>
+        </label>
+        <label className="flex items-center space-x-2 cursor-pointer">
+          <input
+            type="radio"
+            name="userType"
+            value="STAFF"
+            checked={formData.userType === "STAFF"}
+            onChange={handleChange}
+            className="form-radio appearance-none relative h-5 w-5 border border-gray-300 rounded-full 
+             before:absolute before:inset-0 before:w-full before:h-full before:rounded-full before:border before:border-gray-300 
+             checked:before:border-[#F27B39] checked:after:absolute checked:after:inset-[4px] checked:after:bg-[#F27B39] 
+             checked:after:rounded-full"
+          />
+          <span>직원</span>
+        </label>
+      </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">사용자 유형</label>
-          <div className="flex gap-4 mt-1">
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                name="userType"
-                value="OWNER"
-                checked={formData.userType === "OWNER"}
-                onChange={handleChange}
-                className="mr-2"
-              />
-              <span className="text-sm">점주</span>
-            </label>
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                name="userType"
-                value="STAFF"
-                checked={formData.userType === "STAFF"}
-                onChange={handleChange}
-                className="mr-2"
-              />
-              <span className="text-sm">직원</span>
-            </label>
-          </div>
-          {errors.userType && (
-            <p className="text-red-500 text-sm mt-1">{errors.userType}</p>
-          )}
-        </div>
+      <input
+        type="email"
+        name="email"
+        placeholder="이메일 입력"
+        value={formData.email}
+        onChange={handleChange}
+        className="border p-2 m-2 w-64 rounded"
+      />
+      {errors.email && (
+        <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+      )}
 
-        <button
-          type="submit"
-          disabled={resetState.loading}
-          className={`w-full bg-blue-500 text-white p-2 rounded-md 
-                   ${resetState.loading ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-600"} 
-                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 
-                   transition-colors duration-200`}
-        >
-          {resetState.loading ? "처리 중..." : "비밀번호 재발급"}
-        </button>
+      <Button variant="orange">비밀번호 재발급</Button>
 
-        <div className="w-64 h-px bg-gray-300 my-6"></div>
+      <div className="w-64 h-px bg-gray-300 my-6"></div>
 
-        <Link href="/login">
-          <button
-            className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-          >
-            로그인하러 가기
-          </button>
+      <div className="text-sm">
+        <span className="text-gray-600">이미 계정이 있으신가요? </span>
+        <Link href="/login" className="text-orange-500 hover:text-orange-600">
+          로그인
         </Link>
-
-      </form>
-    </div>
+      </div>
+    </form>
   );
 };
 

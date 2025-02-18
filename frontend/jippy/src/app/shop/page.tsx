@@ -115,7 +115,7 @@ export default function ShopsPage() {
         if (loginType === "OWNER") {
           router.replace("/owner/dashboard/sale");
         } else if (loginType === "POS") {
-          router.replace("/order");
+          router.replace("/pos/order");
         }
         setTimeout(() => setTriggerFetch((prev) => !prev), 100); // ✅ 상태 변경으로 리렌더링 유도
       } else {

@@ -124,7 +124,7 @@ ProductGridProps) => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-none bg-white p-4 border-b">
+      <div className="flex-none bg-white p-4 border-b border-r">
         <div className="px-4">
           <CategoryList
             selectedCategory={selectedCategory}

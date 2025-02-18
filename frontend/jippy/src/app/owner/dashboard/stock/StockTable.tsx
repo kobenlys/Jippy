@@ -71,12 +71,19 @@ const StockTable = () => {
     }
   };
 
+  const flattenedStocks = stockData.flatMap((item) =>
+    item.stock.map((unit) => ({
+      ...item,
+      unit
+    }))
+  );
+
   return (
     <div>
-      <div className="flex gap-1 mb-4">
-        <div className="bg-orange-500 text-white px-4 py-1 rounded-full">재고</div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">재고 관리</h2>
         <button
-          className="bg-gray-100 text-gray-600 px-4 py-1 rounded-full"
+          className="bg-orange-500 text-white px-4 py-1 rounded hover:bg-orange-600"
           onClick={() => setRegisterModalOpen(true)}
         >
           재고 등록
@@ -108,49 +115,47 @@ const StockTable = () => {
                 </tr>
               </thead>
               <tbody>
-                {stockData.length > 0 ? (
-                  stockData.flatMap((item, itemIndex) =>
-                    item.stock.map((unit, unitIndex) => (
-                      <tr key={`${itemIndex}-${unitIndex}`} className="hover:bg-gray-50">
-                        <td className="p-2 border-b">{itemIndex * item.stock.length + unitIndex + 1}</td>
-                        <td className="p-2 border-b">{item.stockName}</td>
-                        <td className="p-2 border-b">
-                          {unit.stockUnitSize}{formatUnit(unit.stockUnit)}
-                        </td>
-                        <td className="p-2 border-b">
-                          {unit.stockCount}
-                        </td>
-                        <td className="p-2 border-b">
-                          {unit.stockCount * parseFloat(unit.stockUnitSize)}{formatUnit(unit.stockUnit)}
-                        </td>
-                        <td className="p-2 border-b text-center">
-                          <div className="flex justify-center gap-2">
-                            <button
-                              className="text-blue-500 hover:text-blue-700"
-                              onClick={() => {
-                                setSelectedStockItem({
-                                  ...item,
-                                  stock: [unit]
-                                });
-                                setUpdateModalOpen(true);
-                              }}
-                            >
-                              <Edit2 size={18} />
-                            </button>
-                            <button
-                              className="text-red-500 hover:text-red-700"
-                              onClick={() => {
-                                if (!window.confirm(`${item.stockName}의 ${unit.stockUnitSize}${formatUnit(unit.stockUnit)} 단위를 삭제하시겠습니까?`)) return;
-                                deleteStock(1, item.stockName, unit.stockUnitSize, unit.stockUnit);
-                              }}
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )
+                {flattenedStocks.length > 0 ? (
+                  flattenedStocks.map((item, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="p-2 border-b">{index + 1}</td>
+                      <td className="p-2 border-b">{item.stockName}</td>
+                      <td className="p-2 border-b">
+                        {item.unit.stockUnitSize}{formatUnit(item.unit.stockUnit)}
+                      </td>
+                      <td className="p-2 border-b">
+                        {item.unit.stockCount}
+                      </td>
+                      <td className="p-2 border-b">
+                        {item.unit.stockCount * parseFloat(item.unit.stockUnitSize)}{formatUnit(item.unit.stockUnit)}
+                      </td>
+                      <td className="p-2 border-b text-center">
+                        <div className="flex justify-center gap-2">
+                          <button
+                            className="text-blue-500 hover:text-blue-700"
+                            onClick={() => {
+                              setSelectedStockItem({
+                                ...item,
+                                stock: [item.unit]
+                              });
+                              setUpdateModalOpen(true);
+                            }}
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
+                            className="text-red-500 hover:text-red-700"
+                            onClick={() => {
+                              if (!window.confirm(`${item.stockName}의 ${item.unit.stockUnitSize}${formatUnit(item.unit.stockUnit)} 단위를 삭제하시겠습니까?`)) return;
+                              deleteStock(1, item.stockName, item.unit.stockUnitSize, item.unit.stockUnit);
+                            }}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 ) : (
                   <tr>
                     <td colSpan={6} className="text-center py-4 text-gray-500">
@@ -162,17 +167,13 @@ const StockTable = () => {
               <tfoot className="bg-orange-50 sticky bottom-0 z-10">
                 <tr>
                   <td className="p-2">
-                    {stockData.reduce((sum, item) => sum + item.stock.length, 0)}
+                    {flattenedStocks.length}
                   </td>
                   <td colSpan={2} className="p-2 text-right">
                     전체 수량
                   </td>
                   <td className="p-2">
-                    {stockData.reduce(
-                      (sum, item) =>
-                        sum + item.stock.reduce((s, unit) => s + unit.stockCount, 0),
-                      0
-                    )}
+                    {flattenedStocks.reduce((sum, item) => sum + item.unit.stockCount, 0)}
                   </td>
                   <td colSpan={2}></td>
                 </tr>

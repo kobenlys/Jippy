@@ -112,7 +112,14 @@ const ProductChart: React.FC<ProductChartProps> = ({ storeId }) => {
     } else {
       fetchMonthlyData();
     }
-  }, [storeId, viewType, selectedYear, selectedMonth, fetchRecentData, fetchMonthlyData]);
+  }, [
+    storeId,
+    viewType,
+    selectedYear,
+    selectedMonth,
+    fetchRecentData,
+    fetchMonthlyData,
+  ]);
 
   return (
     <div className="w-full overflow-x-auto">
@@ -120,23 +127,15 @@ const ProductChart: React.FC<ProductChartProps> = ({ storeId }) => {
         <h2 className="text-2xl font-bold" style={{ color: "#F27B39" }}>
           {viewType === "recent" ? "최근 30일 판매량" : "월별 판매량"}
         </h2>
-        <div className="flex items-center gap-4 mt-2 sm:mt-0">
-          <select
-            value={viewType}
-            onChange={(e) =>
-              setViewType(e.target.value as "recent" | "monthly")
-            }
-            className="border p-1 rounded"
-          >
-            <option value="recent">최근 30일</option>
-            <option value="monthly">월별</option>
-          </select>
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 mt-2 sm:mt-0">
+          {/* 📌 월별 옵션 선택 (연도 & 월) */}
           {viewType === "monthly" && (
-            <>
+            <div className="flex gap-3 mr-4">
+              {/* 연도 선택 */}
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="border p-1 rounded"
+                className="border border-gray-300 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F27B39] transition-all"
               >
                 {Array.from({ length: 5 }, (_, i) => currentYear - i).map(
                   (year) => (
@@ -146,10 +145,12 @@ const ProductChart: React.FC<ProductChartProps> = ({ storeId }) => {
                   )
                 )}
               </select>
+
+              {/* 월 선택 */}
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="border p-1 rounded"
+                className="border border-gray-300 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F27B39] transition-all"
               >
                 {[
                   { value: "01", label: "1월" },
@@ -170,8 +171,32 @@ const ProductChart: React.FC<ProductChartProps> = ({ storeId }) => {
                   </option>
                 ))}
               </select>
-            </>
+            </div>
           )}
+
+          {/* 📌 토글 버튼 스타일 */}
+          <div className="flex bg-gray-200 rounded-full p-1">
+            <button
+              onClick={() => setViewType("recent")}
+              className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${
+                viewType === "recent"
+                  ? "bg-[#F27B39] text-white shadow-md"
+                  : "text-gray-600"
+              }`}
+            >
+              최근 30일
+            </button>
+            <button
+              onClick={() => setViewType("monthly")}
+              className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${
+                viewType === "monthly"
+                  ? "bg-[#F27B39] text-white shadow-md"
+                  : "text-gray-600"
+              }`}
+            >
+              월별
+            </button>
+          </div>
         </div>
       </div>
       {loading ? (

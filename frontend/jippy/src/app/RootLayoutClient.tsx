@@ -29,6 +29,8 @@ const hideNavbarPaths = [
   "/feedback",
   "/chatting",
   "/shop/create",
+  "/reset",
+  "/shop"
 ];
 
 const RootLayoutClient = ({ children }: { children: React.ReactNode }) => {

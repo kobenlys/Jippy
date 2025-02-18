@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { Edit2, Trash2 } from "lucide-react";
 import ProductForm from "@/features/dashboard/product/components/ProductForm";
 
 interface ProductItem {
@@ -20,7 +21,9 @@ interface ProductTableProps {
 const ProductTable: React.FC<ProductTableProps> = ({ productData }) => {
   const [showFormModal, setShowFormModal] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
-  const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(
+    null
+  );
 
   const handleDelete = async (storeId: number, productId: number) => {
     if (confirm("정말 삭제하시겠습니까?")) {
@@ -68,16 +71,35 @@ const ProductTable: React.FC<ProductTableProps> = ({ productData }) => {
   return (
     <div className="w-full">
       {/* 상단 탭 및 버튼 영역 */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-6">
+        {/* 왼쪽 레이블 */}
         <div className="flex gap-2">
-          <div className="bg-orange-500 text-white px-3 py-2 rounded-full text-base">
-            상품
+          <div className="flex items-center border-b pb-2">
+            <h2 className="text-2xl font-bold" style={{ color: "#F27B39" }}>
+              상품
+            </h2>
           </div>
         </div>
+
+        {/* 오른쪽 버튼 */}
         <button
           onClick={openCreateModal}
-          className="bg-gray-100 text-gray-600 px-3 py-2 rounded-full text-base"
+          className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-base font-medium shadow-md transition hover:bg-gray-200"
         >
+          <svg
+            className="w-5 h-5 text-gray-600"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
           상품 등록
         </button>
       </div>
@@ -119,18 +141,20 @@ const ProductTable: React.FC<ProductTableProps> = ({ productData }) => {
                       />
                     </td>
                     <td className="p-2 border-b">
-                      <button
-                        onClick={() => openEditModal(item)}
-                        className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md transition-colors duration-200 text-sm flex items-center justify-center"
-                      >
-                        수정
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.storeId, item.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition-colors duration-200 text-sm flex items-center justify-center"
-                      >
-                        삭제
-                      </button>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => openEditModal(item)}
+                          className="text-blue-500 hover:text-blue-700"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.storeId, item.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

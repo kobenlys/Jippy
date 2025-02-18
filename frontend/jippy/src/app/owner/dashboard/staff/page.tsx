@@ -48,32 +48,27 @@ const StaffDashboardPage = () => {
 
   return (
     <div className="p-4">
-      <div className="mt-8">
+      <div className="grid grid-cols-2 gap-6 mt-8">
+        <WorkingStaffCard storeId={storeId} />
         <ScheduleChangeList storeId={storeId} />
       </div>
-      <div className="mt-8">
-        <NoticeList storeId={storeId} ownerName={ownerName} />
-      </div>
-      <div className="mt-8">
-        <TodoList storeId={storeId} />
-      </div>
-      <div className="mt-8">
-        <WorkingStaffCard storeId={storeId} />
-      </div>
-      <div className="mt-8">
-        <StaffListCard storeId={storeId} />
-      </div>
+
       <div className="mt-8">
         <StaffScheduleCard storeId={storeId} />
       </div>
-      <div className="mt-8">
-        <StaffPerformanceCard storeId={storeId} />
+
+      <div className="grid grid-cols-2 gap-6 mt-8">
+        <NoticeList storeId={storeId} ownerName={ownerName} />
+        <TodoList storeId={storeId} />
       </div>
-      <div className="mt-8">
-        <StaffAttendanceList storeId={storeId} />
-      </div>
+
       <div className="mt-8">
         <StoreSalaryCard storeId={storeId} />
+      </div>
+
+      <div className="grid grid-cols-2 gap-6 my-8">
+        <StaffPerformanceCard storeId={storeId} />
+        <StaffListCard storeId={storeId} />
       </div>
     </div>
   );

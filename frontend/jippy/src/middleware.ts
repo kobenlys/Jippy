@@ -16,7 +16,7 @@ export function middleware(request: NextRequest) {
   if (urlPath.startsWith("/owner") && loginType !== "OWNER") {
     console.log("오류2");
     return NextResponse.redirect(new URL("/error", request.url));
-  } else if (urlPath.startsWith("/order") || urlPath.startsWith("/payment")) {
+  } else if (urlPath.startsWith("/pos")) {
     if (loginType !== "POS") {
       console.log("오류3");
       return NextResponse.redirect(new URL("/error", request.url));
@@ -72,8 +72,7 @@ export const config = {
     "/notifications",
     "/todo",
     "/owner/:path*",
-    "/order/:path*",
-    "/payment/:path*",
+    "/pos/:path*",
     "/shop/:path*",
   ],
 };

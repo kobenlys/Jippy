@@ -15,6 +15,7 @@ import {
 } from "chart.js";
 import { Chart } from "react-chartjs-2";
 import type { ChartData } from "chart.js";
+import { Loader2 } from "lucide-react";
 
 ChartJS.register(
   CategoryScale,
@@ -55,34 +56,51 @@ interface ComparisonResponse {
   status: string;
   message: string;
   data: {
-    labels: string[]; // 날짜 문자열 (예: "2024-02-22")
+    labels: string[];
     datasets: ComparisonDataset[];
     statistics: ComparisonStatistics;
     comparison_data: ComparisonDataItem[];
   };
 }
 
+const getCookieValue = (name: string): string | null => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+      return parts.pop()?.split(';').shift() || null;
+  }
+  return null;
+};
+
 const StockComparisonChart = () => {
   const [chartData, setChartData] = useState<
     ChartData<"bar" | "line", number[], string> | null
   >(null);
   const [loading, setLoading] = useState(true);
-  const storeId = 1;
 
   useEffect(() => {
     async function fetchComparisonData() {
       try {
+        const encodedStoreIdList = getCookieValue('storeIdList');
+
+        if (!encodedStoreIdList) {
+          console.error('storeIdList 쿠키를 찾을 수 없습니다.');
+          return;
+        }
+
+        const decodedStoreIdList = decodeURIComponent(encodedStoreIdList);
+        const storeIdList = JSON.parse(decodedStoreIdList);
+        const storeId = storeIdList[0];
+
         const response = await fetch(
           `https://jippy.duckdns.org/stock-ml/api/${storeId}/stock/comparison`,
           { cache: "no-store" }
         );
         const json = (await response.json()) as ComparisonResponse;
         const labels = json.data.labels;
-        // API에서 받은 전체 데이터 중 최근 30일만 사용하도록 필터링
         const cutoff = new Date();
         cutoff.setDate(cutoff.getDate() - 30);
 
-        // 필터링된 인덱스와 라벨을 구합니다.
         const filteredIndices: number[] = [];
         const filteredLabels: string[] = [];
         labels.forEach((dateStr, index) => {
@@ -93,7 +111,6 @@ const StockComparisonChart = () => {
           }
         });
 
-        // 각 데이터셋도 인덱스에 따라 필터링합니다.
         const filterData = (data: number[]) =>
           data.filter((_, index) => filteredIndices.includes(index));
 
@@ -135,7 +152,7 @@ const StockComparisonChart = () => {
     plugins: {
       title: {
         display: true,
-        text: "최근 30일 재고 판매 비교",
+        text: "최근 30일 재고 비교",
       },
       legend: {
         position: "bottom" as const,
@@ -151,10 +168,15 @@ const StockComparisonChart = () => {
     },
   };
 
+  const containerStyle = "h-96 bg-white rounded-lg shadow p-4";
+
   return (
-    <div>
+    <div className={containerStyle}>
       {loading ? (
-        <p>최근 30일 비교 데이터를 불러오는 중...</p>
+        <div className="h-full flex flex-col items-center justify-center gap-2">
+          <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+          <p className="text-gray-500 font-medium">최근 30일 비교 데이터를 불러오는 중...</p>
+        </div>
       ) : chartData ? (
         <Chart
           type="bar"
@@ -162,7 +184,9 @@ const StockComparisonChart = () => {
           options={options}
         />
       ) : (
-        <p>데이터가 없습니다.</p>
+        <div className="h-full flex items-center justify-center">
+          <p className="text-gray-500 font-medium">데이터가 없습니다.</p>
+        </div>
       )}
     </div>
   );

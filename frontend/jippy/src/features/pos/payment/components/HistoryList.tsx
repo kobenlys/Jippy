@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { PaymentHistoryItem, PaymentHistoryDetail } from "@/features/payment/types/history";
+import { PaymentHistoryItem, PaymentHistoryDetail } from "@/features/pos/payment/types/history";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -286,10 +286,10 @@ const PaymentHistoryList = ({
   };
 
   return (
-    <div className="bg-white shadow rounded-lg w-full max-w-6xl mx-auto">
+    <div className="w-full max-w-6xl mx-auto">
       <div className="p-4">
         <FilterTabs currentFilter={currentFilter} onFilterChange={handleFilterChange} />
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center border-b pb-4">
+        <div className="flex flex-col sm:flex-row gap-4 items-center border-b pb-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
             <label htmlFor="startDate" className="text-gray-600 whitespace-nowrap">
               시작일:
@@ -318,26 +318,32 @@ const PaymentHistoryList = ({
       </div>
 
       {loading ? (
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-2 text-gray-600">결제 내역을 불러오는 중...</p>
+        <div className="flex items-center justify-center" style={{ height: '400px' }}>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+            <p className="mt-2 text-gray-600">결제 내역을 불러오는 중...</p>
+          </div>
         </div>
       ) : error ? (
-        <div className="text-red-500 text-center py-4">{error}</div>
+        <div className="flex items-center justify-center" style={{ height: '400px' }}>
+          <div className="text-red-500 text-center">{error}</div>
+        </div>
       ) : filteredAndPaginatedPayments.length === 0 ? (
-        <div className="text-center py-4 text-gray-500">
-          결제 내역이 없습니다.
+        <div className="flex items-center justify-center" style={{ height: '400px' }}>
+          <div className="text-center text-gray-500">
+            결제 내역이 없습니다.
+          </div>
         </div>
       ) : (
-        <div className="overflow-hidden">
+        <div className="overflow-hidden p-4" style={{ minHeight: '400px' }}>
           <div className="min-w-full overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-center">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-4 py-2 text-left whitespace-nowrap">결제일시</th>
-                  <th className="px-4 py-2 text-right whitespace-nowrap">결제금액</th>
-                  <th className="px-4 py-2 text-center whitespace-nowrap">결제수단</th>
-                  <th className="px-4 py-2 text-center whitespace-nowrap">상태</th>
+                  <th className="px-4 py-2 whitespace-nowrap">결제일시</th>
+                  <th className="px-4 py-2 whitespace-nowrap">결제금액</th>
+                  <th className="px-4 py-2 whitespace-nowrap">결제수단</th>
+                  <th className="px-4 py-2 whitespace-nowrap">상태</th>
                 </tr>
               </thead>
               <tbody>
@@ -351,13 +357,13 @@ const PaymentHistoryList = ({
                     <td className="px-4 py-2 whitespace-nowrap">
                       {new Date(payment.createdAt).toLocaleString()}
                     </td>
-                    <td className="px-4 py-2 text-right text-orange-600 font-medium whitespace-nowrap">
+                    <td className="px-4 py-2 text-orange-600 font-medium whitespace-nowrap">
                       {payment.totalCost.toLocaleString()}원
                     </td>
-                    <td className="px-4 py-2 text-center whitespace-nowrap">
+                    <td className="px-4 py-2 whitespace-nowrap">
                       {payment.paymentType}
                     </td>
-                    <td className="px-4 py-2 text-center whitespace-nowrap">
+                    <td className="px-4 py-2 whitespace-nowrap">
                       <span
                         className={`px-2 py-1 rounded-full text-sm transition-colors
                         ${
@@ -377,7 +383,7 @@ const PaymentHistoryList = ({
             </table>
           </div>
 
-          <div className="flex justify-center items-center gap-1 sm:gap-2 p-4 flex-wrap">
+          <div className="flex justify-center items-center gap-1 sm:gap-2 p-4 flex-wrap mt-4">
             <button
               onClick={() => handlePageChange(1)}
               disabled={currentPage === 1}
