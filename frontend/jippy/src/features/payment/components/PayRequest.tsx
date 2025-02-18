@@ -64,8 +64,8 @@ const PaymentRequestComponent = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-white">
-      <Card className="w-full max-w-xl">
+    <div className="flex justify-center items-center min-h-screen bg-#f8f8f8">
+      <Card className="bg-white w-full max-w-xl">
         <div className="p-8">
           <h2 className="text-2xl font-bold mb-6">주문 결제</h2>{" "}
           <div className="space-y-6">
@@ -102,7 +102,7 @@ const PaymentRequestComponent = () => {
             <Button
               onClick={handlePayment}
               disabled={isLoading}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white mt-4"
+              className="w-full bg-jippy-orange hover:bg-orange-600 text-white mt-4"
             >
               {isLoading ? "처리중..." : "결제하기"}
             </Button>
