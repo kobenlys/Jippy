@@ -30,16 +30,28 @@ const LoginPage = () => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
-  const handleLogin = async () => {
-    console.log("API URL:", process.env.NEXT_PUBLIC_API_URL);
+  const setLoginTypeCookie = (type: string) => {
+    document.cookie = `loginType=${type}; path=/; max-age=2419200`;
+  };
 
+  const handleRouting = () => {
+    if (isPos) {
+      router.replace("/order");
+    } else if (userType === "OWNER") {
+      router.replace("/owner/dashboard");
+    } else if (userType === "STAFF") {
+      router.replace("/attendance");
+    }
+  };
+
+  const handleLogin = async () => {
     dispatch(loginStart());
     try {
       let adjustUserType: string = userType;
       if (userType === "POS") {
         adjustUserType = "OWNER";
       }
-      console.log(userType);
+      console.log(userType); // 삭제 필요
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/user/login`,
         {
@@ -66,6 +78,8 @@ const LoginPage = () => {
         // 로그인 성공 후 쿠키 설정 확인
         console.log("설정된 쿠키:", document.cookie);
 
+        setLoginTypeCookie(isPos ? "POS" : userType);
+
         dispatch(
           loginSuccess({
             profile: {
@@ -79,12 +93,6 @@ const LoginPage = () => {
             refreshToken: responseData.data.refreshToken,
           })
         );
-
-        // 직원인 경우 바로 출퇴근 페이지로 이동
-        if (userType === "STAFF") {
-          router.replace("/attendance");
-          return;
-        }
 
         // 매장 정보 조회 및 리덕스 업데이트
         try {
@@ -142,16 +150,7 @@ const LoginPage = () => {
               if (userShops.length > 0) {
                 dispatch(setShops(userShops));
                 dispatch(setCurrentShop(userShops[0]));
-                if (isPos) {
-                  document.cookie = `loginType=${"POS"}; path=/; max-age=2419200`;
-                  router.replace("/order");
-                } else if (userType == "OWNER") {
-                  document.cookie = `loginType=${"OWNER"}; path=/; max-age=2419200`;
-                  router.replace("/owner/dashboard");
-                } else if (userType == "STAFF") {
-                  document.cookie = `loginType=${"STAFF"}; path=/; max-age=2419200`;
-                  router.replace("/attendance");
-                }
+                handleRouting();
               } else {
                 console.log("필터링 후 매장이 없음");
                 router.replace("/shop/create");
@@ -194,7 +193,7 @@ const LoginPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     handleLogin();
-    e.preventDefault(); // 기본 폼 제출 동작 방지
+    e.preventDefault();
   };
 
   return (
