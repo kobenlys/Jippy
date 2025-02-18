@@ -73,7 +73,7 @@ const WeeklyPredictionChart = () => {
     async function fetchWeeklyPrediction() {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/stock-ml/api/${storeId}/predictions/weekly`,
+          `https://jippy.duckdns.org/stock-ml/api/${storeId}/predictions/weekly`,
           { cache: "no-store" }
         );
         const json = (await response.json()) as WeeklyPredictionResponse;
