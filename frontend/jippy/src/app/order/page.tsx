@@ -42,10 +42,17 @@ const POSPage = () => {
 
     if (existingItemIndex > -1) {
       const updatedOrder = [...currentOrder];
-      updatedOrder[existingItemIndex].quantity += 1;
+      updatedOrder[existingItemIndex] = {
+        ...updatedOrder[existingItemIndex],
+        quantity: updatedOrder[existingItemIndex].quantity + 1,
+        name: product.name, // 🔹 상품 이름 추가
+      };
       setCurrentOrder(updatedOrder);
     } else {
-      setCurrentOrder([...currentOrder, { ...product, quantity: 1 }]);
+      setCurrentOrder([
+        ...currentOrder,
+        { ...product, quantity: 1, name: product.name },
+      ]);
     }
   };
 
@@ -54,7 +61,9 @@ const POSPage = () => {
       setCurrentOrder(currentOrder.filter((item) => item.id !== productId));
     } else {
       const updatedOrder = currentOrder.map((item) =>
-        item.id === productId ? { ...item, quantity: newQuantity } : item
+        item.id === productId
+          ? { ...item, quantity: newQuantity, name: item.name }
+          : item
       );
       setCurrentOrder(updatedOrder);
     }
@@ -181,10 +190,13 @@ const POSPage = () => {
         storeId: Number(storeId),
         products: currentOrder.map((item) => ({
           id: item.id,
+          name: item.name,
+          type: item.type,
+          size: item.size,
           quantity: item.quantity,
         })),
       };
-
+      console.log("QR 결제 요청 데이터:", orderData);
       try {
         localStorage.setItem("orderData", JSON.stringify(orderData));
         router.push("/payment/request");

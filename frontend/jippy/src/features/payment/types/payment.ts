@@ -1,3 +1,5 @@
+import { ProductSize, ProductType } from "@/redux/types/product";
+
 export interface PaymentState {
   loading: boolean;
   error: string | null;
@@ -11,7 +13,10 @@ export interface OrderData {
   storeId: number;
   products: Array<{
     id: number;
+    name: string;
     quantity: number;
+    type: ProductType;
+    size: ProductSize;
   }>;
 }
 

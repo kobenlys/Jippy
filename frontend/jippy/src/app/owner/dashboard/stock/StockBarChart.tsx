@@ -21,7 +21,6 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 const StockBarChart = () => {
   const stockData = useSelector((state: RootState) => state.stock) as StockItem[];
 
-  // 모든 재고 항목을 재고 총량 기준 내림차순 정렬
   const sortedStocks = [...stockData].sort((a, b) => b.stockTotalValue - a.stockTotalValue);
 
   const labels = sortedStocks.map((stock) => stock.stockName);
@@ -52,7 +51,6 @@ const StockBarChart = () => {
     },
   };
 
-  // key를 data.labels 기반으로 지정하여 데이터 변경 시 컴포넌트 재생성 (legend 갱신)
   return (
     <div className="p-4">
       <Bar key={labels.join("-")} data={data} options={options} />
