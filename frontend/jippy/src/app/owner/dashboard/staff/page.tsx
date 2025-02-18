@@ -42,12 +42,6 @@ const StaffDashboardPage = () => {
     }
   }, [router]);
 
-  // useEffect(() => {
-  // }, [storeId]);
-
-  // useEffect(() => {
-  // }, [ownerName]);
-
   if (storeId === null) {
     return <LoadingSpinner />;
   }
@@ -76,7 +70,6 @@ const StaffDashboardPage = () => {
         <StaffPerformanceCard storeId={storeId} />
         <StaffListCard storeId={storeId} />
       </div>
-
     </div>
   );
 };

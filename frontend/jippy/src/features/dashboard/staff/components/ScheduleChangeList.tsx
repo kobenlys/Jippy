@@ -1,9 +1,5 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/features/common/components/ui/card/Card";
+import { Card } from "@/features/common/components/ui/card/Card";
+import { CalendarClock } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 interface ScheduleRequest {
@@ -29,6 +25,7 @@ const ScheduleChangeList: React.FC<ScheduleChangeListProps> = ({ storeId }) => {
   const fetchRequests = useCallback(async () => {
     try {
       setIsLoading(true);
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/attendance/${storeId}/tempChange/list`
       );
@@ -40,7 +37,7 @@ const ScheduleChangeList: React.FC<ScheduleChangeListProps> = ({ storeId }) => {
         console.error("근무 변경 요청 목록 조회 실패");
       }
     } catch (error) {
-      console.error("근무 변경 요청 목록 조회 실패", error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -74,8 +71,7 @@ const ScheduleChangeList: React.FC<ScheduleChangeListProps> = ({ storeId }) => {
         alert("근무 변경 요청 승인에 실패했습니다.");
       }
     } catch (error) {
-      console.error("근무 변경 요청 승인 중 오류 발생:", error);
-      alert("근무 변경 요청 승인 중 오류가 발생했습니다.");
+      throw error;
     }
   };
 
@@ -91,42 +87,64 @@ const ScheduleChangeList: React.FC<ScheduleChangeListProps> = ({ storeId }) => {
     )}-${String(date.getDate()).padStart(2, "0")}`;
   };
 
+  if (isLoading) return null;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>근무 변경 요청 목록</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="text-center py-4">로딩 중...</div>
-        ) : requests.length === 0 ? (
-          <div className="text-center py-4 text-gray-500">
-            근무 변경 요청이 없습니다.
+    <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-semibold text-[#3D3733]">
+              근무 변경 요청 목록
+            </h2>
+            {requests.length > 0 && (
+              <span className="ml-2 px-2 py-1 bg-[#F27B39]/10 text-jippy-orange rounded-full text-[15px]">
+                총 {requests.length}건
+              </span>
+            )}
+          </div>
+        </div>
+
+        {requests.length === 0 ? (
+          <div className="py-12 flex flex-col items-center justify-center text-gray-500">
+            <CalendarClock className="h-12 w-12 mb-4 text-gray-300" />
+            <p className="text-center mb-1">근무 변경 요청이 없습니다.</p>
+            <p className="text-sm text-center text-gray-400">
+              새로운 근무 변경 요청이 들어오면 이곳에 표시됩니다.
+            </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {requests.map((request) => (
               <div
                 key={request.uuid}
-                className="border rounded-lg p-4 space-y-2"
+                className="bg-gray-50 rounded-lg p-4 border border-gray-100"
               >
                 <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium">{request.staffName}</h3>
-                    <div className="text-sm text-gray-500">
-                      <div>
-                        변경 전: {formatDate(request.beforeYear)}{" "}
-                        {request.beforeCheckIn} - {request.beforeCheckOut}
+                  <div className="space-y-2">
+                    <h3 className="font-medium text-[15px]">
+                      {request.staffName}
+                    </h3>
+                    <div className="space-y-1">
+                      <div className="text-sm text-gray-500">
+                        변경 전 :{" "}
+                        <span className="text-gray-700">
+                          {formatDate(request.beforeYear)}{" "}
+                          {request.beforeCheckIn} - {request.beforeCheckOut}
+                        </span>
                       </div>
-                      <div>
-                        변경 후: {formatDate(request.newYear)}{" "}
-                        {request.newCheckIn} - {request.newCheckOut}
+                      <div className="text-sm text-gray-500">
+                        변경 후 :{" "}
+                        <span className="text-[#F27B39]">
+                          {formatDate(request.newYear)} {request.newCheckIn} -{" "}
+                          {request.newCheckOut}
+                        </span>
                       </div>
                     </div>
                   </div>
                   <button
                     onClick={() => handleApprove(request)}
-                    className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
+                    className="px-4 py-2 bg-jippy-orange text-white rounded-lg hover:bg-[#D8692E] transition-colors"
                   >
                     승인
                   </button>
@@ -135,7 +153,7 @@ const ScheduleChangeList: React.FC<ScheduleChangeListProps> = ({ storeId }) => {
             ))}
           </div>
         )}
-      </CardContent>
+      </div>
     </Card>
   );
 };

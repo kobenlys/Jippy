@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import TodoItem from "./TodoItem";
-import LoadingSpinner from "@/features/common/components/ui/LoadingSpinner";
-import { ChevronUp } from "lucide-react";
+import { CheckSquare } from "lucide-react";
 import useTodoList from "../hooks/useTodo";
+import { Card } from "@/features/common/components/ui/card/Card";
 
 interface TodoListProps {
   storeId: number;
@@ -13,12 +13,10 @@ interface TodoListProps {
 const TodoList = ({ storeId }: TodoListProps) => {
   const [showInput, setShowInput] = useState(false);
   const [newTodoTitle, setNewTodoTitle] = useState("");
-  const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const { todos, isLoading, error, handleToggle, handleDelete, handleAddTodo } =
+  const { todos, isLoading, handleToggle, handleDelete, handleAddTodo } =
     useTodoList({
       storeId,
-      onScrollChange: (scrolled) => setShowScrollTop(scrolled),
     });
 
   const onAddTodo = async () => {
@@ -31,71 +29,100 @@ const TodoList = ({ storeId }: TodoListProps) => {
     }
   };
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  if (isLoading) return <LoadingSpinner />;
-  if (error) return <div className="text-red-500 text-center p-4">{error}</div>;
+  if (isLoading) return null;
+  if (!todos || todos.length === 0) {
+    return (
+      <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-[#3D3733]">할 일 목록</h2>
+            <button
+              onClick={() => setShowInput(true)}
+              className="w-8 h-8 flex items-center justify-center text-[24px] text-jippy-orange font-bold rounded hover:bg-orange-50 transition-colors"
+            >
+              +
+            </button>
+          </div>
+          {showInput ? (
+            <div className="mb-4 flex gap-2">
+              <input
+                type="text"
+                value={newTodoTitle}
+                onChange={(e) => setNewTodoTitle(e.target.value)}
+                placeholder="할 일을 입력하세요"
+                className="flex-1 p-2 border rounded-lg focus:outline-none focus:border-jippy-orange focus:ring-2 focus:ring-[#F27B39]/20"
+                onKeyPress={(e) => e.key === "Enter" && onAddTodo()}
+              />
+              <button
+                onClick={onAddTodo}
+                className="px-4 py-2 bg-jippy-orange text-white rounded-lg hover:bg-[#D8692E] transition-colors"
+              >
+                추가
+              </button>
+            </div>
+          ) : (
+            <div className="py-12 flex flex-col items-center justify-center text-gray-500">
+              <CheckSquare className="h-12 w-12 mb-4 text-gray-300" />
+              <p className="text-center mb-1">등록된 할 일이 없습니다.</p>
+              <p className="text-sm text-center text-gray-400">
+                새로운 할 일을 추가해주세요.
+              </p>
+            </div>
+          )}
+        </div>
+      </Card>
+    );
+  }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold">할 일 목록</h2>
-        <button
-          onClick={() => setShowInput(!showInput)}
-          className="w-8 h-8 flex items-center justify-center text-2xl text-[#ff5c00] font-bold rounded hover:bg-orange-50"
-        >
-          +
-        </button>
-      </div>
-
-      {showInput && (
-        <div className="mb-4 flex gap-2">
-          <input
-            type="text"
-            value={newTodoTitle}
-            onChange={(e) => setNewTodoTitle(e.target.value)}
-            placeholder="할 일을 입력하세요"
-            className="flex-1 p-2 border rounded focus:outline-none focus:border-[#ff5c00]"
-            onKeyPress={(e) => e.key === "Enter" && onAddTodo()}
-          />
+    <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-semibold text-[#3D3733]">할 일 목록</h2>
+            <span className="ml-2 px-2 py-1 bg-[#F27B39]/10 text-jippy-orange rounded-full text-[15px]">
+              총 {todos.length}개
+            </span>
+          </div>
           <button
-            onClick={onAddTodo}
-            className="px-4 py-2 bg-[#ff5c00] text-white rounded hover:bg-[#ff4400]"
+            onClick={() => setShowInput(!showInput)}
+            className="w-8 h-8 flex items-center justify-center text-[24px] text-jippy-orange font-bold rounded hover:bg-orange-50 transition-colors"
           >
-            추가
+            +
           </button>
         </div>
-      )}
 
-      <div className="space-y-2">
-        {todos.length > 0 ? (
-          todos.map((todo) => (
+        {showInput && (
+          <div className="mb-4 flex gap-2">
+            <input
+              type="text"
+              value={newTodoTitle}
+              onChange={(e) => setNewTodoTitle(e.target.value)}
+              placeholder="할 일을 입력하세요"
+              className="flex-1 p-2 border rounded-lg focus:outline-none focus:border-jippy-orange focus:ring-2 focus:ring-[#F27B39]/20"
+              onKeyPress={(e) => e.key === "Enter" && onAddTodo()}
+            />
+            <button
+              onClick={onAddTodo}
+              className="px-4 py-2 bg-jippy-orange text-white rounded-lg hover:bg-[#D8692E] transition-colors"
+            >
+              추가
+            </button>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          {todos.map((todo) => (
             <TodoItem
               key={todo.id}
               todo={todo}
               onToggle={handleToggle}
               onDelete={handleDelete}
             />
-          ))
-        ) : (
-          <div className="text-center text-gray-500 py-4">
-            등록된 할 일이 없습니다.
-          </div>
-        )}
+          ))}
+        </div>
       </div>
-
-      {showScrollTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-8 right-8 w-10 h-10 bg-[#ff5c00] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#ff7c33] transition-all"
-          aria-label="맨 위로 스크롤"
-        >
-          <ChevronUp size={20} />
-        </button>
-      )}
-    </div>
+    </Card>
   );
 };
 

@@ -1,12 +1,12 @@
 "use client";
 
 import useStaffList from "@/features/dashboard/staff/hooks/useStaffManagement";
-import LoadingSpinner from "@/features/common/components/ui/LoadingSpinner";
 import { Users } from "lucide-react";
 import { StaffInfo, UpdateStaffRequest } from "../types/staff";
 import { useState } from "react";
 import staffApi from "../hooks/staffApi";
 import StaffEditModal from "./StaffEditModal";
+import { Card } from "@/features/common/components/ui/card/Card";
 import StaffAttendanceList from "./StaffAttendanceList";
 
 interface StaffListCardProps {
@@ -50,21 +50,20 @@ const StaffListCard = ({ storeId }: StaffListCardProps) => {
     error,
     refreshList,
   } = useStaffList(storeId);
-  const [currentFilter, setCurrentFilter] = useState<"update" | "attendance">("update");
+  const [currentFilter, setCurrentFilter] = useState<"update" | "attendance">(
+    "update"
+  );
   const [selectedStaff, setSelectedStaff] = useState<StaffInfo | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  if (isLoading) return <LoadingSpinner />;
-  if (error) return <div>에러 발생: {error.message}</div>;
-  if (!staffList) return <div>데이터가 없습니다.</div>;
+  if (isLoading) return null;
 
   const handleFilterChange = (newFilter: "update" | "attendance") => {
     setCurrentFilter(newFilter);
     setSelectedStaff(null);
   };
-  
+
   const handleStaffClick = (staff: StaffInfo) => {
-    console.log("Selected staff:", staff);
     setSelectedStaff(staff);
     setIsModalOpen(true);
   };
@@ -77,7 +76,6 @@ const StaffListCard = ({ storeId }: StaffListCardProps) => {
       await staffApi.updateStaff(storeId, staffId, updates);
       refreshList();
     } catch (error) {
-      console.error("Failed to update staff:", error);
       throw error;
     }
   };
@@ -87,53 +85,119 @@ const StaffListCard = ({ storeId }: StaffListCardProps) => {
       await staffApi.deleteStaff(storeId, staffId);
       refreshList();
     } catch (error) {
-      console.error("Failed to delete staff:", error);
       throw error;
     }
   };
 
-  return (
-    <>
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b">
-          <div className="flex items-center justify-between">
-            <FilterTabs currentFilter={currentFilter} onFilterChange={handleFilterChange} />
-            <Users className="w-5 h-5 text-gray-500" />
-          </div>
-        </div>
+  const getStaffTypeDisplay = (type: string) => {
+    switch (type) {
+      case "MANAGER":
+        return "매니저";
+      case "STAFF":
+        return "직원";
+      default:
+        return type;
+    }
+  };
 
-        <div className="p-4">
+  if (!staffList || staffList.length === 0) {
+    return (
+      <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <FilterTabs
+              currentFilter={currentFilter}
+              onFilterChange={handleFilterChange}
+            />
+            <Users className="w-5 h-5 text-gray-400" />
+          </div>
           {currentFilter === "update" ? (
-            // 직원 목록 표시
-            <div className="space-y-4">
-              {staffList.map((staff) => (
-                <div
-                  key={staff.staffId}
-                  className="p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-                  onClick={() => handleStaffClick(staff)}
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-bold">{staff.staffName}</h3>
-                      <p className="text-sm text-gray-600">{staff.staffType}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">
-                        {staff.staffSalary.toLocaleString()}원
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {staff.staffSalaryType}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="py-12 flex flex-col items-center justify-center text-gray-500">
+              <Users className="h-12 w-12 mb-4 text-gray-300" />
+              <p className="text-center mb-1">등록된 직원이 없습니다.</p>
             </div>
           ) : (
-            // 근태 현황 표시
             <StaffAttendanceList storeId={storeId} />
           )}
         </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <FilterTabs
+            currentFilter={currentFilter}
+            onFilterChange={handleFilterChange}
+          />
+          {currentFilter === "update" && (
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-1 bg-[#F27B39]/10 text-[#F27B39] rounded-full text-[15px]">
+                총 {staffList.length}명
+              </span>
+              <Users className="w-5 h-5 text-gray-400" />
+            </div>
+          )}
+        </div>
+
+        {currentFilter === "update" ? (
+          <div className="overflow-x-auto">
+            <div className="max-h-[280px] overflow-y-auto pr-4">
+              <table className="w-full">
+                <thead className="sticky top-0 bg-white z-10 shadow-[0px_1px_0px_0px_rgba(0,0,0,0.1)]">
+                  <tr>
+                    <th className="py-3 text-left text-[15px] font-medium text-gray-500 pl-2">
+                      이름
+                    </th>
+                    <th className="py-3 text-left text-[15px] font-medium text-gray-500">
+                      직원 구분
+                    </th>
+                    <th className="py-3 text-right text-[15px] font-medium text-gray-500">
+                      급여
+                    </th>
+                    <th className="py-3 text-right text-[15px] font-medium text-gray-500 pr-2">
+                      급여 타입
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {staffList.map((staff) => (
+                    <tr
+                      key={staff.staffId}
+                      onClick={() => handleStaffClick(staff)}
+                      className="border-b border-gray-50 hover:bg-gray-50/80 transition-colors cursor-pointer"
+                    >
+                      <td className="py-4 font-medium pl-2">
+                        {staff.staffName}
+                      </td>
+                      <td className="py-4">
+                        <span
+                          className={`px-2 py-1 rounded-full ${
+                            staff.staffType === "MANAGER"
+                              ? "bg-blue-50 text-blue-500"
+                              : "bg-gray-100 text-gray-500"
+                          }`}
+                        >
+                          {getStaffTypeDisplay(staff.staffType)}
+                        </span>
+                      </td>
+                      <td className="py-4 text-right">
+                        {staff.staffSalary.toLocaleString()}원
+                      </td>
+                      <td className="py-4 text-right pr-2">
+                        {staff.staffSalaryType}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <StaffAttendanceList storeId={storeId} />
+        )}
       </div>
 
       {selectedStaff && (
@@ -145,7 +209,7 @@ const StaffListCard = ({ storeId }: StaffListCardProps) => {
           onDelete={handleDeleteStaff}
         />
       )}
-    </>
+    </Card>
   );
 };
 
