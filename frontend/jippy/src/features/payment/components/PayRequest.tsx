@@ -33,7 +33,6 @@ const PaymentRequestComponent = () => {
 
   const handlePayment = async () => {
     try {
-      console.log("dd");
       setIsLoading(true);
       const orderId = generateRandomOrderId();
 
@@ -66,10 +65,10 @@ const PaymentRequestComponent = () => {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-md">
-        <div className="p-6">
-          <h2 className="text-xl font-bold mb-4">주문 결제</h2>
-          <div className="space-y-4">
+      <Card className="w-full max-w-xl">
+        <div className="p-8">
+          <h2 className="text-2xl font-bold mb-6">주문 결제</h2>{" "}
+          <div className="space-y-6">
             <div className="flex justify-between items-center">
               <span className="text-gray-600">주문 금액</span>
               <span className="font-semibold">
@@ -92,7 +91,9 @@ const PaymentRequestComponent = () => {
                     key={index}
                     className="flex justify-between items-center text-sm"
                   >
-                    <span>상품 ID: {product.id}</span>
+                    <span>
+                      [{product.size}] {product.name} ({product.type})
+                    </span>
                     <span>수량: {product.quantity}개</span>
                   </div>
                 ))}
