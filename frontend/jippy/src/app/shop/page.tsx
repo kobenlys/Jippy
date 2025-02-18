@@ -25,6 +25,7 @@ export default function ShopsPage() {
 
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [userId, setUserId] = useState<number | null>(null); // ✅ userId는 숫자로 처리
+  const [loginType, setLoginType] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -38,9 +39,14 @@ export default function ShopsPage() {
           .split("; ")
           .find((cookie) => cookie.startsWith("userId="))
           ?.split("=")[1] || null;
-
+      const loginType =
+        document.cookie
+          .split("; ")
+          .find((cookie) => cookie.startsWith("loginType="))
+          ?.split("=")[1] || null;
       setAccessToken(token);
       setUserId(userIdString ? Number(userIdString) : null); // ✅ userId를 숫자로 변환
+      setLoginType(loginType);
     }
   }, []);
 
@@ -106,7 +112,11 @@ export default function ShopsPage() {
 
       const selectedShop = shops.find((shop) => shop.id === storeId);
       if (selectedShop) {
-        router.replace("/owner/dashboard/sale");
+        if (loginType === "OWNER") {
+          router.replace("/owner/dashboard/sale");
+        } else if (loginType === "POS") {
+          router.replace("/order");
+        }
         setTimeout(() => setTriggerFetch((prev) => !prev), 100); // ✅ 상태 변경으로 리렌더링 유도
       } else {
         throw new Error("매장을 찾을 수 없습니다.");

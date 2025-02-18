@@ -1,11 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAppDispatch } from "@/redux/hooks";
 import ProductGrid from "@/features/order/components/ProductGrid";
 import { ProductDetailResponse } from "@/redux/types/product";
-import { setOrderData } from "@/redux/slices/paymentSlice";
 import { OrderItem, PaymentMethod } from "@/features/order/types/pos";
 import {
   calculateTotal,
@@ -14,35 +12,27 @@ import {
 import { OrderPayment } from "@/features/order/components/OrderSummary";
 import { CashPaymentModal } from "@/features/order/components/CashPaymentModal";
 
-// interface CashPaymentRequest {
-//   storeId: number;
-//   totalCost: number;
-//   paymentType: "CASH" | "QRCODE";
-//   productList: Array<{
-//     productId: number;
-//     quantity: number;
-//   }>;
-//   cashRequest: {
-//     fifty_thousand_won: number;
-//     ten_thousand_won: number;
-//     five_thousand_won: number;
-//     one_thousand_won: number;
-//     five_hundred_won: number;
-//     one_hundred_won: number;
-//     fifty_won: number;
-//     ten_won: number;
-//   };
-// }
-
 const POSPage = () => {
   const router = useRouter();
-  const dispatch = useAppDispatch();
 
   const [currentOrder, setCurrentOrder] = useState<OrderItem[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(
     null
   );
   const [isCashModalOpen, setIsCashModalOpen] = useState(false);
+  const [storeId, setStoreId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      const storeIdFromCookie =
+        document.cookie
+          .split("; ")
+          .find((cookie) => cookie.startsWith("selectStoreId="))
+          ?.split("=")[1] || null;
+
+      setStoreId(storeIdFromCookie);
+    }
+  }, []);
 
   const handleAddProduct = (productDetail: ProductDetailResponse) => {
     const product = convertToProduct(productDetail);
@@ -96,7 +86,7 @@ const POSPage = () => {
   }) => {
     try {
       const paymentRequest = {
-        storeId: request.storeId,
+        storeId: Number(storeId),
         totalCost: request.totalCost,
         paymentType: "CASH",
         productList: request.productList,
@@ -140,7 +130,7 @@ const POSPage = () => {
 
         // 결제 내역 추가 API 호출
         const historyResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/add?storeId=${request.storeId}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/add?storeId=${storeId}`,
           {
             method: "POST",
             headers: {
@@ -197,7 +187,7 @@ const POSPage = () => {
         totalAmount: calculateTotal(currentOrder),
         orderName: `주문 ${new Date().toLocaleString()}`,
         customerName: "고객",
-        storeId: 1,
+        storeId: Number(storeId),
         products: currentOrder.map((item) => ({
           id: item.id,
           name: item.name,
@@ -208,7 +198,6 @@ const POSPage = () => {
       };
       console.log("QR 결제 요청 데이터:", orderData);
       try {
-        dispatch(setOrderData(orderData));
         localStorage.setItem("orderData", JSON.stringify(orderData));
         router.push("/payment/request");
       } catch (error) {
@@ -247,7 +236,7 @@ const POSPage = () => {
         onClose={() => setIsCashModalOpen(false)}
         totalAmount={calculateTotal(currentOrder)}
         onConfirm={handleCashPayment}
-        storeId={1}
+        storeId={Number(storeId)}
         productList={currentOrder.map((item) => ({
           productId: item.id,
           quantity: item.quantity,

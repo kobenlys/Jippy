@@ -20,9 +20,10 @@ interface ProductGridProps {
 const ProductGrid = ({
   onProductSelect,
   onAddProduct,
-  // showAddButton = true,
-}: ProductGridProps) => {
+}: // showAddButton = true,
+ProductGridProps) => {
   const dispatch = useDispatch<AppDispatch>();
+  const [storeId, setStoreId] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<
     ProductDetailResponse[] | null
   >(null);
@@ -32,16 +33,27 @@ const ProductGrid = ({
   // const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
   const DEFAULT_IMAGE_PATH = "/images/ProductPlaceholder.png";
 
-  const currentShop = useSelector((state: RootState) => state.shop.currentShop);
   const { products, loading, error } = useSelector(
     (state: RootState) => state.product
   );
 
   useEffect(() => {
-    if (currentShop?.id) {
-      dispatch(fetchProducts(currentShop.id));
+    if (typeof document !== "undefined") {
+      const storeIdFromCookie =
+        document.cookie
+          .split("; ")
+          .find((cookie) => cookie.startsWith("selectStoreId="))
+          ?.split("=")[1] || null;
+
+      setStoreId(storeIdFromCookie);
     }
-  }, [dispatch, currentShop?.id]);
+  }, []);
+
+  useEffect(() => {
+    if (storeId) {
+      dispatch(fetchProducts(Number(storeId)));
+    }
+  }, [dispatch, storeId]);
 
   const handleCategorySelect = (
     categoryName: string,
@@ -89,7 +101,7 @@ const ProductGrid = ({
     setSelectedProduct(null);
   };
 
-  if (!currentShop) return <div>매장을 선택해주세요.</div>;
+  if (!storeId) return <div>매장을 선택해주세요.</div>;
   if (loading)
     return (
       <div className="flex justify-center items-center h-full">

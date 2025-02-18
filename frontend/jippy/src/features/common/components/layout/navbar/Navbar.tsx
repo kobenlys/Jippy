@@ -111,9 +111,9 @@ const Navbar = () => {
               <Link href="/payment/history" className={styles.navLink}>
                 결제내역
               </Link>
-              <Link href="/owner/dashboard/stock" className={styles.navLink}>
+              {/* <Link href="/owner/dashboard/stock" className={styles.navLink}>
                 관리모드
-              </Link>
+              </Link> */}
             </div>
 
             <Link href="/qr" className={styles.qrButton}>
