@@ -2,18 +2,22 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import ProductGrid from "@/features/order/components/ProductGrid";
+import ProductGrid from "@/features/pos/order/components/ProductGrid";
 import { ProductDetailResponse } from "@/redux/types/product";
-import { OrderItem, PaymentMethod } from "@/features/order/types/pos";
+import { OrderItem, PaymentMethod } from "@/features/pos/order/types/pos";
 import {
   calculateTotal,
   convertToProduct,
-} from "@/features/order/components/utils";
-import { OrderPayment } from "@/features/order/components/OrderSummary";
-import { CashPaymentModal } from "@/features/order/components/CashPaymentModal";
+} from "@/features/pos/order/components/utils";
+import { OrderPayment } from "@/features/pos/order/components/OrderSummary";
+import { CashPaymentModal } from "@/features/pos/order/components/CashPaymentModal";
+import { useDispatch } from 'react-redux';
+import { setOrderData } from '@/redux/slices/paymentSlice'; // 이 액션을 생성해야 합니다
+
 
 const POSPage = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const [currentOrder, setCurrentOrder] = useState<OrderItem[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(
@@ -197,9 +201,11 @@ const POSPage = () => {
         })),
       };
       console.log("QR 결제 요청 데이터:", orderData);
+
       try {
-        localStorage.setItem("orderData", JSON.stringify(orderData));
-        router.push("/payment/request");
+        dispatch(setOrderData(orderData));
+        // localStorage.setItem("orderData", JSON.stringify(orderData));
+        router.push("payment/request");
       } catch (error) {
         console.error("Error saving order data:", error);
         alert("주문 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
@@ -214,7 +220,7 @@ const POSPage = () => {
   };
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full overflow-hidden">
       <div className="w-4/6 overflow-y-auto pb-8">
         <ProductGrid onAddProduct={handleAddProduct} />
       </div>
