@@ -135,10 +135,10 @@ const CardContent = ({
 }) => <div className={`p-2 ${className || ""}`}>{children}</div>;
 
 const Dashboard = () => {
-  const startMonthDate = "2024-01-01";
-  const endMonthDate = "2024-12-31";
-  const startMonthNowDate = "2025-01-01";
-  const endMonthNowDate = "2025-12-31";
+  const startMonthDate = "2024-01";
+  const endMonthDate = "2024-13";
+  const startMonthNowDate = "2025-01";
+  const endMonthNowDate = "2025-13";
 
   // 클라이언트 사이드에서만 실행하도록 변경
   const [accessToken, setAccessToken] = useState<string | null>(null);
