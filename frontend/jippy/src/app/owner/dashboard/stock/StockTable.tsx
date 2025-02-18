@@ -24,21 +24,29 @@ const StockTable = () => {
 
   const deleteStock = async (storeId: number, stockName: string) => {
     if (!window.confirm(`${stockName} 재고를 삭제하시겠습니까?`)) return;
-    // 예시로 단위 정보는 고정값으로 전달합니다.
+    // 삭제할 재고 정보를 찾습니다.
+    const targetItem = stockData.find((item) => item.stockName === stockName);
+    if (!targetItem || targetItem.stock.length === 0) {
+      alert("삭제할 재고 정보가 없습니다.");
+      return;
+    }
+    // 여기서는 첫번째 단위를 삭제 대상으로 사용합니다.
+    const { stockUnitSize, stockUnit } = targetItem.stock[0];
+  
     const payload = {
       inventory: [
         {
           stock: [
             {
-              stockUnitSize: 100,
-              stockUnit: "g",
+              stockUnitSize: stockUnitSize,
+              stockUnit: stockUnit,
               isDisposal: true,
             },
           ],
         },
       ],
     };
-
+  
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/stock/${storeId}/delete/${encodeURIComponent(stockName)}`,
