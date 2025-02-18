@@ -1,5 +1,3 @@
-"use client";
-
 import { DAYS_OF_WEEK } from "../types/calendar";
 
 const CalendarHeader = () => {

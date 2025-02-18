@@ -48,6 +48,7 @@ const ScheduleChangeList: React.FC<ScheduleChangeListProps> = ({ storeId }) => {
 
   const handleApprove = async (request: ScheduleRequest) => {
     try {
+      console.log(request);
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/attendance/${storeId}/tempChange/${request.staffId}`,
         {
@@ -68,7 +69,7 @@ const ScheduleChangeList: React.FC<ScheduleChangeListProps> = ({ storeId }) => {
 
       if (data.success) {
         alert("근무 변경 요청이 승인되었습니다.");
-        fetchRequests(); // 목록 새로고침
+        fetchRequests();
       } else {
         alert("근무 변경 요청 승인에 실패했습니다.");
       }

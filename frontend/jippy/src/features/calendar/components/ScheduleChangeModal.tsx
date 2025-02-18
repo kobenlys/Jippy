@@ -1,8 +1,6 @@
-"use client";
-
 import React, { useState } from "react";
 import { StaffScheduleData } from "../types/calendar";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 interface Schedule {
   id: string;
@@ -35,13 +33,16 @@ const ScheduleChangeModal: React.FC<ScheduleChangeModalProps> = ({
 }) => {
   const router = useRouter();
   const [step, setStep] = useState<number>(1);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(
     null
   );
-  const [newDate, setNewDate] = useState<string>("");
-  const [newStartTime, setNewStartTime] = useState<string>("");
-  const [newEndTime, setNewEndTime] = useState<string>("");
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [originalDate, setOriginalDate] = useState<string>("");
+  const [newSchedule, setNewSchedule] = useState({
+    date: "",
+    startTime: "",
+    endTime: "",
+  });
 
   const schedules =
     scheduleData?.schedules.map((schedule) => ({
@@ -56,20 +57,31 @@ const ScheduleChangeModal: React.FC<ScheduleChangeModalProps> = ({
   const days = ["일", "월", "화", "수", "목", "금", "토"] as const;
 
   const handleDateChange = (date: string) => {
-    setNewDate(date);
-    if (step === 1) {
-      const dayIndex = new Date(date).getDay();
-      const dayName = days[dayIndex];
-      const schedule = schedules.find((s) => s.dayOfWeek === dayName);
+    setOriginalDate(date);
+    const dayIndex = new Date(date).getDay();
+    const dayName = days[dayIndex];
+    const schedule = schedules.find((s) => s.dayOfWeek === dayName);
 
-      if (schedule) {
-        setSelectedSchedule(schedule);
-        setNewStartTime(schedule.startTime);
-        setNewEndTime(schedule.endTime);
-      } else {
-        setSelectedSchedule(null);
-      }
+    if (schedule) {
+      setSelectedSchedule(schedule);
+      setNewSchedule({
+        date: date,
+        startTime: schedule.startTime,
+        endTime: schedule.endTime,
+      });
+    } else {
+      setSelectedSchedule(null);
     }
+  };
+
+  const handleNewScheduleChange = (
+    field: "date" | "startTime" | "endTime",
+    value: string
+  ) => {
+    setNewSchedule((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   const submitScheduleChange = async () => {
@@ -88,16 +100,16 @@ const ScheduleChangeModal: React.FC<ScheduleChangeModalProps> = ({
       const storeIdList = JSON.parse(decodedStoreIdList);
       const storeId = storeIdList[0];
 
-      const beforeDate = selectedSchedule ? newDate : "";
       const requestData = {
-        beforeYear: beforeDate,
+        beforeYear: originalDate,
         beforeCheckIn: selectedSchedule?.startTime || "",
         beforeCheckOut: selectedSchedule?.endTime || "",
-        newYear: newDate,
-        newCheckIn: newStartTime,
-        newCheckOut: newEndTime,
+        newYear: newSchedule.date,
+        newCheckIn: newSchedule.startTime,
+        newCheckOut: newSchedule.endTime,
       };
 
+      console.log("변경 요청 body", requestData);
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/attendance/${storeId}/tempChange/${userId}/request`,
         {
@@ -109,6 +121,8 @@ const ScheduleChangeModal: React.FC<ScheduleChangeModalProps> = ({
           credentials: "include",
         }
       );
+
+      console.log("변경 요청 응답", response);
 
       if (!response.ok) {
         throw new Error("근무 변경 요청에 실패했습니다.");
@@ -138,9 +152,12 @@ const ScheduleChangeModal: React.FC<ScheduleChangeModalProps> = ({
   const handleClose = (): void => {
     setStep(1);
     setSelectedSchedule(null);
-    setNewDate("");
-    setNewStartTime("");
-    setNewEndTime("");
+    setOriginalDate("");
+    setNewSchedule({
+      date: "",
+      startTime: "",
+      endTime: "",
+    });
     onClose();
   };
 
@@ -164,11 +181,11 @@ const ScheduleChangeModal: React.FC<ScheduleChangeModalProps> = ({
                 <input
                   type="date"
                   className="w-full"
-                  value={newDate}
+                  value={originalDate}
                   onChange={(e) => handleDateChange(e.target.value)}
                 />
               </div>
-              {newDate && !selectedSchedule && (
+              {originalDate && !selectedSchedule && (
                 <div className="text-sm text-red-500">
                   선택한 날짜에 근무 일정이 없습니다.
                 </div>
@@ -189,8 +206,10 @@ const ScheduleChangeModal: React.FC<ScheduleChangeModalProps> = ({
                 <input
                   type="date"
                   className="w-full"
-                  value={newDate}
-                  onChange={(e) => setNewDate(e.target.value)}
+                  value={newSchedule.date}
+                  onChange={(e) =>
+                    handleNewScheduleChange("date", e.target.value)
+                  }
                 />
               </div>
               <div className="flex gap-4">
@@ -201,8 +220,10 @@ const ScheduleChangeModal: React.FC<ScheduleChangeModalProps> = ({
                   <input
                     type="time"
                     className="w-full"
-                    value={newStartTime}
-                    onChange={(e) => setNewStartTime(e.target.value)}
+                    value={newSchedule.startTime}
+                    onChange={(e) =>
+                      handleNewScheduleChange("startTime", e.target.value)
+                    }
                   />
                 </div>
                 <div className="flex-1">
@@ -212,8 +233,10 @@ const ScheduleChangeModal: React.FC<ScheduleChangeModalProps> = ({
                   <input
                     type="time"
                     className="w-full"
-                    value={newEndTime}
-                    onChange={(e) => setNewDate(e.target.value)}
+                    value={newSchedule.endTime}
+                    onChange={(e) =>
+                      handleNewScheduleChange("endTime", e.target.value)
+                    }
                   />
                 </div>
               </div>

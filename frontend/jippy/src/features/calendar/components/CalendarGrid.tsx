@@ -1,5 +1,3 @@
-"use client";
-
 import { StaffScheduleData, ScheduleEvent, TimeSlot } from "../types/calendar";
 import TimeGrid from "./TimeGrid";
 import ScheduleEventComponent from "./ScheduleEvent";
