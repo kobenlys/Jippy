@@ -39,7 +39,9 @@ const POSPage = () => {
   const dispatch = useAppDispatch();
 
   const [currentOrder, setCurrentOrder] = useState<OrderItem[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(
+    null
+  );
   const [isCashModalOpen, setIsCashModalOpen] = useState(false);
 
   const handleAddProduct = (productDetail: ProductDetailResponse) => {
@@ -50,10 +52,17 @@ const POSPage = () => {
 
     if (existingItemIndex > -1) {
       const updatedOrder = [...currentOrder];
-      updatedOrder[existingItemIndex].quantity += 1;
+      updatedOrder[existingItemIndex] = {
+        ...updatedOrder[existingItemIndex],
+        quantity: updatedOrder[existingItemIndex].quantity + 1,
+        name: product.name, // 🔹 상품 이름 추가
+      };
       setCurrentOrder(updatedOrder);
     } else {
-      setCurrentOrder([...currentOrder, { ...product, quantity: 1 }]);
+      setCurrentOrder([
+        ...currentOrder,
+        { ...product, quantity: 1, name: product.name },
+      ]);
     }
   };
 
@@ -62,7 +71,9 @@ const POSPage = () => {
       setCurrentOrder(currentOrder.filter((item) => item.id !== productId));
     } else {
       const updatedOrder = currentOrder.map((item) =>
-        item.id === productId ? { ...item, quantity: newQuantity } : item
+        item.id === productId
+          ? { ...item, quantity: newQuantity, name: item.name }
+          : item
       );
       setCurrentOrder(updatedOrder);
     }
@@ -104,24 +115,29 @@ const POSPage = () => {
       console.log("=== 현금 결제 요청 시작 ===");
       console.log("Request Body:", JSON.stringify(paymentRequest, null, 2));
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payment/cash/confirm`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(paymentRequest),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/payment/cash/confirm`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(paymentRequest),
+        }
+      );
 
       const responseData = await response.json();
       console.log("결제 응답 데이터:", responseData);
 
       if (!response.ok) {
-        throw new Error(responseData?.message || "현금 결제 처리에 실패했습니다");
+        throw new Error(
+          responseData?.message || "현금 결제 처리에 실패했습니다"
+        );
       }
 
       if (responseData.success) {
         console.log("현금 결제 성공, 결제 내역 추가 시작");
-        
+
         // 결제 내역 추가 API 호출
         const historyResponse = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/add?storeId=${request.storeId}`,
@@ -134,7 +150,7 @@ const POSPage = () => {
               paymentType: "CASH",
               totalAmount: request.totalCost,
               products: request.productList,
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
             }),
           }
         );
@@ -150,7 +166,9 @@ const POSPage = () => {
         console.log("결제 내역 추가 성공");
         handleCancelOrder();
       } else {
-        throw new Error(responseData.message || "현금 결제 처리에 실패했습니다");
+        throw new Error(
+          responseData.message || "현금 결제 처리에 실패했습니다"
+        );
       }
 
       // console.log("=== 현금 결제 프로세스 완료 ===");
@@ -182,10 +200,13 @@ const POSPage = () => {
         storeId: 1,
         products: currentOrder.map((item) => ({
           id: item.id,
+          name: item.name,
+          type: item.type,
+          size: item.size,
           quantity: item.quantity,
         })),
       };
-
+      console.log("QR 결제 요청 데이터:", orderData);
       try {
         dispatch(setOrderData(orderData));
         localStorage.setItem("orderData", JSON.stringify(orderData));
