@@ -136,9 +136,9 @@ const CardContent = ({
 
 const Dashboard = () => {
   const startMonthDate = "2024-01";
-  const endMonthDate = "2024-13";
+  const endMonthDate = "2024-12";
   const startMonthNowDate = "2025-01";
-  const endMonthNowDate = "2025-13";
+  const endMonthNowDate = "2025-12";
 
   // 클라이언트 사이드에서만 실행하도록 변경
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -266,7 +266,7 @@ const Dashboard = () => {
   }, [storeId, accessToken]); // ✅ accessToken을 의존성 배열에 추가
 
   return (
-    <div className="grid grid-cols-2 gap-4 p-4 h-screen overflow-y-auto">
+    <div className="grid grid-cols-2 gap-4 p-4 h-screen">
       <div className="col-span-2 grid grid-cols-4 gap-4">
         <Card className="bg-[#FF5C00] text-[#FFCCB0]">
           <CardContent>
