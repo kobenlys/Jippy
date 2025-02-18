@@ -12,6 +12,7 @@ import com.hbhw.jippy.domain.payment.repository.PaymentHistoryRepository;
 import com.hbhw.jippy.domain.product.dto.response.ProductSoldCountResponse;
 import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
+import com.hbhw.jippy.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -125,7 +126,7 @@ public class PaymentHistoryService {
     /**
      * 시간별 매출 조회
      */
-    public SalesByDayResponse fetchSalesByTime(Integer storeId, String startDate, String endDate){
+    public SalesByDayResponse fetchSalesByTime(Integer storeId, String startDate, String endDate) {
         List<SalesResponse> salesByDayResponseList = paymentHistoryRepository.getTimeSales(storeId, startDate, endDate)
                 .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "조회된 매출이 없습니다"));
         return SalesByDayResponse.builder()
@@ -135,7 +136,7 @@ public class PaymentHistoryService {
     /**
      * 일간 매출 조회
      */
-    public SalesByDayResponse fetchSalesByDay(Integer storeId, String startDate, String endDate){
+    public SalesByDayResponse fetchSalesByDay(Integer storeId, String startDate, String endDate) {
         List<SalesResponse> salesByDayResponseList = paymentHistoryRepository.getDailySales(storeId, startDate, endDate)
                 .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "조회된 매출이 없습니다"));
         return SalesByDayResponse.builder()
@@ -145,7 +146,7 @@ public class PaymentHistoryService {
     /**
      * 주간 매출 조회
      */
-    public SalesByWeekResponse fetchSalesByWeek(Integer storeId, String startDate, String endDate){
+    public SalesByWeekResponse fetchSalesByWeek(Integer storeId, String startDate, String endDate) {
 
         List<SalesResponse> salesByDayResponseList = paymentHistoryRepository.getWeeklySales(storeId, startDate, endDate)
                 .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "조회된 매출이 없습니다"));
@@ -156,15 +157,15 @@ public class PaymentHistoryService {
     /**
      * 월간 매출 조회
      */
-    public SalesByMonthResponse fetchSalesByMonth(Integer storeId, String startDate, String endDate){
-        List<SalesResponse> salesByDayResponseList = paymentHistoryRepository.getMonthlySales(storeId, startDate, endDate)
+    public SalesByMonthResponse fetchSalesByMonth(Integer storeId, String startDate, String endDate) {
+        List<SalesResponse> salesByDayResponseList = paymentHistoryRepository.getMonthlySales(storeId, DateTimeUtils.getStartOfMonth(startDate), DateTimeUtils.getEndOfMonth(endDate))
                 .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "조회된 매출이 없습니다"));
         return SalesByMonthResponse.builder()
                 .salesByMonth(salesByDayResponseList).build();
     }
 
     /**
-     *  해당 기간 팔린 상품 집계
+     * 해당 기간 팔린 상품 집계
      */
     public Map<Long, Integer> getTotalSoldByProduct(Integer storeId, String startDate, String endDate) {
         Map<Long, Integer> soldList = new HashMap<>();
@@ -179,7 +180,7 @@ public class PaymentHistoryService {
     }
 
     /**
-     *  해당 기간동안 팔린 물건 별 판매 개수 조회
+     * 해당 기간동안 팔린 물건 별 판매 개수 조회
      */
     public List<ProductSoldCountResponse> getMonthSoldByStoreId(Integer storeId, String startDate, String endDate) {
         return paymentHistoryRepository.getRangeDateSaleProduct(storeId, startDate, endDate)
