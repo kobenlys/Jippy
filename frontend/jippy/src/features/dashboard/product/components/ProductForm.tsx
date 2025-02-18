@@ -27,7 +27,11 @@ interface ProductFormProps {
   onClose: () => void;
 }
 
-const ProductForm: React.FC<ProductFormProps> = ({ mode, productData, onClose }) => {
+const ProductForm: React.FC<ProductFormProps> = ({
+  mode,
+  productData,
+  onClose,
+}) => {
   const [product, setProduct] = useState<ProductItem>({
     id: productData?.id || 0,
     storeId: productData?.storeId || 1,
@@ -214,31 +218,39 @@ const ProductForm: React.FC<ProductFormProps> = ({ mode, productData, onClose })
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-5 bg-white p-6 rounded-xl shadow-lg"
+      >
+        {/* 상품명 입력 */}
         <div>
-          <label className="block mb-1">상품명</label>
+          <label className="text-gray-600 text-sm font-medium">상품명</label>
           <input
             type="text"
             value={product.name}
             onChange={(e) => setProduct({ ...product, name: e.target.value })}
-            className="w-full border p-2 rounded"
+            className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F27B39] transition-all"
             required
           />
         </div>
+
+        {/* 가격 입력 */}
         <div>
-          <label className="block mb-1">가격</label>
+          <label className="text-gray-600 text-sm font-medium">가격</label>
           <input
             type="number"
             value={product.price}
             onChange={(e) =>
               setProduct({ ...product, price: parseInt(e.target.value) })
             }
-            className="w-full border p-2 rounded"
+            className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F27B39] transition-all"
             required
           />
         </div>
+
+        {/* 상품 타입 선택 */}
         <div>
-          <label className="block mb-1">상품 타입</label>
+          <label className="text-gray-600 text-sm font-medium">상품 타입</label>
           <select
             value={product.productType}
             onChange={(e) =>
@@ -247,15 +259,19 @@ const ProductForm: React.FC<ProductFormProps> = ({ mode, productData, onClose })
                 productType: e.target.value as "ICE" | "HOT" | "EXTRA",
               })
             }
-            className="w-full border p-2 rounded"
+            className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F27B39] transition-all"
           >
             <option value="ICE">ICE</option>
             <option value="HOT">HOT</option>
             <option value="EXTRA">EXTRA</option>
           </select>
         </div>
+
+        {/* 상품 사이즈 선택 */}
         <div>
-          <label className="block mb-1">상품 사이즈</label>
+          <label className="text-gray-600 text-sm font-medium">
+            상품 사이즈
+          </label>
           <select
             value={product.productSize}
             onChange={(e) =>
@@ -264,7 +280,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ mode, productData, onClose })
                 productSize: e.target.value as "S" | "M" | "L" | "F",
               })
             }
-            className="w-full border p-2 rounded"
+            className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F27B39] transition-all"
           >
             <option value="S">S</option>
             <option value="M">M</option>
@@ -272,14 +288,21 @@ const ProductForm: React.FC<ProductFormProps> = ({ mode, productData, onClose })
             <option value="F">F</option>
           </select>
         </div>
+
+        {/* 상품 카테고리 선택 */}
         <div>
-          <label className="block mb-1">상품 카테고리</label>
+          <label className="text-gray-600 text-sm font-medium">
+            상품 카테고리
+          </label>
           <select
             value={product.productCategoryId}
             onChange={(e) =>
-              setProduct({ ...product, productCategoryId: parseInt(e.target.value) })
+              setProduct({
+                ...product,
+                productCategoryId: parseInt(e.target.value),
+              })
             }
-            className="w-full border p-2 rounded"
+            className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F27B39] transition-all"
           >
             <option value={0}>-- 선택하세요 --</option>
             {categories.map((cat) => (
@@ -288,30 +311,36 @@ const ProductForm: React.FC<ProductFormProps> = ({ mode, productData, onClose })
               </option>
             ))}
           </select>
-          <div className="mt-2 flex gap-2">
+
+          {/* 카테고리 추가 */}
+          <div className="mt-3 flex gap-2">
             <input
               type="text"
               placeholder="새 카테고리명"
               value={newCategoryName}
               onChange={(e) => setNewCategoryName(e.target.value)}
-              className="border p-2 rounded flex-1"
+              className="border border-gray-300 p-3 rounded-lg flex-1 focus:outline-none focus:ring-2 focus:ring-[#F27B39] transition-all"
             />
             <button
               type="button"
               onClick={handleAddCategory}
-              className="bg-blue-500 text-white px-3 py-2 rounded"
+              className="bg-[#F27B39] text-white px-4 py-3 rounded-lg shadow-md hover:bg-[#d96b32] transition-all"
             >
               추가
             </button>
           </div>
         </div>
+
+        {/* 이미지 업로드 */}
         <div>
-          <label className="block mb-1">상품 이미지 첨부</label>
+          <label className="text-gray-600 text-sm font-medium">
+            상품 이미지 첨부
+          </label>
           <input
             type="file"
             accept="image/*"
             onChange={handleImageChange}
-            className="w-full"
+            className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F27B39] transition-all"
             required={mode === "create"}
           />
           {imageFile && (
@@ -319,24 +348,29 @@ const ProductForm: React.FC<ProductFormProps> = ({ mode, productData, onClose })
               <img
                 src={product.image}
                 alt="미리보기"
-                className="max-h-40 object-contain border"
+                className="max-h-40 object-contain border border-gray-200 rounded-lg shadow-sm"
               />
             </div>
           )}
         </div>
-        <div className="flex items-center">
-          <label className="mr-2">판매 상태</label>
+
+        {/* 판매 상태 체크박스 */}
+        <div className="flex items-center gap-3">
+          <label className="text-gray-600 text-sm font-medium">판매 상태</label>
           <input
             type="checkbox"
             checked={product.status}
             onChange={(e) =>
               setProduct({ ...product, status: e.target.checked })
             }
+            className="w-5 h-5 accent-[#F27B39] transition-all"
           />
         </div>
+
+        {/* 등록 버튼 */}
         <button
           type="submit"
-          className="bg-[#F27B39] text-white px-4 py-2 rounded"
+          className="w-full bg-[#F27B39] text-white px-5 py-3 rounded-lg shadow-md hover:bg-[#d96b32] transition-all"
         >
           {mode === "create" ? "등록" : "수정"}
         </button>
@@ -345,7 +379,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ mode, productData, onClose })
       {(mode === "edit" || (mode === "create" && createdProductId)) && (
         <div className="mt-8">
           <h3 className="text-xl font-semibold mb-4">레시피 등록/수정</h3>
-          <RecipeForm productId={mode === "create" ? createdProductId! : product.id} mode={mode} />
+          <RecipeForm
+            productId={mode === "create" ? createdProductId! : product.id}
+            mode={mode}
+          />
         </div>
       )}
     </>
