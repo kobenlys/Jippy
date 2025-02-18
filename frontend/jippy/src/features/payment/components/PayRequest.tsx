@@ -64,7 +64,7 @@ const PaymentRequestComponent = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+    <div className="flex justify-center items-center min-h-screen bg-white">
       <Card className="w-full max-w-xl">
         <div className="p-8">
           <h2 className="text-2xl font-bold mb-6">주문 결제</h2>{" "}
