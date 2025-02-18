@@ -65,7 +65,7 @@ const PaymentRequestComponent = () => {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-#f8f8f8">
-      <Card className="bg-white w-full max-w-xl">
+      <Card className="bg-white w-full max-w-2xl">
         <div className="p-8">
           <h2 className="text-2xl font-bold mb-6">주문 결제</h2>{" "}
           <div className="space-y-6">
@@ -86,18 +86,29 @@ const PaymentRequestComponent = () => {
             {orderData.products && (
               <div className="mt-4 border-t pt-4">
                 <h3 className="font-semibold mb-2">주문 상품</h3>
-                {orderData.products.map((product, index) => (
-                  <div
-                    key={index}
-                    className="flex justify-between items-center text-sm"
-                  >
-                    <span>
-                      [{product.size}] {product.name} ({product.type})
-                    </span>
-                    <span>수량: {product.quantity}개</span>
-                  </div>
-                ))}
+                <div className="border rounded overflow-hidden">
+                  <div className="grid grid-cols-12 text-center bg-gray-100 font-medium">
+                  <div className="py-2 col-span-2">No.</div>
+                  <div className="py-2 pl-3 col-span-4 text-left">상품명</div>
+                  <div className="py-2 col-span-2">사이즈</div>
+                  <div className="py-2 col-span-2">옵션</div>
+                  <div className="py-2 col-span-2">수량</div>
+                </div>
+                
+                {/* 스크롤 가능한 내용 영역 - 같은 비율 적용 */}
+                <div className="max-h-[260px] overflow-y-auto">
+                  {orderData.products.map((product, index) => (
+                    <div key={index} className="grid grid-cols-12 text-center border-b border-gray-100">
+                      <div className="py-3 col-span-2">{index + 1}</div>
+                      <div className="py-3 pl-2 text-left col-span-4">{product.name}</div>
+                      <div className="py-3 col-span-2">{product.size === 'F' ? '' : product.size}</div>
+                      <div className="py-3 col-span-2">{product.type === 'EXTRA' ? '' : product.type}</div>
+                      <div className="py-3 col-span-2">{product.quantity}개</div>
+                    </div>
+                  ))}
+                </div>
               </div>
+            </div>
             )}
             <Button
               onClick={handlePayment}

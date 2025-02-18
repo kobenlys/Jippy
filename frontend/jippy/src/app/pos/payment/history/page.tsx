@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import PaymentHistoryList from "@/features/payment/components/HistoryList";
-import PaymentHistoryDetail from "@/features/payment/components/HistoryDetail";
-import PettyCashModal from "@/features/payment/components/PettyCashModal";
+import PaymentHistoryList from "@/features/pos/payment/components/HistoryList";
+import PaymentHistoryDetail from "@/features/pos/payment/components/HistoryDetail";
+import PettyCashModal from "@/features/pos/payment/components/PettyCashModal";
 import {
   PaymentHistoryDetail as PaymentDetailType,
   PaymentHistoryItem,
   ApiResponse,
-} from "@/features/payment/types/history";
+} from "@/features/pos/payment/types/history";
 
 const PaymentHistoryPage = () => {
   const [selectedPayment, setSelectedPayment] = useState<PaymentDetailType | null>(null);
@@ -79,8 +79,8 @@ const PaymentHistoryPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-start py-8">
-      <div className="container px-4 max-w-7xl">
+    <div className="page-content">
+      <div className="w-full h-full p-8 overflow-hidden">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800">결제 내역</h1>
           <button
@@ -91,8 +91,8 @@ const PaymentHistoryPage = () => {
           </button>
         </div>
   
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
-          <div className="lg:col-span-7 h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100%-60px)]">
+          <div className="lg:col-span-7 bg-white shadow rounded-lg overflow-hidden h-full">
             <PaymentHistoryList
               filter={historyFilter}
               onSelectPayment={(payment: PaymentHistoryItem) => {
@@ -102,30 +102,33 @@ const PaymentHistoryPage = () => {
             />
           </div>
   
-          <div className="lg:col-span-5">
-            <div className="bg-white rounded-lg shadow p-4 h-full flex justify-center items-center">
-              {isLoading ? (
-                <div className="flex justify-center items-center h-48">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500" />
+          <div className="lg:col-span-5 bg-white shadow rounded-lg overflow-hidden h-full">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500 mx-auto" />
+                  <p className="mt-2 text-gray-600">상세 정보를 불러오는 중...</p>
                 </div>
-              ) : error ? (
-                <div className="text-red-500 p-4 text-center bg-red-50 rounded-lg">
+              </div>
+            ) : error ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-red-500 p-4 text-center bg-red-50 rounded-lg mx-4 max-w-md">
                   <p className="font-medium">오류 발생</p>
                   <p className="text-sm mt-1">{error}</p>
                 </div>
-              ) : selectedPayment ? (
-                <div className="w-full flex justify-center">
-                  <PaymentHistoryDetail 
-                    payment={selectedPayment}
-                    onPaymentStatusChange={handlePaymentStatusChange}
-                  />
+              </div>
+            ) : selectedPayment ? (
+              <PaymentHistoryDetail 
+                payment={selectedPayment}
+                onPaymentStatusChange={handlePaymentStatusChange}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center text-gray-500">
+                  <p className="text-lg">결제 내역을 선택해주세요</p>
                 </div>
-              ) : (
-                <div className="text-gray-500 text-center py-12">
-                  결제 내역을 선택해주세요
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
   

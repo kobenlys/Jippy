@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Button } from "@/features/common/components/ui/button";
-import { PaymentMethod } from "@/features/order/types/pos";
+import { PaymentMethod } from "@/features/pos/order/types/pos";
 
 interface PaymentMethodSelectorProps {
   paymentMethod: PaymentMethod | null;

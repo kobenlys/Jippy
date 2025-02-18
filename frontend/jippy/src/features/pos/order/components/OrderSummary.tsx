@@ -3,7 +3,7 @@
 import { type FC } from "react";
 import { Button } from "@/features/common/components/ui/button";
 import { Card } from "@/features/common/components/ui/card/Card";
-import { OrderItem, PaymentMethod } from "@/features/order/types/pos";
+import { OrderItem, PaymentMethod } from "@/features/pos/order/types/pos";
 import { PaymentMethodSelector } from "./PaymentMethodSelector";
 import { ProductSize, ProductType, ProductSizeLabel, ProductTypeLabel } from '@/redux/types/product';
 
@@ -79,13 +79,15 @@ export const OrderPayment: FC<OrderPaymentProps> = ({
           </h1>
         </div>
       </div>
-
-      <div className="flex-1 flex flex-col space-y-4 p-4 bg-white">
-        <Card className="flex-1">
-          <div className="p-4 h-full overflow-y-auto">
-            {safeCurrentOrder.length === 0 ? (
-              <p className="text-muted-foreground">주문 항목이 없습니다.</p>
-            ) : (
+  
+      <div className="flex-1 flex flex-col space-y-4 p-4 bg-white overflow-hidden">
+        {safeCurrentOrder.length === 0 ? (
+          <Card className="flex-1 flex items-center justify-center">
+            <p className="text-muted-foreground">주문 항목이 없습니다.</p>
+          </Card>
+        ) : (
+          <Card className="flex-1 overflow-hidden">
+            <div className="p-4 h-full overflow-y-auto">
               <ul className="space-y-2">
                 {safeCurrentOrder.map((item) => (
                   <li
@@ -127,10 +129,10 @@ export const OrderPayment: FC<OrderPaymentProps> = ({
                   </li>
                 ))}
               </ul>
-            )}
-          </div>
-        </Card>
-
+            </div>
+          </Card>
+        )}
+  
         <div className="space-y-4">
           <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
             <span className="font-medium">총 합계</span>
@@ -138,12 +140,12 @@ export const OrderPayment: FC<OrderPaymentProps> = ({
               {calculateTotal().toLocaleString()}원
             </span>
           </div>
-
+  
           <PaymentMethodSelector
             paymentMethod={paymentMethod}
             onSelectPaymentMethod={onSelectPaymentMethod}
           />
-
+  
           <Button
             onClick={onPaymentSubmit}
             disabled={!paymentMethod || currentOrder.length === 0}
@@ -152,7 +154,7 @@ export const OrderPayment: FC<OrderPaymentProps> = ({
           >
             결제하기
           </Button>
-
+  
           <Button variant="default" className="w-full" onClick={onCancelOrder}>
             주문 취소
           </Button>

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import type { PaymentState, PaymentConfirmRequest } from "@/features/payment/types/payment";
+import type { PaymentState, PaymentConfirmRequest } from "@/features/pos/payment/types/payment";
 
 const initialState: PaymentState = {
   loading: false,

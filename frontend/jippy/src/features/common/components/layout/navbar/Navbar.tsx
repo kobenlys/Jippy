@@ -98,17 +98,17 @@ const Navbar = () => {
       <div className={styles.container}>
         <div className={styles.wrapper}>
           <div className={styles.logo}>
-            <Link href="/order" className={styles.logoText}>
+            <Link href="/pos/order" className={styles.logoText}>
               Jippy
             </Link>
           </div>
 
           <div className={styles.desktopMenu}>
             <div className={styles.navLinks}>
-              <Link href="/order" className={styles.navLink}>
+              <Link href="/pos/order" className={styles.navLink}>
                 주문
               </Link>
-              <Link href="/payment/history" className={styles.navLink}>
+              <Link href="/pos/payment/history" className={styles.navLink}>
                 결제내역
               </Link>
               {/* <Link href="/owner/dashboard/stock" className={styles.navLink}>

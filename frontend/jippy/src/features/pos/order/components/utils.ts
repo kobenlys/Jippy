@@ -1,6 +1,6 @@
 import { ProductDetailResponse } from "@/redux/types/product";
 import { Product } from "../types/pos";
-import { OrderItem } from "@/features/order/types/pos";
+import { OrderItem } from "@/features/pos/order/types/pos";
 
 export const convertToProduct = (
   productDetail: ProductDetailResponse
