@@ -15,6 +15,7 @@ import {
 } from "chart.js";
 import { Chart } from "react-chartjs-2";
 import type { ChartData } from "chart.js";
+import { Loader2 } from "lucide-react";
 
 ChartJS.register(
   CategoryScale,
@@ -64,14 +65,34 @@ interface WeeklyPredictionResponse {
   };
 }
 
+const getCookieValue = (name: string): string | null => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+      return parts.pop()?.split(';').shift() || null;
+  }
+  return null;
+};
+
 const WeeklyPredictionChart = () => {
   const [chartData, setChartData] = useState<ChartData<"bar" | "line", number[], string> | null>(null);
   const [loading, setLoading] = useState(true);
-  const storeId = 1;
 
   useEffect(() => {
     async function fetchWeeklyPrediction() {
       try {
+        
+        const encodedStoreIdList = getCookieValue('storeIdList');
+
+        if (!encodedStoreIdList) {
+          console.error('storeIdList 쿠키를 찾을 수 없습니다.');
+          return;
+        }
+
+        const decodedStoreIdList = decodeURIComponent(encodedStoreIdList);
+        const storeIdList = JSON.parse(decodedStoreIdList);
+        const storeId = storeIdList[0];
+
         const response = await fetch(
           `https://jippy.duckdns.org/stock-ml/api/${storeId}/predictions/weekly`,
           { cache: "no-store" }
@@ -131,7 +152,7 @@ const WeeklyPredictionChart = () => {
     plugins: {
       title: {
         display: true,
-        text: "1주일 재고 판매 예측",
+        text: "일주일 재고 판매 예측",
       },
       legend: {
         position: "bottom" as const,
@@ -147,14 +168,21 @@ const WeeklyPredictionChart = () => {
     },
   };
 
+  const containerStyle = "h-96 bg-white rounded-lg shadow p-4";
+
   return (
-    <div>
+    <div className={containerStyle}>
       {loading ? (
-        <p>1주일 예측 데이터를 불러오는 중...</p>
+        <div className="h-full flex flex-col items-center justify-center gap-2">
+          <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+          <p className="text-gray-500 font-medium">일주일 예측 데이터를 불러오는 중...</p>
+        </div>
       ) : chartData ? (
         <Chart type="bar" data={chartData as unknown as ChartData<"bar", number[], string>} options={options} />
       ) : (
-        <p>데이터가 없습니다.</p>
+        <div className="h-full flex items-center justify-center">
+          <p className="text-gray-500 font-medium">데이터가 없습니다.</p>
+        </div>
       )}
     </div>
   );

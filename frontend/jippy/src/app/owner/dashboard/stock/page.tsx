@@ -51,20 +51,21 @@ export default async function StockPage() {
         <div className="bg-white p-4 rounded-lg shadow-md">
           <StockTable />
         </div>
-        <div className="bg-white rounded-lg shadow-md p-4 mt-4">
-          <div className="w-full">
-            <h2 className="text-xl font-bold mb-2">재고 데이터</h2>
-            <StockBarChart />
-          </div>
-        </div>
+        
         <div className="bg-white rounded-lg shadow-md p-4 mt-4 flex gap-4">
           <div className="w-1/2">
-            <h2 className="text-xl font-bold mb-2">주간 재고 변화 예측</h2>
+            <h2 className="text-xl font-bold mb-2">주간 재고 판매 예측</h2>
             <WeeklyPredictionChart />
           </div>
           <div className="w-1/2">
             <h2 className="text-xl font-bold mb-2">최근 30일 재고 그래프</h2>
             <StockComparisonChart />
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow-md p-4 mt-4">
+          <div className="w-full">
+            <h2 className="text-xl font-bold mb-2">재고 데이터</h2>
+            <StockBarChart />
           </div>
         </div>
       </div>
