@@ -1,4 +1,4 @@
-// types/product.ts
+// redux/types/product.ts
 export enum ProductType {
     ICE = 1,
     HOT = 2,

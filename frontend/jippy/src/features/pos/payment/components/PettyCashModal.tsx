@@ -55,6 +55,7 @@ const PettyCashModal = ({
   const [qrPayments, setQrPayments] = useState<PaymentHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [requestStartTime, setRequestStartTime] = useState<number | null>(null);
   const [initialCash, setInitialCash] = useState<
     Omit<CashData, "id" | "store_id">
