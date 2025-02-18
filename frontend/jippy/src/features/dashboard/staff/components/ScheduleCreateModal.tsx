@@ -60,8 +60,7 @@ const ScheduleCreateModal = ({
       });
       onSuccess();
       onClose();
-    } catch (error) {
-      console.error("스케줄 등록 실패:", error);
+    } catch {
       alert("스케줄 등록에 실패했습니다.");
     }
   };
@@ -85,12 +84,13 @@ const ScheduleCreateModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-y-auto">
-        <h2 className="text-lg font-semibold mb-4">근무 스케줄 등록</h2>
+        <h2 className="text-xl font-semibold mb-6 text-[#3D3733]">
+          근무 스케줄 등록
+        </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* 직원 선택 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               직원 선택
@@ -98,7 +98,8 @@ const ScheduleCreateModal = ({
             <select
               value={selectedStaffId}
               onChange={(e) => setSelectedStaffId(Number(e.target.value))}
-              className="w-full border rounded-lg px-3 py-2"
+              className="w-full border rounded-lg px-3 py-2 appearance-none
+                bg-[length:15px] bg-[center_right_0.6rem] bg-no-repeat bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNCA2TDggMTBMMTIgNiIgc3Ryb2tlPSIjNjY2NjY2IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')]"
               required
             >
               <option value={0}>직원을 선택하세요</option>
@@ -110,7 +111,6 @@ const ScheduleCreateModal = ({
             </select>
           </div>
 
-          {/* 스케줄 목록 */}
           {schedules.map((schedule, index) => (
             <div key={index} className="p-4 border rounded-lg relative">
               {schedules.length > 1 && (
@@ -133,7 +133,8 @@ const ScheduleCreateModal = ({
                     onChange={(e) =>
                       updateSchedule(index, "dayOfWeek", e.target.value)
                     }
-                    className="w-full border rounded-lg px-3 py-2"
+                    className="w-full h-10 border rounded-lg px-3 py-2 appearance-none
+                bg-[length:15px] bg-[center_right_0.6rem] bg-no-repeat bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNCA2TDggMTBMMTIgNiIgc3Ryb2tlPSIjNjY2NjY2IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')]"
                     required
                   >
                     {DAYS_OF_WEEK.map((day) => (
@@ -153,7 +154,7 @@ const ScheduleCreateModal = ({
                     onChange={(e) =>
                       updateSchedule(index, "startTime", e.target.value)
                     }
-                    className="w-full border rounded-lg px-3 py-2"
+                    className="w-full h-10 border rounded-lg px-3 py-2"
                     required
                   />
                 </div>
@@ -167,7 +168,7 @@ const ScheduleCreateModal = ({
                     onChange={(e) =>
                       updateSchedule(index, "endTime", e.target.value)
                     }
-                    className="w-full border rounded-lg px-3 py-2"
+                    className="w-full h-10 border rounded-lg px-3 py-2"
                     required
                   />
                 </div>
@@ -175,16 +176,14 @@ const ScheduleCreateModal = ({
             </div>
           ))}
 
-          {/* 스케줄 추가 버튼 */}
           <button
             type="button"
             onClick={addSchedule}
-            className="w-full px-4 py-2 text-blue-500 border border-blue-500 rounded-lg hover:bg-blue-50"
+            className="w-full px-4 py-2 text-jippy-orange border border-jippy-orange rounded-lg hover:bg-orange-50"
           >
             + 스케줄 추가
           </button>
 
-          {/* 버튼 */}
           <div className="flex justify-end gap-2 pt-4">
             <button
               type="button"
@@ -195,7 +194,7 @@ const ScheduleCreateModal = ({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              className="px-4 py-2 bg-jippy-orange text-white rounded-lg hover:bg-[#D8692E]"
             >
               등록
             </button>

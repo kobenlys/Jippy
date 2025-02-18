@@ -92,6 +92,11 @@ const LoginPage = () => {
           })
         );
 
+        if (userType === "STAFF") {
+          router.replace("/attendance");
+          return;
+        }
+
         // 매장 정보 조회 및 리덕스 업데이트
         try {
           // 쿠키 디버깅을 위한 로그

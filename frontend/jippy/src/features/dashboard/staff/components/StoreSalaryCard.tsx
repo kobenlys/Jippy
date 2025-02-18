@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import staffApi from "../hooks/staffApi";
-import LoadingSpinner from "@/features/common/components/ui/LoadingSpinner";
+import { Card } from "@/features/common/components/ui/card/Card";
+import { Wallet } from "lucide-react";
 
 interface StoreSalaryCardProps {
   storeId: number;
@@ -15,13 +16,11 @@ const StoreSalaryCard = ({ storeId }: StoreSalaryCardProps) => {
   );
   const [totalSalary, setTotalSalary] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSalaryData = async () => {
       try {
         setIsLoading(true);
-        setError(null);
 
         const today = new Date();
         const currentYear = today.getFullYear();
@@ -57,9 +56,8 @@ const StoreSalaryCard = ({ storeId }: StoreSalaryCardProps) => {
         } else {
           throw new Error("데이터 조회에 실패했습니다.");
         }
-      } catch (err) {
-        setError("인건비 정보를 불러오는데 실패했습니다.");
-        console.error("Failed to fetch salary data:", err);
+      } catch (error) {
+        throw error;
       } finally {
         setIsLoading(false);
       }
@@ -68,35 +66,52 @@ const StoreSalaryCard = ({ storeId }: StoreSalaryCardProps) => {
     fetchSalaryData();
   }, [storeId]);
 
-  if (isLoading) return <LoadingSpinner />;
-  if (error) return <div className="text-red-500">{error}</div>;
+  if (isLoading) return null;
+
+  if (!lastMonthSalary && !currentMonthSalary && !totalSalary) {
+    return (
+      <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div className="p-6">
+          <h2 className="text-xl font-semibold text-[#3D3733] mb-4">
+            매장 인건비 현황
+          </h2>
+          <div className="py-12 flex flex-col items-center justify-center text-gray-500">
+            <Wallet className="h-12 w-12 mb-4 text-gray-300" />
+            <p className="text-center mb-1">인건비 정보가 없습니다.</p>
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
-    <div className="bg-white rounded-lg shadow">
-      <div className="p-4 border-b">
-        <h2 className="text-lg font-semibold">매장 인건비 현황</h2>
+    <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="p-6">
+        <h2 className="text-xl font-semibold text-[#3D3733] mb-6">
+          매장 인건비 현황
+        </h2>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h3 className="text-sm text-gray-500 mb-2">저번 달 인건비</h3>
+            <p className="text-lg font-semibold">
+              {lastMonthSalary?.toLocaleString()}원
+            </p>
+          </div>
+          <div className="bg-[#F27B39]/5 rounded-lg p-4">
+            <h3 className="text-sm text-gray-500 mb-2">이번 달 인건비</h3>
+            <p className="text-lg font-semibold text-jippy-orange">
+              {currentMonthSalary?.toLocaleString()}원
+            </p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h3 className="text-sm text-gray-500 mb-2">누적 인건비</h3>
+            <p className="text-lg font-semibold">
+              {totalSalary?.toLocaleString()}원
+            </p>
+          </div>
+        </div>
       </div>
-      <div className="grid grid-cols-3 divide-x">
-        <div className="p-4 text-center">
-          <h3 className="text-sm text-gray-500 mb-2">저번 달 인건비</h3>
-          <p className="text-xl font-bold">
-            {lastMonthSalary?.toLocaleString()}원
-          </p>
-        </div>
-        <div className="p-4 text-center">
-          <h3 className="text-sm text-gray-500 mb-2">이번 달 인건비</h3>
-          <p className="text-xl font-bold text-blue-600">
-            {currentMonthSalary?.toLocaleString()}원
-          </p>
-        </div>
-        <div className="p-4 text-center">
-          <h3 className="text-sm text-gray-500 mb-2">누적 인건비</h3>
-          <p className="text-xl font-bold text-purple-600">
-            {totalSalary?.toLocaleString()}원
-          </p>
-        </div>
-      </div>
-    </div>
+    </Card>
   );
 };
 

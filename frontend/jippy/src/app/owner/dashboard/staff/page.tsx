@@ -42,31 +42,12 @@ const StaffDashboardPage = () => {
     }
   }, [router]);
 
-  // useEffect(() => {
-  // }, [storeId]);
-
-  // useEffect(() => {
-  // }, [ownerName]);
-
   if (storeId === null) {
     return <LoadingSpinner />;
   }
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-6">인적 관리</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <StaffPerformanceCard storeId={storeId} />
-        <WorkingStaffCard storeId={storeId} />
-        <StaffAttendanceList storeId={storeId} />
-        <StoreSalaryCard storeId={storeId} />
-      </div>
-      <div className="mt-8">
-        <StaffListCard storeId={storeId} />
-      </div>
-      <div className="mt-8">
-        <StaffScheduleCard storeId={storeId} />
-      </div>
       <div className="mt-8">
         <ScheduleChangeList storeId={storeId} />
       </div>
@@ -75,6 +56,24 @@ const StaffDashboardPage = () => {
       </div>
       <div className="mt-8">
         <TodoList storeId={storeId} />
+      </div>
+      <div className="mt-8">
+        <WorkingStaffCard storeId={storeId} />
+      </div>
+      <div className="mt-8">
+        <StaffListCard storeId={storeId} />
+      </div>
+      <div className="mt-8">
+        <StaffScheduleCard storeId={storeId} />
+      </div>
+      <div className="mt-8">
+        <StaffPerformanceCard storeId={storeId} />
+      </div>
+      <div className="mt-8">
+        <StaffAttendanceList storeId={storeId} />
+      </div>
+      <div className="mt-8">
+        <StoreSalaryCard storeId={storeId} />
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
+import { Card } from "@/features/common/components/ui/card/Card";
 import { useWorkingStaff } from "../hooks/useStaffStatistic";
-import LoadingSpinner from "@/features/common/components/ui/LoadingSpinner";
 import { Users } from "lucide-react";
 
 interface WorkingStaffCardProps {
@@ -9,35 +9,44 @@ interface WorkingStaffCardProps {
 }
 
 const WorkingStaffCard = ({ storeId }: WorkingStaffCardProps) => {
-  const { data, isLoading, error } = useWorkingStaff(storeId);
+  const { data, isLoading } = useWorkingStaff(storeId);
 
-  if (isLoading) return <LoadingSpinner />;
-  if (error) return null;
-  if (!data) return null;
+  if (isLoading) return null;
 
-  return (
-    <div className="p-6 bg-white rounded-lg shadow">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">현재 근무 현황</h2>
-        <Users className="w-6 h-6 text-blue-500" />
-      </div>
+  if (data) {
+    return (
+      <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-[#3D3733]">
+              실시간 출근 현황
+            </h2>
+            <Users className="w-5 h-5 text-jippy-orange" />
+          </div>
 
-      <div className="mb-4">
-        <p className="text-3xl font-bold">{data.totalCount}명</p>
-        <p className="text-sm text-gray-600">현재 근무 중</p>
-      </div>
+          <div className="mb-4">
+            <p className="text-3xl font-bold text-[#3D3733]">
+              {data.totalCount}명
+            </p>
+            <p className="text-sm text-gray-600 mt-1">현재 근무 중</p>
+          </div>
 
-      {data.staffList.length > 0 && (
-        <div className="space-y-2">
-          {data.staffList.map((staff) => (
-            <div key={staff.storeUserStaffId} className="text-sm text-gray-700">
-              {staff.name}
+          {data.staffList.length > 0 && (
+            <div className="space-y-2">
+              {data.staffList.map((staff) => (
+                <div
+                  key={staff.storeUserStaffId}
+                  className="text-[15px] text-gray-700"
+                >
+                  {staff.name}
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
-      )}
-    </div>
-  );
+      </Card>
+    );
+  }
 };
 
 export default WorkingStaffCard;

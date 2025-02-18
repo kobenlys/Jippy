@@ -155,6 +155,14 @@ export default function ShopsPage() {
               <p className="text-gray-600">{shop.address}</p>
             </div>
           ))}
+
+          <div
+            onClick={() => router.push("/shop/create")}
+            className="cursor-pointer flex flex-col justify-center items-center p-6 bg-gray-100 rounded-lg shadow-md hover:shadow-lg transition-shadow border-2 border-dashed border-gray-400"
+          >
+            <span className="text-4xl">+</span>
+            <p className="text-gray-600 mt-2">매장 추가</p>
+          </div>
         </div>
       )}
     </div>

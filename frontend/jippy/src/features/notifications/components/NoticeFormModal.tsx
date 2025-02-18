@@ -53,8 +53,7 @@ const NoticeFormModal = ({
       onClose();
       setTitle("");
       setContent("");
-    } catch (error) {
-      console.error("공지사항 처리 실패:", error);
+    } catch {
       alert("공지사항 처리에 실패했습니다.");
     } finally {
       setIsSubmitting(false);
@@ -74,7 +73,7 @@ const NoticeFormModal = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-[600px] max-h-[90vh] overflow-hidden">
         <div className="p-6">
-          <h2 className="text-xl font-bold mb-4">
+          <h2 className="text-xl font-semibold mb-6 text-[#3D3733]">
             {initialData ? "공지사항 수정" : "공지사항 등록"}
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -115,14 +114,10 @@ const NoticeFormModal = ({
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-[#ff5c00] text-white rounded-lg hover:bg-[#ff5c00]/90"
+                className="px-4 py-2 bg-jippy-orange text-white rounded-lg hover:bg-[#D8692E]"
                 disabled={isSubmitting}
               >
-                {isSubmitting
-                  ? "처리 중..."
-                  : initialData
-                  ? "수정하기"
-                  : "등록하기"}
+                {isSubmitting ? "처리 중..." : initialData ? "수정" : "등록"}
               </button>
             </div>
           </form>

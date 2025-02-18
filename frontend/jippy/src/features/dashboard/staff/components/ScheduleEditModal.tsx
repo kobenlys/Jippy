@@ -57,9 +57,9 @@ const ScheduleEditModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-[480px]">
-        <h2 className="text-lg font-semibold mb-4">
+        <h2 className="text-xl font-semibold mb-6 text-[#3D3733]">
           {staffName}님의 스케줄 수정
         </h2>
 
@@ -71,7 +71,8 @@ const ScheduleEditModal = ({
             <select
               value={dayOfWeek}
               onChange={(e) => setDayOfWeek(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2"
+              className="w-full border rounded-lg px-3 py-2 appearance-none
+                bg-[length:15px] bg-[center_right_0.6rem] bg-no-repeat bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNCA2TDggMTBMMTIgNiIgc3Ryb2tlPSIjNjY2NjY2IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')]"
               required
             >
               {DAYS_OF_WEEK.map((day) => (
@@ -127,7 +128,7 @@ const ScheduleEditModal = ({
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                className="px-4 py-2 bg-jippy-orange text-white rounded-lg hover:bg-[#D8692E]"
               >
                 수정
               </button>
