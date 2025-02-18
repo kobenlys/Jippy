@@ -73,7 +73,7 @@ const StockComparisonChart = () => {
     async function fetchComparisonData() {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/stock-ml/api/${storeId}/stock/comparison`,
+          `https://jippy.duckdns.org/stock-ml/api/${storeId}/stock/comparison`,
           { cache: "no-store" }
         );
         const json = (await response.json()) as ComparisonResponse;

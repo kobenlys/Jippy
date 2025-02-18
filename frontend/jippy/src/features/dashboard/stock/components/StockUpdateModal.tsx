@@ -74,7 +74,7 @@ const StockUpdateModal: React.FC<StockUpdateModalProps> = ({ isOpen, onClose, st
             <button type="button" onClick={onClose} className="px-4 py-2 rounded border">
               취소
             </button>
-            <button type="submit" className="px-4 py-2 rounded bg-blue-500 text-white">
+            <button type="submit" className="px-4 py-2 rounded bg-orange-500 text-white">
               수정
             </button>
           </div>

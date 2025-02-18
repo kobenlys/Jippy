@@ -6,9 +6,21 @@ import { RootState } from "@/redux/store";
 import { StockItem } from "@/redux/slices/stockDashSlice";
 import StockRegisterModal from "@/features/dashboard/stock/components/StockRegisterModal";
 import StockUpdateModal from "@/features/dashboard/stock/components/StockUpdateModal";
+import { Edit2, Trash2 } from "lucide-react";
 
 const StockTable = () => {
   const stockData = useSelector((state: RootState) => state.stock) as StockItem[];
+
+  const formatUnit = (unit: string) => {
+    switch (unit.toLowerCase()) {
+      case 'l':
+        return 'L';
+      case 'ml':
+        return 'mL';
+      default:
+        return unit;
+    }
+  };
 
   const [isRegisterModalOpen, setRegisterModalOpen] = useState(false);
   const [isUpdateModalOpen, setUpdateModalOpen] = useState(false);
@@ -22,29 +34,23 @@ const StockTable = () => {
     window.location.reload();
   };
 
-  const deleteStock = async (storeId: number, stockName: string) => {
-    if (!window.confirm(`${stockName} 재고를 삭제하시겠습니까?`)) return;
-    // 삭제할 재고 정보를 찾습니다.
-    const targetItem = stockData.find((item) => item.stockName === stockName);
-    if (!targetItem || targetItem.stock.length === 0) {
-      alert("삭제할 재고 정보가 없습니다.");
-      return;
-    }
-    // 여기서는 첫번째 단위를 삭제 대상으로 사용합니다.
-    const { stockUnitSize, stockUnit } = targetItem.stock[0];
-  
+  const deleteStock = async (
+    storeId: number, 
+    stockName: string, 
+    stockUnitSize: string, 
+    stockUnit: string
+  ) => {
     const payload = {
       inventory: [
         {
           stock: [
             {
-              stockUnitSize: stockUnitSize,
-              stockUnit: stockUnit,
-              isDisposal: true,
-            },
-          ],
-        },
-      ],
+              stockUnitSize: Number(stockUnitSize),
+              stockUnit
+            }
+          ]
+        }
+      ]
     };
   
     try {
@@ -98,63 +104,56 @@ const StockTable = () => {
                   <th className="p-2 text-left border-b w-32">용량(단위)</th>
                   <th className="p-2 text-left border-b w-24">수량</th>
                   <th className="p-2 text-left border-b w-32">총량</th>
-                  <th className="p-2 text-center border-b w-20">수정</th>
-                  <th className="p-2 text-center border-b w-20">삭제</th>
+                  <th className="p-2 text-center border-b w-20">관리</th>
                 </tr>
               </thead>
               <tbody>
                 {stockData.length > 0 ? (
-                  stockData.map((item, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="p-2 border-b">{index + 1}</td>
-                      <td className="p-2 border-b">{item.stockName}</td>
-                      <td className="p-2 border-b">
-                        {item.stock.map((unit, idx) => (
-                          <div key={idx} className="py-1">
-                            {unit.stockUnitSize}
-                            {unit.stockUnit}
+                  stockData.flatMap((item, itemIndex) =>
+                    item.stock.map((unit, unitIndex) => (
+                      <tr key={`${itemIndex}-${unitIndex}`} className="hover:bg-gray-50">
+                        <td className="p-2 border-b">{itemIndex * item.stock.length + unitIndex + 1}</td>
+                        <td className="p-2 border-b">{item.stockName}</td>
+                        <td className="p-2 border-b">
+                          {unit.stockUnitSize}{formatUnit(unit.stockUnit)}
+                        </td>
+                        <td className="p-2 border-b">
+                          {unit.stockCount}
+                        </td>
+                        <td className="p-2 border-b">
+                          {unit.stockCount * parseFloat(unit.stockUnitSize)}{formatUnit(unit.stockUnit)}
+                        </td>
+                        <td className="p-2 border-b text-center">
+                          <div className="flex justify-center gap-2">
+                            <button
+                              className="text-blue-500 hover:text-blue-700"
+                              onClick={() => {
+                                setSelectedStockItem({
+                                  ...item,
+                                  stock: [unit]
+                                });
+                                setUpdateModalOpen(true);
+                              }}
+                            >
+                              <Edit2 size={18} />
+                            </button>
+                            <button
+                              className="text-red-500 hover:text-red-700"
+                              onClick={() => {
+                                if (!window.confirm(`${item.stockName}의 ${unit.stockUnitSize}${formatUnit(unit.stockUnit)} 단위를 삭제하시겠습니까?`)) return;
+                                deleteStock(1, item.stockName, unit.stockUnitSize, unit.stockUnit);
+                              }}
+                            >
+                              <Trash2 size={18} />
+                            </button>
                           </div>
-                        ))}
-                      </td>
-                      <td className="p-2 border-b">
-                        {item.stock.map((unit, idx) => (
-                          <div key={idx} className="py-1">
-                            {unit.stockCount}
-                          </div>
-                        ))}
-                      </td>
-                      <td className="p-2 border-b">
-                        {item.stock.map((unit, idx) => (
-                          <div key={idx} className="py-1">
-                            {unit.stockCount * parseFloat(unit.stockUnitSize)}
-                            {unit.stockUnit}
-                          </div>
-                        ))}
-                      </td>
-                      <td className="p-2 border-b text-center">
-                        <button
-                          className="bg-blue-500 text-white px-2 py-1 rounded"
-                          onClick={() => {
-                            setSelectedStockItem(item);
-                            setUpdateModalOpen(true);
-                          }}
-                        >
-                          수정
-                        </button>
-                      </td>
-                      <td className="p-2 border-b text-center">
-                        <button
-                          className="bg-red-500 text-white px-2 py-1 rounded"
-                          onClick={() => deleteStock(1, item.stockName)}
-                        >
-                          삭제
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                      </tr>
+                    ))
+                  )
                 ) : (
                   <tr>
-                    <td colSpan={7} className="text-center py-4 text-gray-500">
+                    <td colSpan={6} className="text-center py-4 text-gray-500">
                       재고 데이터가 없습니다.
                     </td>
                   </tr>
@@ -162,7 +161,9 @@ const StockTable = () => {
               </tbody>
               <tfoot className="bg-orange-50 sticky bottom-0 z-10">
                 <tr>
-                  <td className="p-2">{stockData.length}</td>
+                  <td className="p-2">
+                    {stockData.reduce((sum, item) => sum + item.stock.length, 0)}
+                  </td>
                   <td colSpan={2} className="p-2 text-right">
                     전체 수량
                   </td>
@@ -173,7 +174,7 @@ const StockTable = () => {
                       0
                     )}
                   </td>
-                  <td colSpan={3}></td>
+                  <td colSpan={2}></td>
                 </tr>
               </tfoot>
             </table>
