@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import StaffAttendanceList from "@/features/dashboard/staff/components/StaffAttendanceList";
 import StaffListCard from "@/features/dashboard/staff/components/StaffListCard";
 import StaffPerformanceCard from "@/features/dashboard/staff/components/StaffPerformanceCard";
 import StaffScheduleCard from "@/features/dashboard/staff/components/StaffScheduleCard";

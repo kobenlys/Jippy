@@ -47,7 +47,6 @@ const StaffListCard = ({ storeId }: StaffListCardProps) => {
   const {
     data: staffList,
     isLoading,
-    error,
     refreshList,
   } = useStaffList(storeId);
   const [currentFilter, setCurrentFilter] = useState<"update" | "attendance">(
