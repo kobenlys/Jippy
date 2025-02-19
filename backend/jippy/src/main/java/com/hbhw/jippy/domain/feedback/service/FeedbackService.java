@@ -28,7 +28,7 @@ public class FeedbackService {
     private final StoreCoordinatesRepository storeCoordinatesRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private static final double EARTH_RADIUS = 6371e3; // 지구 반경 (미터 단위)
-    private static final double ERROR_RANGE = 10.0;
+    private static final double ERROR_RANGE = 1000.0;
 
     /**
      * 고객 피드백 등록
