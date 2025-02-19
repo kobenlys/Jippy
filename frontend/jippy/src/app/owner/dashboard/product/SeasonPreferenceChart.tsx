@@ -156,7 +156,7 @@ const SeasonPreferenceChart: React.FC<SeasonPreferenceChartProps> = ({
           onChange={(e) => setSelectedYear(parseInt(e.target.value))}
           className="border p-1 rounded"
         >
-          {Array.from({ length: 5 }, (_, i) => currentYear - i).map((year) => (
+          {Array.from({ length: 2 }, (_, i) => currentYear - i).map((year) => (
             <option key={year} value={year}>
               {year}
             </option>
