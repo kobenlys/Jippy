@@ -12,8 +12,12 @@ import com.hbhw.jippy.domain.payment.repository.PaymentHistoryRepository;
 import com.hbhw.jippy.domain.product.dto.response.ProductSoldCountResponse;
 import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
+import com.hbhw.jippy.global.pagination.dto.request.PaginationRequest;
+import com.hbhw.jippy.global.pagination.dto.response.PaginationResponse;
 import com.hbhw.jippy.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -30,8 +34,6 @@ public class PaymentHistoryService {
      * 결재내역 저장
      */
     public void savePaymentHistory(PaymentHistory paymentHistory) {
-
-
         paymentHistoryRepository.save(paymentHistory);
     }
 
@@ -45,6 +47,15 @@ public class PaymentHistoryService {
         return paymentHistoryEntity.stream()
                 .map(PaymentMapper::convertPaymentHistoryListResponse)
                 .toList();
+    }
+
+    /**
+     * 결제내역 전체 리스트 페이징 조회
+     */
+    public Page<PaymentHistoryListResponse> fetchPaymentHistoryList(PaginationRequest paginationRequest, Integer storeId) {
+        Pageable pageable = paginationRequest.toPageable();
+        Page<PaymentHistory> paymentHistoryEntity = paymentHistoryRepository.findByStoreId(storeId, paginationRequest.getStartDate(), paginationRequest.getEndDate(),  pageable);
+        return paymentHistoryEntity.map(PaymentMapper::convertPaymentHistoryListResponse);
     }
 
     /**
