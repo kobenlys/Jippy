@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import StaffAttendanceList from "@/features/dashboard/staff/components/StaffAttendanceList";
 import StaffListCard from "@/features/dashboard/staff/components/StaffListCard";
 import StaffPerformanceCard from "@/features/dashboard/staff/components/StaffPerformanceCard";
 import StaffScheduleCard from "@/features/dashboard/staff/components/StaffScheduleCard";
@@ -34,19 +33,13 @@ const StaffDashboardPage = () => {
       const decodedName = ownerName ? decodeURIComponent(ownerName) : "";
 
       if (!parsedStoreId || isNaN(parsedStoreId)) {
-        router.push("/owner/dashboard");
+        router.push("/owner");
       } else {
         setStoreId(parsedStoreId);
         setOwnerName(decodedName);
       }
     }
   }, [router]);
-
-  // useEffect(() => {
-  // }, [storeId]);
-
-  // useEffect(() => {
-  // }, [ownerName]);
 
   if (storeId === null) {
     return <LoadingSpinner />;
@@ -76,7 +69,6 @@ const StaffDashboardPage = () => {
         <StaffPerformanceCard storeId={storeId} />
         <StaffListCard storeId={storeId} />
       </div>
-
     </div>
   );
 };
