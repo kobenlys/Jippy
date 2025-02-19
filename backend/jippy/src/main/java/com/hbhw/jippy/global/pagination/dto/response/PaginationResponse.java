@@ -1,5 +1,6 @@
 package com.hbhw.jippy.global.pagination.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.hbhw.jippy.global.pagination.dto.request.PaginationRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -14,6 +15,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Schema(description = "페이지네이션 응답 DTO")
 public class PaginationResponse<T> {
 
