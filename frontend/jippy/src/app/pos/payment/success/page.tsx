@@ -2,15 +2,33 @@
 
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import axios from "axios";
 import { useState } from "react";
+import { useAppDispatch } from "@/redux/hooks";
+import { confirmPayment, clearPaymentState } from "@/redux/slices/paymentSlice";
 
 // 페이지를 동적으로 처리하도록 설정
 export const dynamic = "force-dynamic";
 
+// 제품과 스토어 데이터 타입 정의
+interface ProductData {
+  id: string | number;
+  quantity: number;
+}
+
+interface StoreData {
+  storeId: string;
+  products: ProductData[];
+}
+
+// 에러 타입 정의
+interface ErrorWithMessage {
+  message: string;
+}
+
 // 실제 결제 처리를 담당하는 컴포넌트
 const PaymentSuccessContent = () => {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,24 +42,35 @@ const PaymentSuccessContent = () => {
       const paymentKey = searchParams.get("paymentKey");
       const orderId = searchParams.get("orderId");
       const amount = searchParams.get("amount");
+      const storeDataParam = searchParams.get("storeData");
   
       if (!paymentKey || !orderId || !amount) {
         throw new Error("필수 파라미터가 누락되었습니다.");
       }
   
-      const savedOrderData = localStorage.getItem("orderData");
-      if (!savedOrderData) {
-        throw new Error("주문 정보를 찾을 수 없습니다.");
+      if (!storeDataParam) {
+        throw new Error("주문 정보 파라미터가 누락되었습니다.");
+      }
+      
+      // URL 파라미터에서 storeData 파싱
+      let storeData: StoreData;
+      try {
+        storeData = JSON.parse(decodeURIComponent(storeDataParam));
+      } catch {
+        throw new Error("주문 정보 파싱에 실패했습니다.");
+      }
+      
+      if (!storeData.storeId || !storeData.products) {
+        throw new Error("주문 정보 형식이 올바르지 않습니다.");
       }
   
-      const orderData = JSON.parse(savedOrderData);
       const amountNumber = Number(amount);
 
       const requestBody = {
-        storeId: orderData.storeId,
+        storeId: storeData.storeId,
         totalCost: amountNumber,
         paymentType: "QRCODE",
-        productList: orderData.products.map((product: { id: string | number; quantity: number }) => ({
+        productList: storeData.products.map((product: ProductData) => ({
           productId: product.id,
           quantity: product.quantity
         })),
@@ -50,27 +79,32 @@ const PaymentSuccessContent = () => {
         amount: amountNumber
       };
   
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/payment/qrcode/confirm`,
-        requestBody
-      );
-  
-      if (response.status === 200 || response.status === 201) {
+      const resultAction = await dispatch(confirmPayment(requestBody));
+      
+      if (confirmPayment.fulfilled.match(resultAction)) {
         setIsConfirmed(true);
-        localStorage.removeItem("orderData");
         
+        // 결제 완료 후 리덕스 스토어 정리
         setTimeout(() => {
+          dispatch(clearPaymentState());
           router.push("/order");
         }, 3000);
-      }
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const status = err.response?.status || "Unknown";
-        const errorMessage = err.response?.data?.message || err.message;
-        setError(`결제 처리 중 오류가 발생했습니다. (${status}: ${errorMessage})`);
       } else {
-        setError("알 수 없는 오류가 발생했습니다.");
+        // confirmPayment가 rejected된 경우 에러 처리
+        const payload = resultAction.payload as string;
+        throw new Error(payload || "결제 확인에 실패했습니다.");
       }
+    } catch (err: unknown) {
+      console.error("결제 확인 실패:", err);
+      
+      // 에러 메시지 추출
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : (typeof err === 'object' && err && 'message' in err)
+          ? (err as ErrorWithMessage).message
+          : "알 수 없는 오류가 발생했습니다.";
+          
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
