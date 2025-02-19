@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/features/common/components/ui/dialog/dialog";
 import { Button } from "@/features/common/components/ui/button";
+import { useRouter } from "next/navigation";
 
 // Payment request interface definition
 // interface PaymentRequest {
@@ -49,6 +50,8 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
   storeId,
   productList,
 }) => {
+  const router = useRouter();
+
   // Manage received amount state
   const [receivedAmount, setReceivedAmount] = useState<number>(0);
 
@@ -78,7 +81,8 @@ export const CashPaymentModal: React.FC<CashPaymentModalProps> = ({
       });
 
       setReceivedAmount(0);
-      onClose();
+      // onClose();
+      router.push("/pos/payment/history");
     } catch (error) {
       console.error("Payment error:", error);
       alert("결제 처리 중 오류가 발생했습니다.");

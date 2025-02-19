@@ -4,12 +4,10 @@ import React, { useState } from "react";
 import { loadTossPayments } from "@tosspayments/payment-sdk";
 import { Card } from "@/features/common/components/ui/card/Card";
 import { Button } from "@/features/common/components/ui/button";
-import { useAppSelector } from "@/redux/hooks";
-// import type { OrderData } from "@/features/payment/types/payment";
+import { useAppSelector, useAppDispatch } from "@/redux/hooks";
+import { setOrderData } from "@/redux/slices/paymentSlice"; 
 
-// test_ck_ma60RZblrqzQnGRxeeGz8wzYWBn1
-// test_ck_yZqmkKeP8gpJeNxBdjGd3bQRxB9l
-const TOSS_CLIENT_KEY = "test_ck_yZqmkKeP8gpJeNxBdjGd3bQRxB9l";
+const TOSS_CLIENT_KEY = "test_ck_ma60RZblrqzQnGRxeeGz8wzYWBn1";
 
 const generateRandomOrderId = () => {
   return "xxxx-xxxx-4xxx-yxxx-xxxxxx".replace(/[xy]/g, (c) => {
@@ -19,12 +17,9 @@ const generateRandomOrderId = () => {
   });
 };
 
-// interface PaymentRequestProps {
-//   orderData: OrderData;
-// }
-
 const PaymentRequestComponent = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useAppDispatch();
   const orderData = useAppSelector((state) => state.payment.orderData);
 
   if (!orderData) {
@@ -36,6 +31,32 @@ const PaymentRequestComponent = () => {
       setIsLoading(true);
       const orderId = generateRandomOrderId();
 
+      // 결제에 필요한 정보를 리덕스 스토어에 저장
+      const paymentReadyData = {
+        ...orderData,
+        products: orderData.products.map(product => ({
+          id: product.id,
+          quantity: product.quantity,
+          name: product.name,
+          size: product.size,
+          type: product.type
+        }))
+      };
+      
+      // 기존 orderData를 업데이트
+      dispatch(setOrderData(paymentReadyData));
+
+      // 필수 데이터만 URL 파라미터로 인코딩
+      const essentialData = {
+        storeId: orderData.storeId || "default-store",
+        products: orderData.products.map(product => ({
+          id: product.id,
+          quantity: product.quantity
+        }))
+      };
+      
+      const encodedData = encodeURIComponent(JSON.stringify(essentialData));
+
       const tossPayments = await loadTossPayments(TOSS_CLIENT_KEY);
 
       const paymentData = {
@@ -43,10 +64,11 @@ const PaymentRequestComponent = () => {
         orderId: orderId,
         orderName: orderData.orderName || "주문",
         customerName: orderData.customerName || "고객",
-        successUrl: `${window.location.origin}/payment/success`,
-        failUrl: `${window.location.origin}/payment/fail`,
+        successUrl: `${process.env.NEXT_PUBLIC_STAFF_ROUTE}/pos/payment/success?storeData=${encodedData}`,
+        failUrl: `${process.env.NEXT_PUBLIC_STAFF_ROUTE}/pos/payment/fail`,
       };
-      console.log(paymentData);
+      
+      console.log("결제 요청 데이터:", paymentData);
       await tossPayments.requestPayment("토스페이", paymentData);
     } catch (error: unknown) {
       console.error("결제 요청 중 오류 발생:", error);
@@ -60,6 +82,7 @@ const PaymentRequestComponent = () => {
       } else {
         alert("결제 요청 중 오류가 발생했습니다.");
       }
+      setIsLoading(false);
     }
   };
 
@@ -95,7 +118,6 @@ const PaymentRequestComponent = () => {
                   <div className="py-2 col-span-2">수량</div>
                 </div>
                 
-                {/* 스크롤 가능한 내용 영역 - 같은 비율 적용 */}
                 <div className="max-h-[260px] overflow-y-auto">
                   {orderData.products.map((product, index) => (
                     <div key={index} className="grid grid-cols-12 text-center border-b border-gray-100">
