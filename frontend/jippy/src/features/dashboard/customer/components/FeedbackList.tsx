@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import useFeedbacks from '@/features/dashboard/customer/hooks/useFeedbacks';
 import { Feedback } from '@/features/dashboard/customer/types/customer';
+import { Trash2 } from "lucide-react";
 
 interface FeedbackListProps {
   storeId: number;
@@ -33,7 +34,7 @@ const FeedbackList: React.FC<FeedbackListProps> = ({ storeId, selectedCategory }
   };
 
   return (
-    <div className="p-4">
+    <div className="py-4">
       {loading && <p className="text-gray-500">로딩중...</p>}
       {error && <p className="text-red-500">오류: {error}</p>}
       {!loading && totalItems === 0 && <p className="text-gray-700">피드백이 없습니다.</p>}
@@ -52,9 +53,9 @@ const FeedbackList: React.FC<FeedbackListProps> = ({ storeId, selectedCategory }
             </div>
             <button
               onClick={() => handleDelete(fb.id)}
-              className="mt-4 md:mt-0 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+              className="text-red-500 hover:text-red-700"
             >
-              삭제
+              <Trash2 size={25} />
             </button>
           </div>
         ))}
