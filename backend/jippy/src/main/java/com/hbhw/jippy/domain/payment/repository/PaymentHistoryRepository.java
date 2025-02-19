@@ -4,6 +4,8 @@ import com.hbhw.jippy.domain.payment.dto.response.SalesByDayResponse;
 import com.hbhw.jippy.domain.payment.dto.response.SalesResponse;
 import com.hbhw.jippy.domain.payment.entity.PaymentHistory;
 import com.hbhw.jippy.domain.product.dto.response.ProductSoldCountResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -17,6 +19,8 @@ import java.util.Optional;
 public interface PaymentHistoryRepository extends MongoRepository<PaymentHistory, Integer> {
 
     List<PaymentHistory> findByStoreId(Integer storeId, Sort sort);
+
+    Page<PaymentHistory> findByStoreId(Integer storeId, String startDate, String endDate, Pageable pageable);
 
     List<PaymentHistory> findByStoreIdAndPaymentStatus(Integer storeId, String paymentStatus, Sort sort);
 
