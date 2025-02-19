@@ -66,7 +66,7 @@ const QRCodeCRUD: React.FC = () => {
         return;
       }
 
-      setStoreId(storeIdList[0]); // store 선택 페이지 구성 후 수정 필요요
+      setStoreId(storeIdList[0]);
 
       const token = getCookieValue("accessToken");
       setAccessToken(token);
@@ -379,90 +379,90 @@ const QRCodeCRUD: React.FC = () => {
 
   return (
     <div className="flex justify-center items-center p-8">
-      <Card className="w-full max-w-4xl">
+      <Card className="w-full max-w-4xl bg-white">
         <CardContent className="p-6">
-          <div className="flex gap-8 items-center">
-            <div className="flex flex-col gap-3 w-48 shrink-0">
+          <div className="flex gap-8 items-center min-h-[600px]">
+            <div className="flex flex-col gap-3 shrink-0">
               {QR_PAGES.map((config) => (
                 <Button
-                  key={config.name}
-                  onClick={() => handleQRButtonClick(config.name)}
-                  variant={selectedQR === config.name ? "default" : "default"}
-                  className={`w-full justify-start h-11 border ${
-                    selectedQR === config.name
-                      ? "border-gray-400 bg-gray-400 text-white hover:bg-gray-400"
-                      : "border-gray-200 hover:border-gray-500 hover:text-gray-600"
-                  }`}
-                >
-                  <QrCode className="w-4 h-4 mr-2 opacity-70" />
-                  <span className="text-sm">{config.name}</span>
-                </Button>
+                key={config.name}
+                onClick={() => handleQRButtonClick(config.name)}
+                variant={selectedQR === config.name ? "default" : "default"}
+                className={`w-32 md:w-40 lg:w-48 justify-start h-11 bg-white border-2 ${
+                  selectedQR === config.name
+                    ? "border-orange-500 text-orange-500 hover:bg-orange-50"
+                    : "border-gray-200 text-gray-700 hover:border-orange-500 hover:text-orange-500"
+                }`}
+              >
+                <QrCode className="w-4 h-4 mr-2" />
+                <span className="text-sm font-medium">{config.name}</span>
+              </Button>
               ))}
             </div>
 
             <div className="flex-1 flex justify-center">
               <div className="w-[320px]">
                 <div className="flex flex-col items-center">
-                  <div className="h-[500px] w-full flex items-center justify-center">
-                    <div className="flex flex-col items-center w-full relative mt-10 mb-10">
-                      <h3 className="text-xl font-semibold text-gray-900 mb-6">
-                        {selectedQR ? `${selectedQR} QR 코드` : "QR 코드"}
-                      </h3>
-                      <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6 w-[280px] h-[280px] flex items-center justify-center">
-                        {isLoading ? (
-                          <div className="flex flex-col items-center justify-center">
-                            <Loader2 className="w-8 h-8 animate-spin opacity-70 mb-4" />
-                            <p className="text-sm text-gray-500">
-                              QR 코드 {qrExists ? "생성" : "조회"} 중...
-                            </p>
-                          </div>
-                        ) : error ? (
-                          <div className="flex flex-col items-center justify-center text-red-500">
-                            <p className="text-sm text-center">{error}</p>
-                          </div>
-                        ) : selectedQR && qrExists === false ? (
-                          <div className="flex flex-col items-center justify-center">
-                            <Button
-                              onClick={() => handleQRGenerate(selectedQR)}
-                              className="mb-2"
-                            >
-                              <Plus className="w-4 h-4 mr-2" />
-                              {selectedQR} QR 코드 생성하기
-                            </Button>
-                          </div>
-                        ) : qrImage && imageDimensions.width > 0 ? (
-                          <Image
-                            src={qrImage}
-                            alt="QR Code"
-                            width={200}
-                            height={200}
-                            className="object-contain"
-                            onError={() => {
-                              setError("QR 코드 이미지를 불러올 수 없습니다");
-                              setQrImage(null);
-                            }}
-                            unoptimized
-                          />
-                        ) : (
-                          <div className="flex flex-col items-center justify-center text-gray-500">
-                            <QrCode className="w-16 h-16 mb-4 opacity-40" />
-                            <p className="text-sm">
-                              QR 코드를 생성하려면 버튼을 클릭하세요
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                      {qrImage && !error && (
-                        <Button
-                          onClick={handlePrint}
-                          variant="orange"
-                          className="w-full h-11"
-                        >
-                          <Printer className="w-4 h-4 mr-2" />
-                          QR 코드 출력하기
-                        </Button>
+                  <div className="w-full flex flex-col items-center justify-center">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-6">
+                      {selectedQR ? `${selectedQR} QR 코드` : "QR 코드"}
+                    </h3>
+                    <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6 w-full h-[320px] flex items-center justify-center">
+                      {isLoading ? (
+                        <div className="flex flex-col items-center justify-center">
+                          <Loader2 className="w-8 h-8 animate-spin opacity-70 mb-4" />
+                          <p className="text-sm text-gray-500">
+                            QR 코드 {qrExists ? "생성" : "조회"} 중...
+                          </p>
+                        </div>
+                      ) : error ? (
+                        <div className="flex flex-col items-center justify-center text-red-500">
+                          <p className="text-sm text-center">{error}</p>
+                        </div>
+                      ) : selectedQR && qrExists === false ? (
+                        <div className="flex flex-col items-center justify-center">
+                          <Button
+                            onClick={() => handleQRGenerate(selectedQR)}
+                            className="bg-white border-2 border-orange-500 text-orange-500 hover:bg-orange-50"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            {selectedQR} QR 코드 생성하기
+                          </Button>
+                        </div>
+                      ) : qrImage && imageDimensions.width > 0 ? (
+                        <Image
+                          src={qrImage}
+                          alt="QR Code"
+                          width={200}
+                          height={200}
+                          className="object-contain"
+                          onError={() => {
+                            setError("QR 코드 이미지를 불러올 수 없습니다");
+                            setQrImage(null);
+                          }}
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-gray-500">
+                          <QrCode className="w-16 h-16 mb-4 opacity-40" />
+                          <p className="text-sm">
+                            QR 코드를 생성하려면 버튼을 클릭하세요
+                          </p>
+                        </div>
                       )}
                     </div>
+                    <Button
+                      onClick={handlePrint}
+                      disabled={!qrImage || !!error}
+                      className={`w-full h-11 ${
+                        !qrImage || !!error
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-orange-500 text-white hover:bg-orange-600"
+                      }`}
+                    >
+                      <Printer className="w-4 h-4 mr-2" />
+                      QR 코드 출력하기
+                    </Button>
                   </div>
                 </div>
               </div>
