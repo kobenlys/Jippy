@@ -22,7 +22,7 @@ const usePrediction = (storeId: number) => {
         if (accessToken === null) {
           router.replace("/login");
         }
-        const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/feedback-ml/predictions/${storeId}`
+        const endpoint = `https://jippy.duckdns.org/feedback-ml/predictions/${storeId}`
         const res = await fetch(endpoint, {
           method: "GET",
           headers: {

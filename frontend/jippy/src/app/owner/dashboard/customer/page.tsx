@@ -49,31 +49,32 @@ const CustomerDashboardPage = () => {
         <div className="flex flex-wrap gap-2 mb-6">
           <button
             onClick={() => setSelectedCategory(null)}
-            className={buttonClass(selectedCategory === null)}
+            className={`${buttonClass(selectedCategory === null)} rounded-xl`}
           >
             전체
           </button>
           <button
             onClick={() => setSelectedCategory('SERVICE')}
-            className={buttonClass(selectedCategory === 'SERVICE')}
+            className={`${buttonClass(selectedCategory === 'SERVICE')} rounded-xl`}
+            
           >
             서비스
           </button>
           <button
             onClick={() => setSelectedCategory('LIVE')}
-            className={buttonClass(selectedCategory === 'LIVE')}
+            className={`${buttonClass(selectedCategory === 'LIVE')} rounded-xl`}
           >
             실시간 서비스
           </button>
           <button
             onClick={() => setSelectedCategory('PRODUCT')}
-            className={buttonClass(selectedCategory === 'PRODUCT')}
+            className={`${buttonClass(selectedCategory === 'PRODUCT')} rounded-xl`}
           >
             제품관련
           </button>
           <button
             onClick={() => setSelectedCategory('ETC')}
-            className={buttonClass(selectedCategory === 'ETC')}
+            className={`${buttonClass(selectedCategory === 'ETC')} rounded-xl`}
           >
             기타
           </button>
@@ -86,7 +87,6 @@ const CustomerDashboardPage = () => {
 
       {/* 오른쪽 컬럼: 피드백 분석 */}
       <div className="md:w-1/2 p-4 md:p-6 flex flex-col">
-        <h2 className="text-2xl font-bold mb-4">피드백 분석</h2>
         <div className="flex-grow overflow-y-auto no-scrollbar">
           {storeId !== null && <MLAnalysis storeId={storeId} />}
         </div>
