@@ -56,7 +56,7 @@ public class AttendanceService {
     private final AttendanceMongoRepository attendanceMongoRepository;
     private final UUIDProvider uuidProvider;
     private static final double EARTH_RADIUS = 6371e3; // 지구 반경 (미터 단위)
-    private static final double ERROR_RANGE = 10.0;
+    private static final double ERROR_RANGE = 1000.0;
 
     private static final String TEMP_SCHEDULE_PREFIX = "temp:schedule:";
 
