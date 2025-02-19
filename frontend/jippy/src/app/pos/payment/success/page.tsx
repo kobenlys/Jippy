@@ -20,6 +20,11 @@ interface StoreData {
   products: ProductData[];
 }
 
+// 에러 타입 정의
+interface ErrorWithMessage {
+  message: string;
+}
+
 // 실제 결제 처리를 담당하는 컴포넌트
 const PaymentSuccessContent = () => {
   const router = useRouter();
@@ -51,7 +56,7 @@ const PaymentSuccessContent = () => {
       let storeData: StoreData;
       try {
         storeData = JSON.parse(decodeURIComponent(storeDataParam));
-      } catch (e) {
+      } catch {
         throw new Error("주문 정보 파싱에 실패했습니다.");
       }
       
@@ -82,16 +87,24 @@ const PaymentSuccessContent = () => {
         // 결제 완료 후 리덕스 스토어 정리
         setTimeout(() => {
           dispatch(clearPaymentState());
-          router.push("/pos/payment/history");
+          router.push("/order");
         }, 3000);
       } else {
         // confirmPayment가 rejected된 경우 에러 처리
         const payload = resultAction.payload as string;
         throw new Error(payload || "결제 확인에 실패했습니다.");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("결제 확인 실패:", err);
-      setError(err.message || "알 수 없는 오류가 발생했습니다.");
+      
+      // 에러 메시지 추출
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : (typeof err === 'object' && err && 'message' in err)
+          ? (err as ErrorWithMessage).message
+          : "알 수 없는 오류가 발생했습니다.";
+          
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
