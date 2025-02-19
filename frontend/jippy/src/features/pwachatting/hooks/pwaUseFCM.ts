@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from "react";
 import { getMessaging, getToken, MessagePayload } from "firebase/messaging";
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAeyyqdIG8ALszCkNP3PG1uW4Gprhbje4A",
@@ -11,8 +11,6 @@ const firebaseConfig = {
   appId: "1:70892831219:web:71e8d19f9d4b52ee9f5286",
   measurementId: "G-891SKEBEDW"
 };
-
-let isInitialized = false;
 
 const getCookieValue = (name: string): string | null => {
   if (typeof document === "undefined") return null;
@@ -44,7 +42,8 @@ export const usePwaFCM = () => {
         body: JSON.stringify({
           userId: parseInt(userId),
           token,
-          userType
+          userType,
+          deviceType: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? 'mobile' : 'web'
         }),
       });
 
@@ -61,56 +60,98 @@ export const usePwaFCM = () => {
 
   useEffect(() => {
     let messaging: import('firebase/messaging').Messaging;
-
+  
     const initializeFCM = async () => {
-      if (isInitialized) {
-        console.log('FCM already initialized');
-        return;
-      }
-
       try {
-        if (!userId || !userType) return;
-
-        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-          console.log('Push 알림이 지원되지 않는 브라우저입니다.');
+        if (!userId || !userType) {
+          console.log('사용자 인증 정보 없음');
           return;
         }
-
-        const app = initializeApp(firebaseConfig);
+  
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+          console.log('Push 알림 미지원 브라우저');
+          return;
+        }
+  
+        let app;
+        if (!getApps().length) {
+          app = initializeApp(firebaseConfig);
+        } else {
+          app = getApps()[0];
+        }
+        
         messaging = getMessaging(app);
-
+  
+        const swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        console.log('Service Worker 등록 완료:', swRegistration);
+  
         const permission = await Notification.requestPermission();
+        console.log('알림 권한 상태:', permission);
+  
         if (permission === 'granted') {
+          try {
+            const currentToken = await getToken(messaging, {
+              vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+              serviceWorkerRegistration: swRegistration
+            });
+  
+            if (currentToken) {
+              console.log('FCM 토큰:', currentToken);
+              await saveTokenToBackend(currentToken);
+            }
 
-          const token = await getToken(messaging, {
-            vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY
-          });
-
-          if (token) {
-            await saveTokenToBackend(token);
+            setInterval(async () => {
+              const refreshedToken = await getToken(messaging, {
+                vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+                serviceWorkerRegistration: swRegistration
+              });
+              
+              if (refreshedToken !== currentToken) {
+                console.log('FCM 토큰 갱신됨:', refreshedToken);
+                await saveTokenToBackend(refreshedToken);
+              }
+            }, 1000 * 60 * 60);
+  
+          } catch (tokenError) {
+            console.error('FCM 토큰 생성 실패:', tokenError);
           }
         }
-
+  
         const { onMessage } = await import('firebase/messaging');
         onMessage(messaging, (payload: MessagePayload) => {
+          console.log('포그라운드 메시지 수신:', payload);
+          
           if ('Notification' in window && Notification.permission === 'granted') {
             const title = payload.data?.title || 'JIPPY Alert';
             const body = payload.data?.body || '새로운 메시지가 도착했습니다.';
             
-            new Notification(title, { body });
+            const notification = new Notification(title, { 
+              body,
+              icon: '/icons/pwa.png',
+              badge: '/icons/badge.png',
+              tag: payload.data?.messageId,
+              requireInteraction: true, 
+              data: payload.data
+            });
+  
+            notification.onclick = () => {
+              window.focus();
+              notification.close();
+            };
           }
         });
-
-        isInitialized = true;
-        console.log('FCM initialized successfully');
-
+  
+        console.log('FCM 초기화 완료');
+  
       } catch (error) {
-        console.error('FCM 초기화 중 에러 발생:', error);
+        console.error('FCM 초기화 실패:', error);
       }
     };
-
+  
     initializeFCM();
-
-    return () => {};
+  
+    return () => {
+      // cleanup 로직
+    };
   }, [userId, userType, saveTokenToBackend]);
 };
