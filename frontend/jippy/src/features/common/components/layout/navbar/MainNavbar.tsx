@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Menu, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useDispatch } from "react-redux";
@@ -104,15 +103,6 @@ const Navbar = () => {
           </div>
 
           <div className={styles.desktopMenu}>
-            <Link href="/qr" className={styles.qrButton}>
-              <Image
-                src="/images/NavbarQR.svg"
-                alt="QR Code"
-                fill
-                className={styles.qrImage}
-              />
-            </Link>
-
             {accessToken ? (
               <div className={styles.profileDropdown} ref={dropdownRef}>
                 <button

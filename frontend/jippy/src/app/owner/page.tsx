@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import Navbar from "@/features/owner/navbar/mainNavbar";
+import Navbar from "@/features/owner/navbar/MainNavbar";
 
 // ✅ Shop 타입 정의
 interface Shop {
