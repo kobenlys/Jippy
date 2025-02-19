@@ -97,7 +97,7 @@ const Navbar = () => {
       <div className={styles.container}>
         <div className={styles.wrapper}>
           <div className={styles.logo}>
-            <Link href="/pos/order" className={styles.logoText}>
+            <Link href="/shop" className={styles.logoText}>
               Jippy
             </Link>
           </div>
