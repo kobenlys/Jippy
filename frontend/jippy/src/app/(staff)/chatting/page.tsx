@@ -86,10 +86,10 @@ const ChattingPage: React.FC = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-56px)] bg-white">
+    <div className="h-[calc(100vh-56px)]">
       {showChatList ? (
         <div className="h-full">
-          <div className="sticky top-0 z-10 bg-white">
+          <div className="sticky top-0 z-10">
             <PageTitle />
           </div>
           <ChatList chatRooms={chatRooms} onSelect={handleChatRoomSelect} />
