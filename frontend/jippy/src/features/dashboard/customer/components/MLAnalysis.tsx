@@ -1,12 +1,13 @@
 import React from 'react';
 import usePrediction from '@/features/dashboard/customer/hooks/usePrediction';
 
-const categoryMapping = {
+const categoryMapping: { [key: string]: string } = {
   "1": "서비스",
   "2": "실시간 서비스",
   "3": "제품관련",
   "4": "기타",
 };
+
 
 interface MLAnalysisProps {
   storeId: number;
