@@ -10,39 +10,9 @@ interface StaffAttendanceListProps {
   storeId: number;
 }
 
-interface FilterTabProps {
-  currentFilter: "update" | "attendance";
-  onFilterChange: (filter: "update" | "attendance") => void;
-}
-
 const StaffAttendanceList = ({ storeId }: StaffAttendanceListProps) => {
   const { data: staffList, isLoading, error } = useStaffList(storeId);
   const [openStaffId, setOpenStaffId] = useState<number | null>(null);
-
-const FilterTabs = ({ currentFilter, onFilterChange }: FilterTabProps) => (
-  <div className="flex space-x-2 mb-4">
-    <button
-      onClick={() => onFilterChange("update")}
-      className={`px-4 py-2 transition-colors ${
-        currentFilter === "update"
-          ? "border-b-2 border-orange-500 text-orange-600 font-medium"
-          : "text-gray-500 hover:text-gray-700"
-      }`}
-    >
-      직원 목록
-    </button>
-    <button
-      onClick={() => onFilterChange("attendance")}
-      className={`px-4 py-2 transition-colors ${
-        currentFilter === "attendance"
-          ? "border-b-2 border-orange-500 text-orange-600 font-medium"
-          : "text-gray-500 hover:text-gray-700"
-      }`}
-    >
-      근태 현황
-    </button>
-  </div>
-);
 
   if (isLoading) {
     return (
