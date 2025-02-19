@@ -34,7 +34,7 @@ const FeedbackList: React.FC<FeedbackListProps> = ({ storeId, selectedCategory }
   };
 
   return (
-    <div className="p-4">
+    <div className="py-4">
       {loading && <p className="text-gray-500">로딩중...</p>}
       {error && <p className="text-red-500">오류: {error}</p>}
       {!loading && totalItems === 0 && <p className="text-gray-700">피드백이 없습니다.</p>}

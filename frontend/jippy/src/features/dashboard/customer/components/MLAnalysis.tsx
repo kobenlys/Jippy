@@ -20,7 +20,7 @@ const MLAnalysis: React.FC<MLAnalysisProps> = ({ storeId }) => {
   if (!data) return null;
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="py-6 px-2 max-w-4xl mx-auto">
       {/* 피드백 총계 카드 */}
       <div className="mb-6 grid grid-cols-2 gap-4">
         <div className="flex flex-row items-center justify-between bg-[#F27B39] text-white p-4 rounded-xl shadow-md">
