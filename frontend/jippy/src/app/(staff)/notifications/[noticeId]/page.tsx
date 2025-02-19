@@ -111,14 +111,14 @@ const NoticeDetailPage = ({
       <div className="p-4">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="border-b pb-4">
-            <h1 className="text-xl font-medium mb-2">{notice.title}</h1>
+            <h1 className="text-xl font-medium mb-2 break-words">{notice.title}</h1>
             <div className="flex justify-between text-sm text-gray-600">
               <span>{notice.author}</span>
               <span className="text-gray-300">{notice.createdAt}</span>
             </div>
           </div>
 
-          <div className="py-6 whitespace-pre-wrap">{notice.content}</div>
+          <div className="py-6 whitespace-pre-wrap" style={{ wordBreak: 'keep-all' }}>{notice.content}</div>
 
           <div className="mt-6 flex justify-center">
             <button

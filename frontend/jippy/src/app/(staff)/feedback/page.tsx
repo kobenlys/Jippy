@@ -173,7 +173,7 @@ const FeedbackPage = () => {
                             <div>
                                 {feedbacks.map((feedback) => (
                                     <div key={feedback.id} className="border-b py-3 last:border-b-0">
-                                        <div className="hover:bg-gray-50 transition-colors p-2">
+                                        <div className="transition-colors p-2">
                                             <div className="flex justify-between items-center">
                                                 <div className="flex-1">
                                                     <p className="font-medium">{feedback.content}</p>
