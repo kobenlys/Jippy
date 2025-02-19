@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import Navbar from "@/features/owner/navbar/mainNavbar";
 
 // ✅ Shop 타입 정의
 interface Shop {
@@ -119,7 +120,7 @@ export default function ShopsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      
+      <Navbar />  
       <h1 className="text-2xl font-bold mb-6">내 매장 목록</h1>
       {localError && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">

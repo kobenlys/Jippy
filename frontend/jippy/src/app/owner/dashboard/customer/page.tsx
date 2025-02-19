@@ -23,7 +23,7 @@ const CustomerDashboardPage = () => {
       console.log("parsedStoreId: ", parsedStoreId);
 
       if (!parsedStoreId || isNaN(parsedStoreId)) {
-        router.replace("/owner/dashboard");
+        router.replace("/owner");
       } else {
         setStoreId(parsedStoreId);
       }

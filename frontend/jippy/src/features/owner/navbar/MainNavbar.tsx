@@ -104,26 +104,6 @@ const Navbar = () => {
           </div>
 
           <div className={styles.desktopMenu}>
-            <div className={styles.navLinks}>
-              <Link href="/owner/dashboard/sale" className={styles.navLink}>
-                매출
-              </Link>
-              <Link href="/owner/dashboard/product" className={styles.navLink}>
-                상품
-              </Link>
-              <Link href="/owner/dashboard/stock" className={styles.navLink}>
-                재고
-              </Link>
-              <Link href="/owner/dashboard/staff" className={styles.navLink}>
-                직원
-              </Link>
-              <Link href="/owner/dashboard/customer" className={styles.navLink}>
-                고객
-              </Link>
-              <Link href="/owner/dashboard/qr" className={styles.navLink}>
-                QR 관리
-              </Link>
-            </div>
 
             {accessToken ? (
               <div className={styles.profileDropdown} ref={dropdownRef}>

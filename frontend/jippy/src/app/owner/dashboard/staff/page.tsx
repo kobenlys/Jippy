@@ -33,7 +33,7 @@ const StaffDashboardPage = () => {
       const decodedName = ownerName ? decodeURIComponent(ownerName) : "";
 
       if (!parsedStoreId || isNaN(parsedStoreId)) {
-        router.push("/owner/dashboard");
+        router.push("/owner");
       } else {
         setStoreId(parsedStoreId);
         setOwnerName(decodedName);

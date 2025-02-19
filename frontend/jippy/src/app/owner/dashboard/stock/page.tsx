@@ -40,7 +40,7 @@ export default async function StockPage() {
   }
   const parsedStoreId = storeId ? parseInt(storeId, 10) : null;
   if (!parsedStoreId || isNaN(parsedStoreId)) {
-    redirect("/owner/dashboard");
+    redirect("/owner");
   }
 
   const stockData = await getStockData(parsedStoreId, accessToken);

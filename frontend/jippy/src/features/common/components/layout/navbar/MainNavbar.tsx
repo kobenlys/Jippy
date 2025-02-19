@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Menu, ChevronDown } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { logout } from "@/redux/slices/userSlice";
 import { useRouter } from "next/navigation";
@@ -12,34 +13,33 @@ const Navbar = () => {
   const router = useRouter();
   const dispatch = useDispatch();
 
-  // 상태 추가 (초기값: null)
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // 🔥 클라이언트 사이드에서만 실행하도록 변경
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>("사용자");
 
   useEffect(() => {
-    // 클라이언트 사이드에서만 실행
-    if (typeof window !== "undefined") {
-      const cookies = document.cookie.split("; ");
-
-      // accessToken 가져오기
+    if (typeof document !== "undefined") {
+      // document가 클라이언트에서만 실행됨을 보장
       const token =
-        cookies
+        document.cookie
+          .split("; ")
           .find((cookie) => cookie.startsWith("accessToken="))
           ?.split("=")[1] || null;
-      setAccessToken(token);
 
-      // userName 가져오기
       const encodedUserName =
-        cookies
+        document.cookie
+          .split("; ")
           .find((cookie) => cookie.startsWith("userName="))
           ?.split("=")[1] || "";
+
+      setAccessToken(token);
       setUserName(decodeURIComponent(encodedUserName) || "사용자");
     }
-  }, []);
-
-  const [isOpen, setIsOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  }, []); // 👈 useEffect 안에서 실행 (클라이언트 사이드에서만 실행됨)
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -79,7 +79,7 @@ const Navbar = () => {
       }
 
       dispatch(logout());
-
+      setAccessToken(null);
       setIsDropdownOpen(false);
       router.push("/");
       alert("성공적으로 로그아웃되었습니다.");
@@ -98,32 +98,20 @@ const Navbar = () => {
       <div className={styles.container}>
         <div className={styles.wrapper}>
           <div className={styles.logo}>
-            <Link href="/owner" className={styles.logoText}>
+            <Link href="/pos/order" className={styles.logoText}>
               Jippy
             </Link>
           </div>
 
           <div className={styles.desktopMenu}>
-            <div className={styles.navLinks}>
-              <Link href="/owner/dashboard/sale" className={styles.navLink}>
-                매출
-              </Link>
-              <Link href="/owner/dashboard/product" className={styles.navLink}>
-                상품
-              </Link>
-              <Link href="/owner/dashboard/stock" className={styles.navLink}>
-                재고
-              </Link>
-              <Link href="/owner/dashboard/staff" className={styles.navLink}>
-                직원
-              </Link>
-              <Link href="/owner/dashboard/customer" className={styles.navLink}>
-                고객
-              </Link>
-              <Link href="/owner/dashboard/qr" className={styles.navLink}>
-                QR 관리
-              </Link>
-            </div>
+            <Link href="/qr" className={styles.qrButton}>
+              <Image
+                src="/images/NavbarQR.svg"
+                alt="QR Code"
+                fill
+                className={styles.qrImage}
+              />
+            </Link>
 
             {accessToken ? (
               <div className={styles.profileDropdown} ref={dropdownRef}>
@@ -131,7 +119,7 @@ const Navbar = () => {
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className={styles.profileButton}
                 >
-                  <span>{userName} 님</span>
+                  <span>{userName ? `${userName} 님` : "사용자"}</span>
                   <ChevronDown className={styles.dropdownIcon} />
                 </button>
 

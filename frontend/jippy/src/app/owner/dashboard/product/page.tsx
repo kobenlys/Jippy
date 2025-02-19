@@ -60,7 +60,7 @@ export default function ProductDashboardPage() {
     console.log("Parsed storeId:", parsedStoreId); // ✅ 디버깅용 로그 추가
 
     if (!parsedStoreId || isNaN(parsedStoreId)) {
-      router.replace("/owner/dashboard");
+      router.replace("/owner");
     } else {
       setStoreId(parsedStoreId);
     }
