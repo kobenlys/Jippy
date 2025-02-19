@@ -82,7 +82,7 @@ const PaymentHistoryPage = () => {
     <div className="page-content">
       <div className="w-full h-full p-8 overflow-hidden">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">결제 내역</h1>
+          <h1 className="text-2xl font-bold text-gray-800">결제내역</h1>
           <button
             onClick={() => setIsCashModalOpen(true)}
             className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors duration-200"
