@@ -19,12 +19,12 @@ interface FilterTabProps {
 }
 
 const FilterTabs = ({ currentFilter, onFilterChange }: FilterTabProps) => (
-  <div className="flex">
+  <div className="flex gap-6 mb-6">
     <button
       onClick={() => onFilterChange("update")}
-      className={`px-4 transition-colors ${
+      className={`transition-colors ${
         currentFilter === "update"
-          ? "bg-orange-100 text-orange-500 rounded-md text-lg font-semibold"
+          ? "text-jippy-orange font-semibold border-b-2 border-[#F27B39] pb-1"
           : "text-gray-500 hover:text-gray-700"
       }`}
     >
@@ -32,9 +32,9 @@ const FilterTabs = ({ currentFilter, onFilterChange }: FilterTabProps) => (
     </button>
     <button
       onClick={() => onFilterChange("attendance")}
-      className={`px-4 transition-colors ${
+      className={`transition-colors ${
         currentFilter === "attendance"
-          ? "bg-orange-100 text-orange-500 rounded-md text-lg font-semibold"
+          ? "text-jippy-orange font-semibold border-b-2 border-[#F27B39] pb-1"
           : "text-gray-500 hover:text-gray-700"
       }`}
     >
@@ -44,11 +44,7 @@ const FilterTabs = ({ currentFilter, onFilterChange }: FilterTabProps) => (
 );
 
 const StaffListCard = ({ storeId }: StaffListCardProps) => {
-  const {
-    data: staffList,
-    isLoading,
-    refreshList,
-  } = useStaffList(storeId);
+  const { data: staffList, isLoading, refreshList } = useStaffList(storeId);
   const [currentFilter, setCurrentFilter] = useState<"update" | "attendance">(
     "update"
   );
@@ -103,20 +99,23 @@ const StaffListCard = ({ storeId }: StaffListCardProps) => {
     return (
       <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
         <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <FilterTabs
-              currentFilter={currentFilter}
-              onFilterChange={handleFilterChange}
-            />
-            <Users className="w-5 h-5 text-gray-400" />
-          </div>
+          <h2 className="text-xl font-semibold text-[#3D3733] mb-4">
+            직원 관리
+          </h2>
+          <FilterTabs
+            currentFilter={currentFilter}
+            onFilterChange={handleFilterChange}
+          />
           {currentFilter === "update" ? (
             <div className="py-12 flex flex-col items-center justify-center text-gray-500">
               <Users className="h-12 w-12 mb-4 text-gray-300" />
               <p className="text-center mb-1">등록된 직원이 없습니다.</p>
             </div>
           ) : (
-            <StaffAttendanceList storeId={storeId} />
+            <div className="py-12 flex flex-col items-center justify-center text-gray-500">
+              <Users className="h-12 w-12 mb-4 text-gray-300" />
+              <p className="text-center mb-1">등록된 직원이 없습니다.</p>
+            </div>
           )}
         </div>
       </Card>
@@ -124,26 +123,26 @@ const StaffListCard = ({ storeId }: StaffListCardProps) => {
   }
 
   return (
-    <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+    <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 h-full flex flex-col">
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <FilterTabs
-            currentFilter={currentFilter}
-            onFilterChange={handleFilterChange}
-          />
+          <h2 className="text-xl font-semibold text-[#3D3733]">직원 관리</h2>
           {currentFilter === "update" && (
             <div className="flex items-center gap-2">
-              <span className="px-2 py-1 bg-[#F27B39]/10 text-[#F27B39] rounded-full text-[15px]">
+              <span className="mr-2 px-2 py-1 bg-[#F27B39]/10 text-[#F27B39] rounded-full text-[15px]">
                 총 {staffList.length}명
               </span>
               <Users className="w-5 h-5 text-gray-400" />
             </div>
           )}
         </div>
-
+        <FilterTabs
+          currentFilter={currentFilter}
+          onFilterChange={handleFilterChange}
+        />
         {currentFilter === "update" ? (
           <div className="overflow-x-auto">
-            <div className="max-h-[280px] overflow-y-auto pr-4">
+            <div className="max-h-[550px] overflow-y-auto pr-2">
               <table className="w-full">
                 <thead className="sticky top-0 bg-white z-10 shadow-[0px_1px_0px_0px_rgba(0,0,0,0.1)]">
                   <tr>
@@ -195,7 +194,9 @@ const StaffListCard = ({ storeId }: StaffListCardProps) => {
             </div>
           </div>
         ) : (
-          <StaffAttendanceList storeId={storeId} />
+          <div className="max-h-[550px] overflow-y-auto pr-2">
+            <StaffAttendanceList storeId={storeId} />
+          </div>
         )}
       </div>
 
