@@ -11,7 +11,7 @@ public class StockStatusScheduler {
     private final StockStatusRedisRepository stockStatusRedis;
 
     // 매일 자정에 판매 재고량 초기화
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 0 18 * * *", zone = "Asia/Seoul")
     public void resetDailySoldStock() {
         stockStatusRedis.resetAllSoldStock();
     }
