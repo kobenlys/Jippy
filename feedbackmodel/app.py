@@ -103,7 +103,7 @@ def get_predictions(store_id: int):
     지정된 store_id의 고객 피드백 데이터를 MySQL에서 조회하여  
     각 피드백에 대해 긍정/부정 예측을 수행하고 결과를 반환합니다.
     """
-    query = text("SELECT category, content, created_at FROM store_feedback WHERE store_id = :store_id")
+    query = text("SELECT category, content, created_at FROM store_feedback WHERE store_id = :store_id ORDER BY created_at desc")
     
     positive_reviews = []
     negative_reviews = []
