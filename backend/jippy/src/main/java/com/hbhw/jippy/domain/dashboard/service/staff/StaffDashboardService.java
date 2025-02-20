@@ -1,5 +1,6 @@
 package com.hbhw.jippy.domain.dashboard.service.staff;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hbhw.jippy.domain.dashboard.dto.response.staff.*;
 import com.hbhw.jippy.domain.store.entity.Store;
 import com.hbhw.jippy.domain.store.repository.StoreRepository;
@@ -14,17 +15,19 @@ import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
 import com.hbhw.jippy.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -33,6 +36,10 @@ public class StaffDashboardService {
     private final AttendanceStatusRepository attendanceStatusRepository;
     private final StoreStaffRepository storeStaffRepository;
     private final EmploymentStatusRepository employmentStatusRepository;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
+
+    private static final String CASH_PREFIX = "staffDashboard";
 
     public WorkingStaffResponse getWorkingStaff(Integer storeId) {
         Store store = validateStore(storeId);
@@ -161,28 +168,46 @@ public class StaffDashboardService {
         storeRepository.findById(storeId)
                 .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재하지 않는 매장입니다."));
 
-        List<EmploymentStatus> totalWork = employmentStatusRepository.findByStoreId(storeId);
+        String key = CASH_PREFIX + storeId;
+        String cashJsonData = redisTemplate.opsForValue().get(key);
 
-        if (totalWork.isEmpty()) {
-            throw new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장의 근무 기록이 없습니다.");
+        try {
+            if (StringUtils.hasText(cashJsonData)) {
+                log.info("totalStoreSalary : cash hit!!");
+                return objectMapper.readValue(cashJsonData, TotalStoreSalaryResponse.class);
+            }
+
+            List<EmploymentStatus> totalWork = employmentStatusRepository.findByStoreId(storeId);
+
+
+            if (totalWork.isEmpty()) {
+                throw new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장의 근무 기록이 없습니다.");
+            }
+
+            String firstWorkDate = totalWork.stream()
+                    .min(Comparator.comparing(EmploymentStatus::getStartDate))
+                    .map(EmploymentStatus::getStartDate)
+                    .orElse(DateTimeUtils.nowString());
+
+            String endWorkDate = totalWork.stream()
+                    .max(Comparator.comparing(EmploymentStatus::getStartDate))
+                    .map(EmploymentStatus::getStartDate)
+                    .orElse(DateTimeUtils.nowString());
+
+            Integer totalHourlySalary = calculateHourlyStaffSalary(storeId, firstWorkDate, endWorkDate);
+            Integer totalMonthlySalary = calculateMonthlyStaffSalary(storeId, firstWorkDate, endWorkDate);
+
+            TotalStoreSalaryResponse response = TotalStoreSalaryResponse.builder()
+                    .totalStoreSalary(totalHourlySalary + totalMonthlySalary)
+                    .build();
+
+            String jsonData = objectMapper.writeValueAsString(response); // 객체 → JSON 변환
+            redisTemplate.opsForValue().set(key, jsonData, Duration.ofSeconds(60 * 60));
+            log.info("totalStoreSalary : db search");
+            return response;
+        } catch (Exception e) {
+            throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "상품 도메인 서버에러 발생");
         }
-
-        String firstWorkDate = totalWork.stream()
-                .min(Comparator.comparing(EmploymentStatus::getStartDate))
-                .map(EmploymentStatus::getStartDate)
-                .orElse(DateTimeUtils.nowString());
-
-        String endWorkDate = totalWork.stream()
-                .max(Comparator.comparing(EmploymentStatus::getStartDate))
-                .map(EmploymentStatus::getStartDate)
-                .orElse(DateTimeUtils.nowString());
-
-        Integer totalHourlySalary = calculateHourlyStaffSalary(storeId, firstWorkDate, endWorkDate);
-        Integer totalMonthlySalary = calculateMonthlyStaffSalary(storeId, firstWorkDate, endWorkDate);
-
-        return TotalStoreSalaryResponse.builder()
-                .totalStoreSalary(totalHourlySalary + totalMonthlySalary)
-                .build();
     }
 
     /**

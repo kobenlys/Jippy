@@ -68,6 +68,8 @@ public class CalendarService {
                         calendar -> calendar.getStoreUserStaff().getId()
                 ));
 
+
+
         return groupedSchedules.entrySet().stream()
                 .map(entry -> {
                     List<Calendar> staffCalendars = entry.getValue();
