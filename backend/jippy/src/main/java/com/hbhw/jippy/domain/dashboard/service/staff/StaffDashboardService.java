@@ -39,7 +39,7 @@ public class StaffDashboardService {
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
 
-    private static final String CASH_PREFIX = "staffDashboard";
+    private static final String CACHE_PREFIX = "staffDashboard";
 
     public WorkingStaffResponse getWorkingStaff(Integer storeId) {
         Store store = validateStore(storeId);
@@ -152,23 +152,38 @@ public class StaffDashboardService {
 
     public StoreSalaryResponse getStoreSalary(Integer storeId, String date) {
         Store store = validateStore(storeId);
+        String key = CACHE_PREFIX + storeId + date;
+        String cashJsonData = redisTemplate.opsForValue().get(key);
 
-        String startOfMonth = DateTimeUtils.getStartOfMonth(date);
-        String endOfMonth = DateTimeUtils.getEndOfMonth(date);
+        try {
+            if (cashJsonData != null) {
+                log.info("totalStoreSalary : cash hit!!");
+                return objectMapper.readValue(cashJsonData, StoreSalaryResponse.class);
+            }
 
-        Integer hourlyStaffSalary = calculateHourlyStaffSalary(storeId, startOfMonth, endOfMonth);
-        Integer monthlyStaffSalary = calculateMonthlyStaffSalary(storeId, startOfMonth, endOfMonth);
+            String startOfMonth = DateTimeUtils.getStartOfMonth(date);
+            String endOfMonth = DateTimeUtils.getEndOfMonth(date);
 
-        return StoreSalaryResponse.builder()
-                .storeSalary(hourlyStaffSalary + monthlyStaffSalary)
-                .build();
+            Integer hourlyStaffSalary = calculateHourlyStaffSalary(storeId, startOfMonth, endOfMonth);
+            Integer monthlyStaffSalary = calculateMonthlyStaffSalary(storeId, startOfMonth, endOfMonth);
+            StoreSalaryResponse storeSalaryResponse = StoreSalaryResponse.builder()
+                    .storeSalary(hourlyStaffSalary + monthlyStaffSalary)
+                    .build();
+
+            String jsonData = objectMapper.writeValueAsString(storeSalaryResponse); // 객체 → JSON 변환
+            redisTemplate.opsForValue().set(key, jsonData, Duration.ofSeconds(60 * 60));
+            log.info("totalStoreSalary : db search");
+            return storeSalaryResponse;
+        } catch (Exception e) {
+            throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "상품 도메인 서버에러 발생");
+        }
     }
 
     public TotalStoreSalaryResponse getTotalStoreSalary(Integer storeId) {
         storeRepository.findById(storeId)
                 .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재하지 않는 매장입니다."));
 
-        String key = CASH_PREFIX + storeId;
+        String key = CACHE_PREFIX + storeId;
         String cashJsonData = redisTemplate.opsForValue().get(key);
 
         try {

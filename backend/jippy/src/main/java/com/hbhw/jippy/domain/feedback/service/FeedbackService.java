@@ -1,5 +1,8 @@
 package com.hbhw.jippy.domain.feedback.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hbhw.jippy.domain.dashboard.dto.response.staff.StoreSalaryResponse;
 import com.hbhw.jippy.domain.feedback.dto.request.FeedbackRequest;
 import com.hbhw.jippy.domain.feedback.dto.response.FeedbackResponse;
 import com.hbhw.jippy.domain.feedback.entity.Feedback;
@@ -11,24 +14,30 @@ import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
 import com.hbhw.jippy.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FeedbackService {
-
     private final FeedbackRepository feedbackRepository;
     private final NotificationService notificationService;
     private final StoreCoordinatesRepository storeCoordinatesRepository;
     private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
     private static final double EARTH_RADIUS = 6371e3; // 지구 반경 (미터 단위)
     private static final double ERROR_RANGE = 1000.0;
+
+    private static final String CASH_PREFIX = "feedback";
 
     /**
      * 고객 피드백 등록
@@ -87,10 +96,29 @@ public class FeedbackService {
      * 매장 전체 피드백 조회
      */
     public List<FeedbackResponse> getFeedbacksByStore(int storeId) {
-        List<Feedback> feedbackList = feedbackRepository.findByStoreId(storeId);
-        return feedbackList.stream()
-                .map(this::toResponse) // Entity에서 DTO로 변환
-                .collect(Collectors.toList());
+        String key = CASH_PREFIX + storeId;
+        String cashJsonData = redisTemplate.opsForValue().get(key);
+
+        try {
+            if(cashJsonData != null){
+                log.info("totalStoreSalary : cash hit!!");
+                return objectMapper.readValue(cashJsonData, new TypeReference<>() {
+                });
+            }
+
+            List<Feedback> feedbackList = feedbackRepository.findByStoreId(storeId);
+            List<FeedbackResponse> feedbackResponseList = feedbackList.stream()
+                    .map(this::toResponse)
+                    .toList();
+
+            String jsonData = objectMapper.writeValueAsString(feedbackResponseList); // 객체 → JSON 변환
+            redisTemplate.opsForValue().set(key, jsonData, Duration.ofSeconds(60 * 5));
+            log.info("totalStoreSalary : db search");
+            return feedbackResponseList;
+        } catch (Exception e) {
+            log.error("feedback error : {}", e.getClass());
+            throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "피드백 서버에러 발생");
+        }
     }
 
 
