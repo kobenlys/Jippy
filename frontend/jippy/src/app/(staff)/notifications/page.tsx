@@ -42,7 +42,7 @@ const NotificationsPage = () => {
       pageSize: 7,
       sortBy: "createdAt",
       direction: "DESC",
-      startDate: "2025-02-01 00:00:00",
+      startDate: "2024-02-01 00:00:00",
       endDate: now.toISOString().split('T')[0] + " 23:59:59"
     };
 
