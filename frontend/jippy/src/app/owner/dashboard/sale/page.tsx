@@ -135,8 +135,8 @@ const CardContent = ({
 }) => <div className={`p-2 ${className || ""}`}>{children}</div>;
 
 const Dashboard = () => {
-  const startMonthDate = "2024-01";
-  const endMonthDate = "2024-12";
+  const startMonthDate = "2025-01";
+  const endMonthDate = "2025-12";
   const startMonthNowDate = "2025-01";
   const endMonthNowDate = "2025-12";
 
