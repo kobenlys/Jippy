@@ -27,12 +27,7 @@ const QR_CONFIGS: QRConfig[] = [
     name: "직원 등록",
     explain: "USERQR",
     url: "https://jippy.duckdns.org/signup/staff/{storeId}",
-  },
-  // {
-  //   name: "직원 출퇴근",
-  //   explain: "ATTENDANCEQR",
-  //   url: ""
-  // }
+  }
 ];
 
 const QRCodeCRUD: React.FC = () => {

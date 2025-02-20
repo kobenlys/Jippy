@@ -5,7 +5,12 @@ import { Button } from "@/features/common/components/ui/button";
 import { Card } from "@/features/common/components/ui/card/Card";
 import { OrderItem, PaymentMethod } from "@/features/pos/order/types/pos";
 import { PaymentMethodSelector } from "./PaymentMethodSelector";
-import { ProductSize, ProductType, ProductSizeLabel, ProductTypeLabel } from '@/redux/types/product';
+import {
+  ProductSize,
+  ProductType,
+  ProductSizeLabel,
+  ProductTypeLabel,
+} from "@/redux/types/product";
 
 interface OrderPaymentProps {
   currentOrder: OrderItem[];
@@ -26,44 +31,51 @@ export const OrderPayment: FC<OrderPaymentProps> = ({
   onPaymentSubmit,
   onCancelOrder,
 }) => {
-
   // 컴포넌트 레벨에서 safeCurrentOrder 정의
   const safeCurrentOrder = currentOrder || [];
 
   // types 정리 후 수정 예정
   const formatOrderItemName = (item: OrderItem) => {
-    if (!item) return '';
-  
+    if (!item) return "";
+
     try {
       // 문자열 값을 enum으로 변환하기 위한 타입 가드 함수들
       const getSizeEnum = (size: unknown): ProductSize => {
         switch (size) {
-          case 'S': return ProductSize.S;
-          case 'M': return ProductSize.M;
-          case 'L': return ProductSize.L;
-          case 'F': return ProductSize.F;
-          default: return ProductSize.M;
+          case "S":
+            return ProductSize.S;
+          case "M":
+            return ProductSize.M;
+          case "L":
+            return ProductSize.L;
+          case "F":
+            return ProductSize.F;
+          default:
+            return ProductSize.M;
         }
       };
-  
+
       const getTypeEnum = (type: unknown): ProductType => {
         switch (type) {
-          case 'ICE': return ProductType.ICE;
-          case 'HOT': return ProductType.HOT;
-          case 'EXTRA': return ProductType.EXTRA;
-          default: return ProductType.ICE;
+          case "ICE":
+            return ProductType.ICE;
+          case "HOT":
+            return ProductType.HOT;
+          case "EXTRA":
+            return ProductType.EXTRA;
+          default:
+            return ProductType.ICE;
         }
       };
-  
+
       const sizeValue = getSizeEnum(item.size);
       const typeValue = getTypeEnum(item.type);
-  
+
       if (sizeValue === ProductSize.F || typeValue === ProductType.EXTRA) {
         return item.name;
       }
-  
+
       return `[${ProductSizeLabel[sizeValue]}] ${item.name} (${ProductTypeLabel[typeValue]})`;
-  
     } catch (error) {
       console.error(error);
       return item.name;
@@ -72,6 +84,18 @@ export const OrderPayment: FC<OrderPaymentProps> = ({
 
   return (
     <div className="flex flex-col h-full">
+      <style jsx>{`
+        /* Chrome, Safari, Edge, Opera */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        /* Firefox */
+        input[type="number"] {
+          -moz-appearance: textfield;
+        }
+      `}</style>
       <div className="flex-none bg-white p-4 border-b w-full flex justify-center items-center">
         <div className="px-4">
           <h1 className="h-[50px] text-xl font-semibold flex items-center justify-center">
@@ -79,7 +103,7 @@ export const OrderPayment: FC<OrderPaymentProps> = ({
           </h1>
         </div>
       </div>
-  
+
       <div className="flex-1 flex flex-col space-y-4 p-4 bg-white overflow-hidden">
         {safeCurrentOrder.length === 0 ? (
           <Card className="flex-1 flex items-center justify-center">
@@ -95,7 +119,9 @@ export const OrderPayment: FC<OrderPaymentProps> = ({
                     className="flex justify-between items-center py-2 border-b border-border last:border-0"
                   >
                     <div className="flex flex-col">
-                      <span className="font-medium">{formatOrderItemName(item)}</span>
+                      <span className="font-medium">
+                        {formatOrderItemName(item)}
+                      </span>
                       <span className="text-sm text-muted-foreground">
                         {item.price.toLocaleString()}원
                       </span>
@@ -113,9 +139,18 @@ export const OrderPayment: FC<OrderPaymentProps> = ({
                       >
                         -
                       </button>
-                      <span className="w-8 text-center tabular-nums">
-                        {item.quantity}
-                      </span>
+                      <input
+                        type="number"
+                        className="w-10 text-center"
+                        value={item.quantity}
+                        onChange={(e) => {
+                          const newQuantity = parseInt(e.target.value, 10);
+                          if (!isNaN(newQuantity)) {
+                            onQuantityChange(item.id, newQuantity);
+                          }
+                        }}
+                        aria-label="수량 입력"
+                      />
                       <button
                         onClick={() =>
                           onQuantityChange(item.id, item.quantity + 1)
@@ -132,7 +167,7 @@ export const OrderPayment: FC<OrderPaymentProps> = ({
             </div>
           </Card>
         )}
-  
+
         <div className="space-y-4">
           <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
             <span className="font-medium">총 합계</span>
@@ -140,12 +175,12 @@ export const OrderPayment: FC<OrderPaymentProps> = ({
               {calculateTotal().toLocaleString()}원
             </span>
           </div>
-  
+
           <PaymentMethodSelector
             paymentMethod={paymentMethod}
             onSelectPaymentMethod={onSelectPaymentMethod}
           />
-  
+
           <Button
             onClick={onPaymentSubmit}
             disabled={!paymentMethod || currentOrder.length === 0}
@@ -154,7 +189,7 @@ export const OrderPayment: FC<OrderPaymentProps> = ({
           >
             결제하기
           </Button>
-  
+
           <Button variant="default" className="w-full" onClick={onCancelOrder}>
             주문 취소
           </Button>

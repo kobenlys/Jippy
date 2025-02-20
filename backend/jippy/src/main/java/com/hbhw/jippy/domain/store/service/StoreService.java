@@ -1,5 +1,6 @@
 package com.hbhw.jippy.domain.store.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hbhw.jippy.domain.store.dto.request.StoreCreateRequest;
@@ -16,12 +17,14 @@ import com.hbhw.jippy.global.error.BusinessException;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -38,20 +41,33 @@ public class StoreService {
     private final StoreRepository storeRepository;
     private final UserOwnerRepository userOwnerRepository; // 점주 조회용 (예시)
     private final RestClient restClient;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
+
+    private static final String CACHE_PREFIX = "store";
 
     @Builder
-    public StoreService(StoreRepository storeRepository, UserOwnerRepository userOwnerRepository, StoreCoordinatesRepository storeCoordinatesRepository) {
+    public StoreService(StoreRepository storeRepository, UserOwnerRepository userOwnerRepository, StoreCoordinatesRepository storeCoordinatesRepository, RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper) {
         this.storeRepository = storeRepository;
         this.userOwnerRepository = userOwnerRepository;
+        this.redisTemplate = redisTemplate;
+        this.objectMapper = objectMapper;
         this.restClient = RestClient.create();
         this.storeCoordinatesRepository = storeCoordinatesRepository;
     }
 
     @Transactional
     public StoreResponse createStore(StoreCreateRequest request) {
+        String key = CACHE_PREFIX +":list" + request.getUserOwnerId();
+
         // UserOwner 조회
         UserOwner userOwner = userOwnerRepository.findById(request.getUserOwnerId())
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 점주입니다."));
+
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
+            log.info("store : {} → delete", key);
+            redisTemplate.delete(key);
+        }
 
         // 엔티티 빌드
         Store store = Store.builder()
@@ -83,6 +99,12 @@ public class StoreService {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장은 존재하지 않습니다."));
 
+        String key = CACHE_PREFIX +":detail" + storeId;
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
+            log.info("store : {} → delete", key);
+            redisTemplate.delete(key);
+        }
+
         store.setName(request.getName());
         store.setAddress(request.getAddress());
         store.setOpeningDate(request.getOpeningDate());
@@ -103,18 +125,54 @@ public class StoreService {
 
     @Transactional(readOnly = true)
     public StoreResponse getStore(Integer storeId) {
-        Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장은 존재하지 않습니다."));
-        return toResponse(store);
+        String key = CACHE_PREFIX +":detail" + storeId;
+        String cashJsonData = redisTemplate.opsForValue().get(key);
+
+        try{
+            if (cashJsonData != null) {
+                log.info("store : cash hit!!");
+                return objectMapper.readValue(cashJsonData, StoreResponse.class);
+            }
+
+            Store store = storeRepository.findById(storeId)
+                    .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장은 존재하지 않습니다."));
+            StoreResponse storeResponse = toResponse(store);
+
+            String jsonData = objectMapper.writeValueAsString(storeResponse); // 객체 → JSON 변환
+            redisTemplate.opsForValue().set(key, jsonData, Duration.ofSeconds(60 * 30));
+            log.info("store : db search");
+            return storeResponse;
+        } catch (Exception e){
+            throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "매장 서버 에러 발생");
+        }
     }
 
     public List<StoreResponse> getStoreListByOwnerId(Integer ownerId){
-        List<Store> storeListByOwner = storeRepository.findByUserOwnerId(ownerId)
-                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장은 존재하지 않습니다."));
 
-        return storeListByOwner.stream()
-                .map(this::toResponse)
-                .toList();
+        String key = CACHE_PREFIX +":list"+ ownerId;
+        String cashJsonData = redisTemplate.opsForValue().get(key);
+
+        try{
+            if (cashJsonData != null) {
+                log.info("store : cash hit!!");
+                return objectMapper.readValue(cashJsonData, new TypeReference<>() {
+                });
+            }
+
+            List<Store> storeListByOwner = storeRepository.findByUserOwnerId(ownerId)
+                    .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장은 존재하지 않습니다."));
+
+            List<StoreResponse> storeResponseList = storeListByOwner.stream()
+                    .map(this::toResponse).toList();
+
+
+            String jsonData = objectMapper.writeValueAsString(storeResponseList); // 객체 → JSON 변환
+            redisTemplate.opsForValue().set(key, jsonData, Duration.ofSeconds(60 * 30));
+            log.info("store : db search");
+            return storeResponseList;
+        }catch(Exception e) {
+            throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "매장 서버 에러 발생");
+        }
     }
 
 
