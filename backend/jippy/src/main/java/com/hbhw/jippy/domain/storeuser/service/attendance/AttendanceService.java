@@ -1,5 +1,8 @@
 package com.hbhw.jippy.domain.storeuser.service.attendance;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hbhw.jippy.domain.dashboard.dto.response.staff.StoreSalaryResponse;
 import com.hbhw.jippy.domain.store.entity.Store;
 import com.hbhw.jippy.domain.store.entity.StoreCoordinates;
 import com.hbhw.jippy.domain.store.repository.StoreCoordinatesRepository;
@@ -53,6 +56,7 @@ public class AttendanceService {
     private final CalendarRepository calendarRepository;
     private final StoreCoordinatesRepository storeCoordinatesRepository;
     private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
     private final AttendanceMongoRepository attendanceMongoRepository;
     private final UUIDProvider uuidProvider;
     private static final double EARTH_RADIUS = 6371e3; // 지구 반경 (미터 단위)
@@ -68,7 +72,6 @@ public class AttendanceService {
         StoreUserStaff staff = storeStaffRepository.findByUserStaffId(attendanceRequest.getStaffId())
                 .orElseThrow(() -> new NoSuchElementException("매장 직원 정보를 찾을 수 없습니다."));
 
-        // 좌표 오차 범위 내에 있는지 확인
 //        Optional<StoreCoordinates> storeCoordinatesOptional = storeCoordinatesRepository.findByStoreId(storeId);
 //        if (!storeCoordinatesOptional.isPresent()) {
 //            throw new BusinessException(CommonErrorCode.NOT_FOUND, "스토어 좌표를 찾을 수 없습니다." + " " + storeId);
@@ -157,6 +160,12 @@ public class AttendanceService {
         String key = TEMP_SCHEDULE_PREFIX + storeUserStaffId + ":" + request.getNewDate();
         String value = request.getNewStartTime() + "|" + request.getNewEndTime();
         Duration ttl = Duration.between(LocalDateTime.now(), LocalDate.parse(request.getNewDate()).plusDays(1).atStartOfDay());
+        String listKey = TEMP_SCHEDULE_PREFIX + storeId;
+
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(listKey))) {
+            log.info("attendance cashe: {} → delete", listKey);
+            redisTemplate.delete(listKey);
+        }
 
         log.info(key);
         log.info(value);
@@ -246,31 +255,49 @@ public class AttendanceService {
     }
 
     public List<ChangeScheduleResponse> fetchChangeSchedule(Integer storeId) {
-        List<StoreUserStaff> staffList = storeStaffRepository.findByStoreId(storeId)
-                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재 하지 않는 직원입니다."));
-        List<ChangeScheduleResponse> response = new ArrayList<>();
 
-        for (StoreUserStaff staff : staffList) {
-            List<ChangeSchedule> changeScheduleList = attendanceMongoRepository.getStaffChangeSchedule(storeId, staff.getId(), false)
-                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재 하지 않는 직원입니다."));
+        String key = TEMP_SCHEDULE_PREFIX + storeId;
+        String cashJsonData = redisTemplate.opsForValue().get(key);
 
-            for (ChangeSchedule changeSchedule : changeScheduleList) {
-                ChangeScheduleResponse changeScheduleResponse = ChangeScheduleResponse.builder()
-                        .uuid(changeSchedule.getUuid())
-                        .staffId(changeSchedule.getStaffId())
-                        .staffName(staff.getUserStaff().getName())
-                        .beforeCheckIn(changeSchedule.getBeforeCheckIn())
-                        .beforeCheckOut(changeSchedule.getBeforeCheckOut())
-                        .beforeYear(changeSchedule.getBeforeYear())
-                        .newCheckIn(changeSchedule.getNewCheckIn())
-                        .newCheckOut(changeSchedule.getNewCheckOut())
-                        .newYear(changeSchedule.getNewYear())
-                        .build();
-
-                response.add(changeScheduleResponse);
+        try {
+            if (cashJsonData != null) {
+                log.info("totalStoreSalary : cash hit!!");
+                return objectMapper.readValue(cashJsonData, new TypeReference<>() {
+                });
             }
+
+            List<StoreUserStaff> staffList = storeStaffRepository.findByStoreId(storeId)
+                    .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재 하지 않는 직원입니다."));
+            List<ChangeScheduleResponse> response = new ArrayList<>();
+
+
+            for (StoreUserStaff staff : staffList) { // 가상스레드 적용 가능
+                List<ChangeSchedule> changeScheduleList = attendanceMongoRepository.getStaffChangeSchedule(storeId, staff.getId(), false)
+                        .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재 하지 않는 직원입니다."));
+
+                for (ChangeSchedule changeSchedule : changeScheduleList) {
+                    ChangeScheduleResponse changeScheduleResponse = ChangeScheduleResponse.builder()
+                            .uuid(changeSchedule.getUuid())
+                            .staffId(changeSchedule.getStaffId())
+                            .staffName(staff.getUserStaff().getName())
+                            .beforeCheckIn(changeSchedule.getBeforeCheckIn())
+                            .beforeCheckOut(changeSchedule.getBeforeCheckOut())
+                            .beforeYear(changeSchedule.getBeforeYear())
+                            .newCheckIn(changeSchedule.getNewCheckIn())
+                            .newCheckOut(changeSchedule.getNewCheckOut())
+                            .newYear(changeSchedule.getNewYear())
+                            .build();
+
+                    response.add(changeScheduleResponse);
+                }
+            }
+            String jsonData = objectMapper.writeValueAsString(response); // 객체 → JSON 변환
+            redisTemplate.opsForValue().set(key, jsonData, Duration.ofSeconds(60 * 10));
+            log.info("totalStoreSalary : db search");
+            return response;
+        } catch (Exception e) {
+            throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "직원 근태 서버 에러");
         }
-        return response;
     }
 
     /**

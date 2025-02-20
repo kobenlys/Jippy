@@ -1,5 +1,7 @@
 package com.hbhw.jippy.domain.product.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hbhw.jippy.domain.payment.service.PaymentHistoryService;
 import com.hbhw.jippy.domain.product.dto.request.CreateProductRequest;
 import com.hbhw.jippy.domain.product.dto.request.ProductUpdateRequest;
@@ -11,6 +13,7 @@ import com.hbhw.jippy.domain.product.entity.Product;
 import com.hbhw.jippy.domain.product.entity.ProductCategory;
 import com.hbhw.jippy.domain.product.mapper.ProductMapper;
 import com.hbhw.jippy.domain.product.repository.ProductRepository;
+import com.hbhw.jippy.domain.store.dto.response.StoreResponse;
 import com.hbhw.jippy.domain.store.entity.Store;
 import com.hbhw.jippy.domain.store.service.StoreService;
 import com.hbhw.jippy.global.code.CommonErrorCode;
@@ -20,6 +23,7 @@ import com.hbhw.jippy.utils.UUIDProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,6 +33,7 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.*;
 
 @Slf4j
@@ -42,6 +47,10 @@ public class ProductService {
     private final ProductCategoryService productCategoryService;
     private final S3Client s3Client;
     private final UUIDProvider uuidProvider;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
+
+    private static final String CACHE_PREFIX = "store";
 
     @Value("${cloud.aws.s3.bucket}")
     private String s3BucketName;
@@ -54,6 +63,12 @@ public class ProductService {
      */
     @Transactional
     public void createProduct(CreateProductRequest createProductRequest, MultipartFile image, Integer storeId) {
+        String key = CACHE_PREFIX + ":all" + storeId;
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
+            log.info("product : {} → delete", key);
+            redisTemplate.delete(key);
+        }
+
         Store storeEntity = storeService.getStoreEntity(storeId);
         ProductCategory productCategoryEntity = productCategoryService
                 .getProductCategoryEntity(createProductRequest.getStoreId(), createProductRequest.getProductCategoryId());
@@ -102,14 +117,32 @@ public class ProductService {
      * 매장별 상품 목록 조회
      */
     public List<ProductListResponse> getListAllProduct(Integer storeId) {
-        List<Product> productList = productRepository.findByStoreId(storeId);
-        if (productList == null || productList.isEmpty()) {
-            throw new BusinessException(CommonErrorCode.NOT_FOUND, "상품이 존재하지 않습니다");
-        }
+        String key = CACHE_PREFIX + ":all" + storeId;
+        String cashJsonData = redisTemplate.opsForValue().get(key);
 
-        return productList.stream()
-                .map(ProductMapper::convertProductListResponse)
-                .toList();
+        try {
+            if (cashJsonData != null) {
+                log.info("product : cash hit!!");
+                return objectMapper.readValue(cashJsonData, new TypeReference<>() {
+                });
+            }
+            List<Product> productList = productRepository.findByStoreId(storeId);
+            if (productList == null || productList.isEmpty()) {
+                throw new BusinessException(CommonErrorCode.NOT_FOUND, "상품이 존재하지 않습니다");
+            }
+
+            List<ProductListResponse> productListResponseList = productList.stream()
+                    .map(ProductMapper::convertProductListResponse)
+                    .toList();
+
+            String jsonData = objectMapper.writeValueAsString(productListResponseList); // 객체 → JSON 변환
+            redisTemplate.opsForValue().set(key, jsonData, Duration.ofSeconds(60 * 30));
+            log.info("product : db search");
+            return productListResponseList;
+
+        } catch (Exception e) {
+            throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "상품 서버 에러 발생");
+        }
     }
 
     /**
@@ -191,51 +224,85 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public Product getProduct(Integer storeId, Long productId) {
-        try{
+        try {
             Optional<Product> product = productRepository.findByIdAndStoreId(productId, storeId);
             return product.orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "상품이 존재하지 않습니다."));
-        }catch (BusinessException e){
+        } catch (BusinessException e) {
             log.error("상품 조회 실패 - storeId: {}, productId: {}, error: {}", storeId, productId, e.getMessage());
             throw e;
         }
     }
 
     /**
-     *  해당 기간동안 상품들의 정보 및 판매 개수 조회
+     * 해당 기간동안 상품들의 정보 및 판매 개수 조회
      */
     @Transactional(readOnly = true)
     public List<ProductDetailResponse> fetchAllProductInfo(Integer storeId, String startDate, String endDate) {
-        List<Product> productList = productRepository.findByStoreId(storeId);
-        Map<Long, Integer> soldInfo = paymentHistoryService.getTotalSoldByProduct(storeId, DateTimeUtils.getStartOfMonth(startDate), DateTimeUtils.getEndOfMonth(endDate));
-        return productList.stream()
-                .map(product -> {
-                    Integer totalSold = soldInfo.get(product.getId());
-                    if (Objects.isNull(totalSold)) {
-                        totalSold = 0;
-                    }
-                    return ProductMapper.convertProductFetchResponse(product, totalSold);
-                })
-                .toList();
+        String key = CACHE_PREFIX +":fetchAll" + storeId + startDate + endDate;
+        String cashJsonData = redisTemplate.opsForValue().get(key);
+
+        try {
+            if (cashJsonData != null) {
+                log.info("store : cash hit!!");
+                return objectMapper.readValue(cashJsonData, new TypeReference<List<ProductDetailResponse>>() {
+                });
+            }
+            List<Product> productList = productRepository.findByStoreId(storeId);
+            Map<Long, Integer> soldInfo = paymentHistoryService.getTotalSoldByProduct(storeId, DateTimeUtils.getStartOfMonth(startDate), DateTimeUtils.getEndOfMonth(endDate));
+
+            List<ProductDetailResponse> productDetailResponseList = productList.stream()
+                    .map(product -> {
+                        Integer totalSold = soldInfo.get(product.getId());
+                        if (Objects.isNull(totalSold)) {
+                            totalSold = 0;
+                        }
+                        return ProductMapper.convertProductFetchResponse(product, totalSold);
+                    })
+                    .toList();
+
+            String jsonData = objectMapper.writeValueAsString(productDetailResponseList); // 객체 → JSON 변환
+            redisTemplate.opsForValue().set(key, jsonData, Duration.ofSeconds(60 * 3));
+            log.info("product : db search");
+            return productDetailResponseList;
+        } catch (Exception e) {
+            throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "상품 서버 에러 발생");
+        }
     }
 
     /**
-     *  달별 상품 판매 개수 조회
+     * 달별 상품 판매 개수 조회
      */
     public ProductMonthSoldResponse fetchMonthProductInfo(Integer storeId, String targetYear) {
-        Map<String, List<ProductSoldCountResponse>> soldmap = new HashMap<>();
-        final String[] months = {"jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"};
-        final String[] monthByNumber = {"01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"};
+        String key = CACHE_PREFIX + ":fetchMonth" + storeId;
+        String cashJsonData = redisTemplate.opsForValue().get(key);
 
-        for (int i = 0; i < 12; i++) {
-            String startDate = targetYear + "-" + monthByNumber[i] + "-01 00:00:00";
-            String endDate = targetYear + "-" + monthByNumber[i] + "-31 23:59:59";
-            List<ProductSoldCountResponse> resultMonth = paymentHistoryService.getMonthSoldByStoreId(storeId, startDate, endDate);
-            soldmap.put(months[i], resultMonth);
+        try {
+            if (cashJsonData != null) {
+                log.info("product : cash hit!!");
+                return objectMapper.readValue(cashJsonData, ProductMonthSoldResponse.class);
+            }
+
+            Map<String, List<ProductSoldCountResponse>> soldmap = new HashMap<>();
+            final String[] months = {"jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"};
+            final String[] monthByNumber = {"01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"};
+
+            for (int i = 0; i < 12; i++) { // 가상 스레드 적용
+                String startDate = targetYear + "-" + monthByNumber[i] + "-01 00:00:00";
+                String endDate = targetYear + "-" + monthByNumber[i] + "-31 23:59:59";
+                List<ProductSoldCountResponse> resultMonth = paymentHistoryService.getMonthSoldByStoreId(storeId, startDate, endDate);
+                soldmap.put(months[i], resultMonth);
+            }
+            ProductMonthSoldResponse productMonthSoldResponse = ProductMonthSoldResponse.builder()
+                    .productMonthlySold(soldmap)
+                    .build();
+
+            String jsonData = objectMapper.writeValueAsString(productMonthSoldResponse); // 객체 → JSON 변환
+            redisTemplate.opsForValue().set(key, jsonData, Duration.ofSeconds(60 * 3));
+            log.info("product : db search");
+            return productMonthSoldResponse;
+        } catch (Exception e) {
+            throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "상품 서버 에러 발생");
         }
-
-        return ProductMonthSoldResponse.builder()
-                .productMonthlySold(soldmap)
-                .build();
     }
 
 }

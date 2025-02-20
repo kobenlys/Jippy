@@ -1,5 +1,6 @@
 package com.hbhw.jippy.domain.payment.repository;
 
+import com.hbhw.jippy.domain.payment.dto.ProductTotalSold;
 import com.hbhw.jippy.domain.payment.dto.response.SalesByDayResponse;
 import com.hbhw.jippy.domain.payment.dto.response.SalesResponse;
 import com.hbhw.jippy.domain.payment.entity.PaymentHistory;
@@ -65,12 +66,18 @@ public interface PaymentHistoryRepository extends MongoRepository<PaymentHistory
     Optional<List<SalesResponse>> getMonthlySales(Integer storeId, String startDate, String endDate);
 
     /**
-     *  특정 기간 결제 내역 조회
+     *  특정 기간 결제 내역 에서 상품 판매량 조회
      */
     @Aggregation(pipeline = {
-            "{ $match: { updated_at: { $gte: ?1, $lte: ?2 }, store_id: ?0 } }"
+            // store_id와 updated_at(특정 기간)를 조건으로 매칭
+            "{ '$match': { 'store_id': ?0, 'updated_at': { '$gte': ?1, '$lte': ?2 } } }",
+            "{ '$unwind': '$buyProduct' }",
+            "{ '$group': { '_id': '$buyProduct.product_id', " +
+                    "'totalQuantity': { '$sum': '$buyProduct.product_quantity' }} }",
+            "{ '$project': { '_id': 0, 'productId': '$_id', 'totalQuantity': 1 } }"
     })
-    List<PaymentHistory> getRangeDatePaymentHistoryList(Integer storeId, String startDate, String endDate);
+    Optional<List<ProductTotalSold>> getProductSoldByStoreAndPeriod(Integer storeId, String startDate, String endDate);
+
 
     /**
      *  상품을 달별로 판매한 정보 조회

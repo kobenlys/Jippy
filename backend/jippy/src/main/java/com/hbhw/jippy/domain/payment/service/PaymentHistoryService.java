@@ -1,5 +1,6 @@
 package com.hbhw.jippy.domain.payment.service;
 
+import com.hbhw.jippy.domain.payment.dto.ProductTotalSold;
 import com.hbhw.jippy.domain.payment.dto.request.PaymentUUIDRequest;
 import com.hbhw.jippy.domain.payment.dto.response.*;
 import com.hbhw.jippy.domain.payment.entity.BuyProduct;
@@ -16,13 +17,16 @@ import com.hbhw.jippy.global.pagination.dto.request.PaginationRequest;
 import com.hbhw.jippy.global.pagination.dto.response.PaginationResponse;
 import com.hbhw.jippy.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentHistoryService {
@@ -176,18 +180,16 @@ public class PaymentHistoryService {
     }
 
     /**
-     * 해당 기간 팔린 상품 집계
+     *  해당 기간 팔린 상품 집계
      */
     public Map<Long, Integer> getTotalSoldByProduct(Integer storeId, String startDate, String endDate) {
-        Map<Long, Integer> soldList = new HashMap<>();
-        List<PaymentHistory> paymentHistoryList = paymentHistoryRepository.getRangeDatePaymentHistoryList(storeId, startDate, endDate);
-        for (PaymentHistory paymentHistory : paymentHistoryList) {
-            List<BuyProduct> buyProductList = paymentHistory.getBuyProductHistories();
-            buyProductList.stream()
-                    .map(BuyProduct::getProductId)
-                    .forEach(productId -> soldList.merge(productId, 1, Integer::sum));
-        }
-        return soldList;
+        List<ProductTotalSold> productTotalSoldList = paymentHistoryRepository.getProductSoldByStoreAndPeriod(storeId, startDate, endDate)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "판매 데이터를 찾지 못 했습니다!"));
+        log.info(productTotalSoldList.toString());
+        Map<Long, Integer> productSalesMap = productTotalSoldList.stream()
+                .collect(Collectors.toMap(ProductTotalSold::getProductId, ProductTotalSold::getTotalQuantity));
+        log.info(productSalesMap.toString());
+        return productSalesMap;
     }
 
     /**
