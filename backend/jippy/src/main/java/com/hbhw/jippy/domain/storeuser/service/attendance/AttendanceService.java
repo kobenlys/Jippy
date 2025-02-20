@@ -120,8 +120,9 @@ public class AttendanceService {
 
         String today = DateTimeUtils.todayString();
 
-        EmploymentStatus status = employmentStatusRepository.findTodayAttendance(staff.getId(), today)
+        List<EmploymentStatus> statusList = employmentStatusRepository.findTodayAttendance(staff.getId(), today)
                 .orElseThrow(() -> new NoSuchElementException("출근 기록이 없습니다."));
+        EmploymentStatus status = statusList.get(0);
 
         String endTime = DateTimeUtils.nowString();
 //        validateCheckOutTime(staff, DateTimeUtils.parseDateTime(endTime));
