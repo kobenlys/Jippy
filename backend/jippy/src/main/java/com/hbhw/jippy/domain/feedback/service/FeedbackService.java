@@ -18,14 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-<<<<<<< backend/jippy/src/main/java/com/hbhw/jippy/domain/feedback/service/FeedbackService.java
 import java.time.Duration;
-import java.util.Collections;
-=======
 import java.util.Comparator;
->>>>>>> backend/jippy/src/main/java/com/hbhw/jippy/domain/feedback/service/FeedbackService.java
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
