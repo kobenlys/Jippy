@@ -87,7 +87,7 @@ public class FeedbackService {
      * 매장 전체 피드백 조회
      */
     public List<FeedbackResponse> getFeedbacksByStore(int storeId) {
-        List<Feedback> feedbackList = feedbackRepository.findByStoreId(storeId);
+        List<Feedback> feedbackList = feedbackRepository.findByStoreIdOrderByCreatedAtDesc(storeId);
         return feedbackList.stream()
                 .map(this::toResponse) // Entity에서 DTO로 변환
                 .collect(Collectors.toList());
@@ -98,7 +98,7 @@ public class FeedbackService {
      * 카테고리별 피드백 조회
      */
     public List<FeedbackResponse> getFeedbacksByCategory(int storeId, Category category) {
-        List<Feedback> feedbackList = feedbackRepository.findByStoreIdAndCategory(storeId, category);
+        List<Feedback> feedbackList = feedbackRepository.findByStoreIdAndCategoryByCreatedAtDesc(storeId, category);
         return feedbackList.stream()
                 .map(this::toResponse) // Entity에서 DTO로 변환
                 .collect(Collectors.toList());
