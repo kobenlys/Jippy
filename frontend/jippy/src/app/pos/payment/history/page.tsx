@@ -47,17 +47,12 @@ const PaymentHistoryPage = () => {
         throw new Error("결제 상세 정보를 불러오는데 실패했습니다");
       }
  
-      // console.log("API 응답 원본:", result.data);
-      // console.log("변환 전 상태:", result.data.paymentStatus);
- 
       const transformedPayment = {
         ...result.data,
         paymentStatus: result.data.paymentStatus === "PURCHASE" ? "완료" : 
                       result.data.paymentStatus === "CANCEL" ? "취소" : 
                       result.data.paymentStatus
       };
- 
-      // console.log("변환 후 상태:", transformedPayment);
       
       setSelectedPayment(transformedPayment);
     } catch (error) {
@@ -69,10 +64,8 @@ const PaymentHistoryPage = () => {
     }
   };
 
-  // 결제 상태 변경 처리 함수
   const handlePaymentStatusChange = async (updatedPayment: PaymentDetailType) => {
     setSelectedPayment(updatedPayment);
-    // 목록 새로고침을 위해 동일한 결제 내역 재조회
     if (selectedPayment) {
       await fetchPaymentDetail(1, selectedPayment.uuid);
     }
@@ -82,7 +75,7 @@ const PaymentHistoryPage = () => {
     <div className="page-content">
       <div className="w-full h-full p-8 overflow-hidden">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">결제내역</h1>
+          <h1 className="text-2xl font-bold text-gray-800">결제 내역</h1>
           <button
             onClick={() => setIsCashModalOpen(true)}
             className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors duration-200"

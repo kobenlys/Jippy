@@ -190,23 +190,18 @@ const PaymentHistoryList = ({
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handlePaymentStatusUpdate = useCallback((updatedPayment: PaymentHistoryDetail) => {
-    // 상태 업데이트를 하나의 배치로 처리
     setSelectedPaymentDetail(updatedPayment);
     onPaymentStatusChange?.(updatedPayment);
     
-    // fetchPayments 호출 대신 현재 상태를 직접 업데이트
     if (currentFilter === "success" && updatedPayment.paymentStatus === "취소") {
-      // 완료 목록에서 보고 있을 때 취소된 항목 제거
       setPayments(prevPayments => 
         prevPayments.filter(payment => payment.uuid !== updatedPayment.uuid)
       );
     } else if (currentFilter === "cancel" && updatedPayment.paymentStatus === "완료") {
-      // 취소 목록에서 보고 있을 때 완료된 항목 제거
       setPayments(prevPayments => 
         prevPayments.filter(payment => payment.uuid !== updatedPayment.uuid)
       );
     } else {
-      // 전체 목록이거나 상태가 현재 필터와 일치할 때는 항목 업데이트
       setPayments(prevPayments => 
         prevPayments.map(payment => 
           payment.uuid === updatedPayment.uuid 
@@ -217,7 +212,6 @@ const PaymentHistoryList = ({
     }
   }, [currentFilter, onPaymentStatusChange]);
   
-  // useEffect는 하나만 유지
   useEffect(() => {
     fetchPayments();
   }, [fetchPayments, currentFilter]);
@@ -233,16 +227,6 @@ const PaymentHistoryList = ({
       console.error("결제 상세 정보 조회 실패:", error);
     }
   };
-
-  // useEffect(() => {
-  //   fetchPayments();
-  // }, [fetchPayments]);
-
-  // useEffect(() => {
-  //   if (selectedPaymentDetail && selectedPaymentDetail.paymentStatus === "취소") {
-  //     handlePaymentStatusUpdate(selectedPaymentDetail);
-  //   }
-  // }, [selectedPaymentDetail, handlePaymentStatusUpdate]);
 
   const filteredAndPaginatedPayments = useMemo(() => {
     let filtered = [...payments];
