@@ -154,7 +154,24 @@ public class StockStatusRedisRepository {
                             .isLowStock(false)
                             .build();
                     updates.put(key, resetStatus);
+                } else if (value instanceof LinkedHashMap) {
+                    @SuppressWarnings("unchecked")
+                    LinkedHashMap<String, Object> map = (LinkedHashMap<String, Object>) value;
+                    StockStatusRedis resetStatus = StockStatusRedis.builder()
+                            .initialStock((Integer) map.get("initialStock"))
+                            .soldStock(0)
+                            .currentStock((Integer) map.get("initialStock"))
+                            .soldPercentage(0)
+                            .lastUpdated(DateTimeUtils.nowString())
+                            .isDessert((Boolean) map.get("isDessert"))
+                            .isLowStock(false)
+                            .build();
+                    updates.put(key, resetStatus);
                 }
+            }
+
+            if (!updates.isEmpty()) {
+                redisTemplate.opsForValue().multiSet(updates);
             }
         }
     }

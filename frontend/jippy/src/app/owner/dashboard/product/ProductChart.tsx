@@ -134,10 +134,17 @@ const ProductChart: React.FC<ProductChartProps> = ({ storeId }) => {
               {/* 연도 선택 */}
               <select
                 value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                onChange={(e) => {
+                  const newYear = parseInt(e.target.value);
+                  setSelectedYear(newYear);
+
+                  if (newYear === 2025 && parseInt(selectedMonth) > 2) {
+                    setSelectedMonth("02");
+                  }
+                }}
                 className="border border-gray-300 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F27B39] transition-all"
               >
-                {Array.from({ length: 5 }, (_, i) => currentYear - i).map(
+                {Array.from({ length: 2 }, (_, i) => currentYear - i).map(
                   (year) => (
                     <option key={year} value={year}>
                       {year}
@@ -165,11 +172,15 @@ const ProductChart: React.FC<ProductChartProps> = ({ storeId }) => {
                   { value: "10", label: "10월" },
                   { value: "11", label: "11월" },
                   { value: "12", label: "12월" },
-                ].map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
+                ]
+                  .filter(
+                    (m) => selectedYear !== 2025 || parseInt(m.value) <= 2
+                  )
+                  .map((m) => (
+                    <option key={m.value} value={m.value}>
+                      {m.label}
+                    </option>
+                  ))}
               </select>
             </div>
           )}

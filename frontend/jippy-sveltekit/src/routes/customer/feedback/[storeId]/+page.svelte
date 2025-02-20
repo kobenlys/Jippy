@@ -63,7 +63,7 @@
         }
   
         alert("불편 사항이 성공적으로 접수되었습니다!");
-        goto("/customer/feedback/success");
+        goto("/svt/customer/feedback/success");
       } catch (error) {
         alert("피드백 전송 중 오류가 발생했습니다. 다시 시도해주세요.");
       } finally {

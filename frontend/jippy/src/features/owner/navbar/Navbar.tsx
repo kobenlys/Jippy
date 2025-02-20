@@ -123,6 +123,9 @@ const Navbar = () => {
               <Link href="/owner/dashboard/qr" className={styles.navLink}>
                 QR 관리
               </Link>
+              <Link href="/owner/dashboard/chat" className={styles.navLink}>
+                채팅
+              </Link>
             </div>
 
             {accessToken ? (

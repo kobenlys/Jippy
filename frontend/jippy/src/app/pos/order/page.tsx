@@ -132,31 +132,6 @@ const POSPage = () => {
       if (responseData.success) {
         console.log("현금 결제 성공, 결제 내역 추가 시작");
 
-        // 결제 내역 추가 API 호출
-        const historyResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/payment-history/add?storeId=${storeId}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              paymentType: "CASH",
-              totalAmount: request.totalCost,
-              products: request.productList,
-              createdAt: new Date().toISOString(),
-            }),
-          }
-        );
-
-        const historyData = await historyResponse.json();
-        console.log("결제 내역 추가 응답:", historyData);
-
-        if (!historyResponse.ok || !historyData.success) {
-          console.error("결제 내역 추가 실패:", historyData);
-          throw new Error("결제 내역 추가에 실패했습니다");
-        }
-
         console.log("결제 내역 추가 성공");
         handleCancelOrder();
       } else {

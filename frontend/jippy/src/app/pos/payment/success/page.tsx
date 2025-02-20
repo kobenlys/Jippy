@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useAppDispatch } from "@/redux/hooks";
 import { confirmPayment, clearPaymentState } from "@/redux/slices/paymentSlice";
+import type { PaymentConfirmRequest } from "@/features/pos/payment/types/payment";
 
 // 페이지를 동적으로 처리하도록 설정
 export const dynamic = "force-dynamic";
@@ -16,7 +17,7 @@ interface ProductData {
 }
 
 interface StoreData {
-  storeId: string;
+  storeId: string | number; // storeId가 string 또는 number 타입일 수 있음
   products: ProductData[];
 }
 
@@ -66,12 +67,17 @@ const PaymentSuccessContent = () => {
   
       const amountNumber = Number(amount);
 
-      const requestBody = {
-        storeId: storeData.storeId,
+      // storeId를 number로 변환 (PaymentConfirmRequest 타입에 맞춤)
+      const storeIdNumber = typeof storeData.storeId === 'string' 
+        ? parseInt(storeData.storeId, 10) || 0 // 변환 실패 시 기본값 0
+        : storeData.storeId;
+
+      const requestBody: PaymentConfirmRequest = {
+        storeId: storeIdNumber,
         totalCost: amountNumber,
         paymentType: "QRCODE",
         productList: storeData.products.map((product: ProductData) => ({
-          productId: product.id,
+          productId: typeof product.id === 'string' ? parseInt(product.id, 10) || 0 : product.id,
           quantity: product.quantity
         })),
         orderId,
@@ -87,7 +93,7 @@ const PaymentSuccessContent = () => {
         // 결제 완료 후 리덕스 스토어 정리
         setTimeout(() => {
           dispatch(clearPaymentState());
-          router.push("/order");
+          router.push("/pos/payment/history");
         }, 3000);
       } else {
         // confirmPayment가 rejected된 경우 에러 처리
@@ -134,7 +140,7 @@ const PaymentSuccessContent = () => {
               결제가 완료되었습니다!
             </h1>
             <p className="text-gray-600">
-              잠시 후 주문 페이지로 이동합니다...
+              잠시 후 결제내역 페이지로 이동합니다...
             </p>
           </div>
         ) : (

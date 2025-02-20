@@ -104,7 +104,11 @@ const Navbar = () => {
           </div>
 
           <div className={styles.desktopMenu}>
-
+          <div className={styles.navLinks}>
+              <Link href="/owner/dashboard/chat" className={styles.navLink}>
+                채팅
+              </Link>
+            </div>
             {accessToken ? (
               <div className={styles.profileDropdown} ref={dropdownRef}>
                 <button

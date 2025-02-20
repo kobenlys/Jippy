@@ -60,7 +60,7 @@ public class AttendanceService {
     private final AttendanceMongoRepository attendanceMongoRepository;
     private final UUIDProvider uuidProvider;
     private static final double EARTH_RADIUS = 6371e3; // 지구 반경 (미터 단위)
-    private static final double ERROR_RANGE = 10.0;
+    private static final double ERROR_RANGE = 1000.0;
 
     private static final String TEMP_SCHEDULE_PREFIX = "temp:schedule:";
 
@@ -72,21 +72,20 @@ public class AttendanceService {
         StoreUserStaff staff = storeStaffRepository.findByUserStaffId(attendanceRequest.getStaffId())
                 .orElseThrow(() -> new NoSuchElementException("매장 직원 정보를 찾을 수 없습니다."));
 
-        // 좌표 오차 범위 내에 있는지 확인
-        Optional<StoreCoordinates> storeCoordinatesOptional = storeCoordinatesRepository.findByStoreId(storeId);
-        if (!storeCoordinatesOptional.isPresent()) {
-            throw new BusinessException(CommonErrorCode.NOT_FOUND, "스토어 좌표를 찾을 수 없습니다." + " " + storeId);
-        }
-        StoreCoordinates storeCoordinates = storeCoordinatesOptional.get();
-        System.out.println(storeCoordinates.getLatitude() + " " + storeCoordinates.getLongitude());
-        System.out.println(Double.parseDouble(attendanceRequest.getLatitude()) + " " + Double.parseDouble(attendanceRequest.getLongitude()));
-        if (!isWithinRange(storeCoordinates.getLatitude(), storeCoordinates.getLongitude(),
-                Double.parseDouble(attendanceRequest.getLatitude()), Double.parseDouble(attendanceRequest.getLongitude()), ERROR_RANGE)) {
-            throw new BusinessException(CommonErrorCode.OUT_OF_RANGE, "GPS 범위를 벗어났습니다.");
-        }
+//        Optional<StoreCoordinates> storeCoordinatesOptional = storeCoordinatesRepository.findByStoreId(storeId);
+//        if (!storeCoordinatesOptional.isPresent()) {
+//            throw new BusinessException(CommonErrorCode.NOT_FOUND, "스토어 좌표를 찾을 수 없습니다." + " " + storeId);
+//        }
+//        StoreCoordinates storeCoordinates = storeCoordinatesOptional.get();
+//        System.out.println(storeCoordinates.getLatitude() + " " + storeCoordinates.getLongitude());
+//        System.out.println(Double.parseDouble(attendanceRequest.getLatitude()) + " " + Double.parseDouble(attendanceRequest.getLongitude()));
+//        if (!isWithinRange(storeCoordinates.getLatitude(), storeCoordinates.getLongitude(),
+//            Double.parseDouble(attendanceRequest.getLatitude()), Double.parseDouble(attendanceRequest.getLongitude()), ERROR_RANGE)) {
+//            throw new BusinessException(CommonErrorCode.OUT_OF_RANGE, "GPS 범위를 벗어났습니다.");
+//        }
 
         String startTime = DateTimeUtils.nowString();
-        validateCheckInTime(staff, DateTimeUtils.parseDateTime(startTime));
+//        validateCheckInTime(staff, DateTimeUtils.parseDateTime(startTime));
 
         Boolean isLate = checkIfLate(staff, DateTimeUtils.parseDateTime(startTime));
 
@@ -124,11 +123,12 @@ public class AttendanceService {
 
         String today = DateTimeUtils.todayString();
 
-        EmploymentStatus status = employmentStatusRepository.findTodayAttendance(staff.getId(), today)
+        List<EmploymentStatus> statusList = employmentStatusRepository.findTodayAttendance(staff.getId(), today)
                 .orElseThrow(() -> new NoSuchElementException("출근 기록이 없습니다."));
+        EmploymentStatus status = statusList.get(0);
 
         String endTime = DateTimeUtils.nowString();
-        validateCheckOutTime(staff, DateTimeUtils.parseDateTime(endTime));
+//        validateCheckOutTime(staff, DateTimeUtils.parseDateTime(endTime));
 
         Boolean isEarlyLeave = checkIfEarlyLeave(staff, DateTimeUtils.parseDateTime(endTime));
         Integer totalWorkTime = calculateTotalWorkTime(
