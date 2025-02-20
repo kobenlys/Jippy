@@ -82,7 +82,7 @@ public class AttendanceService {
         }
 
         String startTime = DateTimeUtils.nowString();
-        validateCheckInTime(staff, DateTimeUtils.parseDateTime(startTime));
+//        validateCheckInTime(staff, DateTimeUtils.parseDateTime(startTime));
 
         Boolean isLate = checkIfLate(staff, DateTimeUtils.parseDateTime(startTime));
 
@@ -124,7 +124,7 @@ public class AttendanceService {
                 .orElseThrow(() -> new NoSuchElementException("출근 기록이 없습니다."));
 
         String endTime = DateTimeUtils.nowString();
-        validateCheckOutTime(staff, DateTimeUtils.parseDateTime(endTime));
+//        validateCheckOutTime(staff, DateTimeUtils.parseDateTime(endTime));
 
         Boolean isEarlyLeave = checkIfEarlyLeave(staff, DateTimeUtils.parseDateTime(endTime));
         Integer totalWorkTime = calculateTotalWorkTime(
