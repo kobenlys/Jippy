@@ -64,8 +64,8 @@ const PaymentRequestComponent = () => {
         orderId: orderId,
         orderName: orderData.orderName || "주문",
         customerName: orderData.customerName || "고객",
-        successUrl: `${process.env.NEXT_PUBLIC_STAFF_ROUTE}/pos/payment/success?storeData=${encodedData}`,
-        failUrl: `${process.env.NEXT_PUBLIC_STAFF_ROUTE}/pos/payment/fail`,
+        successUrl: `${process.env.NEXT_PUBLIC_API_URL}/pos/payment/success?storeData=${encodedData}`,
+        failUrl: `${process.env.NEXT_PUBLIC_API_URL}/pos/payment/fail`,
       };
       
       console.log("결제 요청 데이터:", paymentData);
