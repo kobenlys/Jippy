@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -60,19 +61,15 @@ public class FeedbackService {
         }
 
         // 좌표 오차 범위 내에 있는지 확인
-//        Optional<StoreCoordinates> storeCoordinatesOptional = storeCoordinatesRepository.findByStoreId(storeId);
-//        if (!storeCoordinatesOptional.isPresent()) {
-//            throw new BusinessException(CommonErrorCode.NOT_FOUND, "스토어 좌표를 찾을 수 없습니다." + " " + storeId);
-//        }
-//        StoreCoordinates storeCoordinates = storeCoordinatesOptional.get();
-//        System.out.println(storeCoordinates.getLatitude() + " " + storeCoordinates.getLongitude());
-//        System.out.println(Double.parseDouble(request.getLatitude()) + " " + Double.parseDouble(request.getLongitude()));
-//        if (!isWithinRange(storeCoordinates.getLatitude(), storeCoordinates.getLongitude(),
-//                Double.parseDouble(request.getLatitude()), Double.parseDouble(request.getLongitude()), ERROR_RANGE)) {
-//            System.out.println("GPS 범위를 벗어났습니다.");
-//            throw new BusinessException(CommonErrorCode.OUT_OF_RANGE, "GPS 범위를 벗어났습니다.");
-//        }
-
+        Optional<StoreCoordinates> storeCoordinatesOptional = storeCoordinatesRepository.findByStoreId(storeId);
+        if (!storeCoordinatesOptional.isPresent()) {
+            throw new BusinessException(CommonErrorCode.NOT_FOUND, "스토어 좌표를 찾을 수 없습니다." + " " + storeId);
+        }
+        StoreCoordinates storeCoordinates = storeCoordinatesOptional.get();
+        if (!isWithinRange(storeCoordinates.getLatitude(), storeCoordinates.getLongitude(),
+                Double.parseDouble(request.getLatitude()), Double.parseDouble(request.getLongitude()), ERROR_RANGE)) {
+            throw new BusinessException(CommonErrorCode.OUT_OF_RANGE, "GPS 범위를 벗어났습니다.");
+        }
 
         Feedback feedback = Feedback.builder()
                 .storeId(storeId)
