@@ -1,28 +1,26 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  age: string;
+  userType: string;
+}
+
 interface UserState {
-  user: {
-    id: string | null;
-    email: string | null;
-    name: string | null;
-    age: string | null;
-    userType: string | null;
-  } | null;
-  auth: {
-    accessToken: string | null;
-    refreshToken: string | null;
-  };
+  profile: UserProfile | null;
+  accessToken: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: UserState = {
-  user: null,
-  auth: {
-    accessToken: null,
-    refreshToken: null,
-  },
+  profile: null,
+  accessToken: null,
+  refreshToken: null,
   isAuthenticated: false,
   loading: false,
   error: null,
@@ -37,32 +35,26 @@ const userSlice = createSlice({
       state.error = null;
     },
     loginSuccess: (state, action: PayloadAction<{
-      user: UserState["user"];
+      profile: UserProfile;
       accessToken: string;
       refreshToken: string;
     }>) => {
       state.loading = false;
       state.isAuthenticated = true;
-      state.user = action.payload.user;
-      state.auth = {
-        accessToken: action.payload.accessToken,
-        refreshToken: action.payload.refreshToken,
-      };
+      state.profile = action.payload.profile;
+      state.accessToken = action.payload.accessToken;
+      state.refreshToken = action.payload.refreshToken;
     },
     loginFailure: (state, action: PayloadAction<string>) => {
       state.loading = false;
       state.error = action.payload;
+      state.isAuthenticated = false;
     },
-    logout: () => {
-      return initialState;
-    },
-    updateUserInfo: (state, action: PayloadAction<Partial<UserState["user"]>>) => {
-      if (state.user) {
-        state.user = { ...state.user, ...action.payload };
+    logout: () => initialState,
+    updateUserInfo: (state, action: PayloadAction<Partial<UserProfile>>) => {
+      if (state.profile) {
+        state.profile = { ...state.profile, ...action.payload };
       }
-    },
-    refreshToken: (state, action: PayloadAction<{ accessToken: string }>) => {
-      state.auth.accessToken = action.payload.accessToken;
     },
   },
 });
@@ -72,8 +64,7 @@ export const {
   loginSuccess, 
   loginFailure, 
   logout, 
-  updateUserInfo, 
-  refreshToken 
+  updateUserInfo 
 } = userSlice.actions;
 
 export default userSlice.reducer;

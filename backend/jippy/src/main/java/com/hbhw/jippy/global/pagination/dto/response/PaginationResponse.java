@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Page;
 
+import java.util.Collections;
 import java.util.List;
 
 @Getter
@@ -49,9 +50,8 @@ public class PaginationResponse<T> {
 
     public static <T> PaginationResponse<T> of(Page<T> page, PaginationRequest request) {
         return PaginationResponse.<T>builder()
-                .content(page.getContent())
+                .content(page.getContent() != null ? page.getContent() : Collections.emptyList())
                 .page(page.getNumber())
-                .author(request.getAuthor())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .pageSize(page.getSize())

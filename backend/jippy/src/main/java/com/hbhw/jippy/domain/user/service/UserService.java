@@ -1,5 +1,6 @@
 package com.hbhw.jippy.domain.user.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hbhw.jippy.domain.store.entity.Store;
 import com.hbhw.jippy.domain.store.repository.StoreRepository;
 import com.hbhw.jippy.domain.storeuser.entity.staff.StoreUserStaff;
@@ -23,9 +24,12 @@ import com.hbhw.jippy.global.auth.repository.RefreshTokenRepository;
 import com.hbhw.jippy.global.auth.config.UserPrincipal;
 import com.hbhw.jippy.global.code.CommonErrorCode;
 import com.hbhw.jippy.global.error.BusinessException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,7 +37,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -48,9 +57,13 @@ public class UserService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final StoreStaffRepository storeStaffRepository;
     private final StoreRepository storeRepository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${jwt.refresh.expiration}")
     private Long refreshTokenExpireTime;
+
+    @Value("${jwt.access.expiration}")
+    private Long accessTokenExpireTime;
 
     @Transactional
     public void ownerSignUp(OwnerSignUpRequest request) {
@@ -59,6 +72,7 @@ public class UserService {
         }
 
         BaseUser newUser = userFactory.createUser(request, UserType.OWNER);
+        log.info("newUser {}", newUser);
         userOwnerRepository.save((UserOwner) newUser);
     }
 
@@ -89,15 +103,14 @@ public class UserService {
     }
 
     @Transactional
-    public LoginResponse login(LoginRequest request) {
-        BaseUser user = findUser(request.getEmail(), request.getUserType());
+    public LoginResponse login(LoginRequest request, HttpServletResponse response) {
 
+        BaseUser user = findUser(request.getEmail(), request.getUserType());
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BusinessException(CommonErrorCode.INVALID_INPUT_VALUE, "비밀번호가 일치하지 않습니다.");
         }
 
         StaffType staffType = getStaffType(user);
-
         UserPrincipal principal = new UserPrincipal(user, staffType);
         Authentication authentication = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -121,6 +134,29 @@ public class UserService {
                 .orElse(null);
         log.info("Redis에 저장된 값: " + savedToken);
 
+        // storeId list 가져오기
+        List<Integer> storeIdList = new ArrayList<>();
+        if (StaffType.OWNER.name().equals(staffType.name())) {
+            Optional<List<Store>> storeList = storeRepository.findByUserOwnerId(principal.getId());
+            if (storeList.isPresent()) {
+                for (Store store : storeList.get()) {
+                    System.out.println(store.getId() + " " + store.getName());
+                    storeIdList.add(store.getId());
+                }
+            }
+        } else if (StaffType.STAFF.name().equals(staffType.name()) || StaffType.MANAGER.name().equals(staffType.name())) {
+            log.info("staff");
+            Optional<List<StoreUserStaff>> storeUserStaffOptional = storeStaffRepository.findAllByUserStaffId(principal.getId());
+            if (storeUserStaffOptional.isPresent()) {
+                for (StoreUserStaff storeUserStaff : storeUserStaffOptional.get()) {
+                    System.out.println(storeUserStaff.getStore().getId());
+                    storeIdList.add(storeUserStaff.getStore().getId());
+                }
+            }
+        }
+
+        // JWT 토큰과 사용자 정보를 쿠키에 저장
+        setCookie(response, accessToken, refreshToken, principal, staffType, storeIdList);
         return LoginResponse.of(user, staffType, accessToken, refreshToken);
     }
 
@@ -206,15 +242,11 @@ public class UserService {
     /**
      * 사용자 유형 조회 메서드
      */
-    private StaffType getStaffType(BaseUser user) {
+    public StaffType getStaffType(BaseUser user) {
         if (user instanceof UserOwner owner) {
             return owner.getStaffType();
         }
-
-        UserStaff staff = (UserStaff) user;
-        StoreUserStaff storeStaff = storeStaffRepository.findByUserStaff(staff)
-                .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "매장 정보를 찾을 수 없습니다."));
-        return storeStaff.getStaffType();
+        return StaffType.STAFF;
     }
 
     private String generateTempPassword() {
@@ -238,5 +270,34 @@ public class UserService {
         }
 
         return new String(password);
+    }
+
+    private void setCookie(HttpServletResponse response, String accessToken, String refreshToken, UserPrincipal principal, StaffType staffType, List<Integer> storeIdList) {
+        System.out.println(storeIdList);
+        try {
+            // 리스트를 JSON 문자열로 변환
+            String jsonList = objectMapper.writeValueAsString(storeIdList);
+            String encodedList = URLEncoder.encode(jsonList, StandardCharsets.UTF_8);
+            String encodedUserName = URLEncoder.encode(principal.getName(), StandardCharsets.UTF_8);
+
+            // ResponseCookie 생성
+            addCookie(response, "storeIdList", encodedList, (int) (refreshTokenExpireTime / 1000));
+            addCookie(response, "userId", principal.getId().toString(), (int) (refreshTokenExpireTime / 1000));
+            addCookie(response, "staffType", staffType.name(), (int) (refreshTokenExpireTime / 1000));
+            addCookie(response, "userName", encodedUserName, (int) (refreshTokenExpireTime / 1000));
+            addCookie(response, "accessToken", accessToken, (int) (accessTokenExpireTime / 1000));
+            addCookie(response, "refreshToken", refreshToken, (int) (refreshTokenExpireTime / 1000));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "리스트 JSON 매핑 뱐환 오류");
+        }
+    }
+
+    public static void addCookie(HttpServletResponse response, String name, String value, int maxAge) {
+        Cookie cookie = new Cookie(name, value);
+        cookie.setPath("/");
+        cookie.setMaxAge(maxAge);
+        cookie.setHttpOnly(false);
+        response.addCookie(cookie);
     }
 }

@@ -125,6 +125,11 @@ public class StockStatusService {
                     .isLowStock(false)
                     .build();
         } else {
+
+            if (status.getCurrentStock() <= 0 || status.getSoldPercentage() >= 100) {
+                return;
+            }
+
             status.setSoldStock(status.getSoldStock() + decreaseAmount);
             status.setCurrentStock(item.getStockTotalValue() - status.getSoldStock());
             status.setSoldPercentage(calculatePercentage(status.getSoldStock(), status.getInitialStock()));
@@ -140,8 +145,13 @@ public class StockStatusService {
     public void updateBatchStockStatus(Integer storeId, List<StockUpdateInfo> updates) {
         Map<String, StockUpdateInfo> mergedUpdates = new HashMap<>();
 
+        if (updates.isEmpty()) {
+            return;
+        }
+
         for (StockUpdateInfo update : updates) {
             String stockName = update.getItem().getStockName();
+            System.out.println(update.item.getStockName());
 
             if (mergedUpdates.containsKey(stockName)) {
                 mergedUpdates.computeIfPresent(stockName, (k, existing) -> StockUpdateInfo.builder()
@@ -161,8 +171,9 @@ public class StockStatusService {
 
         for (StockUpdateInfo update : mergedUpdates.values()) {
             StockStatusRedis currentStatus = currentStatuses.get(update.getItem().getStockName());
-
             if (currentStatus == null) {
+                System.out.println(update);
+
                 StockStatusRedis newStatus = StockStatusRedis.builder()
                         .initialStock(update.getItem().getStockTotalValue())
                         .soldStock(update.getDecreaseAmount())
@@ -175,6 +186,10 @@ public class StockStatusService {
                 checkLowStock(newStatus);
                 batchUpdates.put(update.getItem().getStockName(), newStatus);
             } else {
+                if (currentStatus.getCurrentStock() <= 0 || currentStatus.getSoldPercentage() >= 100) {
+                    continue;
+                }
+
                 int newSoldStock = currentStatus.getSoldStock() + update.getDecreaseAmount();
                 StockStatusRedis updatedStatus = StockStatusRedis.builder()
                         .initialStock(currentStatus.getInitialStock())
@@ -252,8 +267,8 @@ public class StockStatusService {
             if (status != null && Boolean.TRUE.equals(status.getIsLowStock())) {
                 lowStockList.add(LowStockInfoResponse.builder()
                         .stockName(item.getStockName())
-                        .soldPercentage(status.getSoldPercentage())
-                        .remainingStock(status.getCurrentStock())
+                        .soldPercentage(Math.min(status.getSoldPercentage(), 100))
+                        .remainingStock(Math.max(status.getCurrentStock(), 0))
                         .build());
             }
         }

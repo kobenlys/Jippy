@@ -2,29 +2,30 @@
 
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { 
-  updateUserInfo, 
-  logout 
-} from "@/redux/slices/userSlice";
+import { updateUserInfo, logout } from "@/redux/slices/userSlice";
 import { AppDispatch, RootState } from "@/redux/store";
 import "@/app/globals.css";
-import Button from "@/components/ui/button/Button";
+import { Button } from "@/features/common/components/ui/button";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FormField } from "@/components/ui/form/FormFields";
+import { FormField } from "@/features/common/components/ui/form/FormFields";
 import { styles } from "@/features/shop/constants/styles";
 
 const UpdateUserForm = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const { user, auth } = useSelector((state: RootState) => state.user);
+  
+  const profile = useSelector((state: RootState) => state.user.profile);
+  const accessToken = useSelector((state: RootState) => state.user.accessToken);
+  const isAuthenticated = useSelector((state: RootState) => state.user.isAuthenticated);
+
   const [newPassword, setNewPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [initialUserInfo, setInitialUserInfo] = useState({ 
-    name: user?.name || "", 
-    age: user?.age || "" 
+    name: profile?.name || "", 
+    age: profile?.age || "" 
   });
   const [passwordErrors, setPasswordErrors] = useState({
     newPassword: "",
@@ -32,10 +33,10 @@ const UpdateUserForm = () => {
   });
 
   useEffect(() => {
-    if (!auth.accessToken) {
+    if (!isAuthenticated || !accessToken) {
       router.push("/login");
     }
-  }, [auth.accessToken, router]);
+  }, [isAuthenticated, accessToken, router]);
 
   const validatePassword = (password: string): boolean => {
     const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])(?=.{8,})/;
@@ -98,13 +99,13 @@ const UpdateUserForm = () => {
   };
 
   const isUserInfoChanged = (): boolean => {
-    return user?.name !== initialUserInfo.name || user?.age !== initialUserInfo.age;
+    return profile?.name !== initialUserInfo.name || profile?.age !== initialUserInfo.age;
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     
-    if (!auth.accessToken) {
+    if (!accessToken) {
       toast.error("로그인이 필요합니다");
       router.push("/login");
       return;
@@ -112,27 +113,25 @@ const UpdateUserForm = () => {
   
     const isPasswordChanged = newPassword && confirmPassword && currentPassword;
   
-    // 폼 제출 전 유효성 검사
     if (isPasswordChanged) {
       if (!validatePassword(newPassword) || newPassword !== confirmPassword) {
-        return; // 에러 메시지가 이미 표시되어 있으므로 중단
+        return;
       }
     }
   
     try {
       let userInfoUpdated = false;
       
-      // 유저 정보 업데이트 처리
       if (isUserInfoChanged()) {
         const userInfoResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/update/userInfo`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${auth.accessToken}`
+            "Authorization": `Bearer ${accessToken}`
           },
           body: JSON.stringify({
-            name: user?.name,
-            age: user?.age,
+            name: profile?.name,
+            age: profile?.age,
           }),
         });
   
@@ -156,13 +155,12 @@ const UpdateUserForm = () => {
         }
       }
   
-      // 비밀번호 변경 처리
       if (isPasswordChanged) {
         const passwordResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/update/password`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${auth.accessToken}`
+            "Authorization": `Bearer ${accessToken}`
           },
           body: JSON.stringify({
             currentPassword,
@@ -200,7 +198,7 @@ const UpdateUserForm = () => {
       <FormField
         label="이름"
         name="name"
-        value={user?.name || ""}
+        value={profile?.name || ""}
         onChange={(e) => handleUserInfoChange("name", e.target.value)}
       />
 
@@ -208,7 +206,7 @@ const UpdateUserForm = () => {
         label="이메일"
         name="email"
         type="email"
-        value={user?.email || ""}
+        value={profile?.email || ""}
         onChange={() => {}}
         disabled={true}
       />
@@ -216,7 +214,7 @@ const UpdateUserForm = () => {
       <FormField
         label="생년월일"
         name="age"
-        value={user?.age || ""}
+        value={profile?.age || ""}
         onChange={(e) => handleUserInfoChange("age", e.target.value)}
       />
 
@@ -227,7 +225,7 @@ const UpdateUserForm = () => {
             <input
               type="radio"
               value="OWNER"
-              checked={user?.userType === "OWNER"}
+              checked={profile?.userType === "OWNER"}
               disabled
               className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
             />
@@ -237,7 +235,7 @@ const UpdateUserForm = () => {
             <input
               type="radio"
               value="STAFF"
-              checked={user?.userType === "STAFF"}
+              checked={profile?.userType === "STAFF"}
               disabled
               className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
             />
@@ -275,7 +273,7 @@ const UpdateUserForm = () => {
         isValid={confirmPassword !== "" && newPassword !== "" && newPassword === confirmPassword}
       />
 
-      <Button type="orange">
+      <Button variant="orange">
         수정하기
       </Button>
     </form>

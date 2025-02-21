@@ -4,10 +4,11 @@ import com.hbhw.jippy.domain.product.enums.ProductSize;
 import com.hbhw.jippy.domain.product.enums.ProductType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
-@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 public class CreateProductRequest {
     private Integer productCategoryId;
@@ -15,7 +16,6 @@ public class CreateProductRequest {
     private String name;
     private Integer price;
     private boolean status;
-    private String image;
     private ProductType productType;
     private ProductSize productSize;
 }

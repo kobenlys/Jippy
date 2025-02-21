@@ -3,8 +3,8 @@
 import React, { useRef, useState } from "react";
 import type { OCRResponse } from "@/features/shop/types/shops";
 import "@/app/globals.css";
-import { Input } from "@/components/ui/input/Input";
-import Button from "@/components/ui/button/Button";
+import { Input } from "@/features/common/components/ui/input/Input";
+import { Button } from "@/features/common/components/ui/button";
 
 interface OCRImageUploadProps {
   onSuccess: (data: OCRResponse) => void;
@@ -101,7 +101,7 @@ const OCRImageUpload = ({ onSuccess, isProcessing }: OCRImageUploadProps) => {
         style={{ display: "none" }}
       />
       <Button
-        type="orangeSquare"
+        variant="orangeSquare"
         onClick={isScanned ? handleRetry : selectedFile ? handleImageUpload : () => fileInputRef.current?.click()}
         disabled={isProcessing}
       >

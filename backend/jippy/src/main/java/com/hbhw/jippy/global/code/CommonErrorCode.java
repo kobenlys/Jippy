@@ -16,7 +16,8 @@ public enum CommonErrorCode implements ErrorCode {
     NOT_FOUND(HttpStatus.NOT_FOUND, "C-006", "리소스를 찾을 수 없습니다."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "C-007", "허용되지 않은 HTTP 메소드입니다."),
     FORBIDDEN(HttpStatus.FORBIDDEN, "C-008", "접근이 허용되지 않았습니다."),
-    NULL_POINT(HttpStatus.NOT_FOUND, "C-009", "리소스가 존재하지 않습니다.");
+    NULL_POINT(HttpStatus.NOT_FOUND, "C-009", "리소스가 존재하지 않습니다."),
+    OUT_OF_RANGE(HttpStatus.BAD_REQUEST, "C-010", "GPS 범위를 벗어났습니다.");
 
     private HttpStatus status;
     private String code;

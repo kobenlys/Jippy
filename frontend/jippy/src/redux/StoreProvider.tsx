@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import { Provider } from 'react-redux';
 import { createStore, AppStore } from './store';
-import { setStockData } from './stockSlice';
+import { setStockData } from './slices/stockSlice';
 
 // StoreProvider를 named export에서 default export로 변경
 export function StoreProvider({

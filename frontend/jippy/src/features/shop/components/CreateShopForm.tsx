@@ -3,9 +3,9 @@
 import React from "react";
 import { useShopForm } from "@/features/shop/hooks/useShopForm";
 import "@/app/globals.css";
-import { FormField } from "@/components/ui/form/FormFields";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import Button from "@/components/ui/button/Button";
+import { FormField } from "@/features/common/components/ui/form/FormFields";
+import { Alert, AlertDescription } from "@/features/common/components/ui/Alert";
+import { Button } from "@/features/common/components/ui/button";
 import OCRImageUpload from "@/features/shop/components/OCRImageUpload";
 
 const CreateShopForm = () => {
@@ -85,9 +85,8 @@ const CreateShopForm = () => {
         )}
 
         <Button
-          type="orange"
+          variant="orange"
           disabled={isLoading || isProcessingImage}
-          onClick={handleSubmit}
           className="w-full mt-4"
         >
           {isLoading ? "등록 중..." : "매장 등록"}

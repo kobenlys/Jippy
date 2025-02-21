@@ -44,7 +44,6 @@ public class NoticeService {
 
         Page<Notice> noticePage = noticeRepository.findByStoreIdAndSearchConditions(
                 storeId,
-                paginationRequest.getAuthor(),
                 paginationRequest.getStartDate(),
                 paginationRequest.getEndDate(),
                 paginationRequest.toPageable()

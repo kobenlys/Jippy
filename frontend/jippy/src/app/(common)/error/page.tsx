@@ -12,7 +12,8 @@ export default function FeedbackPage() {
           <Image
             src="/images/AccessDeny.png"
             alt="Access Denied"
-            className="w-48 h-48"
+            width={192}  // w-48 = 12rem = 192px
+            height={192}
           />
           <p className="text-xl font-semibold mt-6">잘못된 접근이거나 요청하신</p>
           <p className="text-xl font-bold text-[#FF5C00] mt-2">페이지를 찾을 수 없습니다.</p>

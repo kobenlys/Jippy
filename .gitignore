@@ -3,3 +3,4 @@ etc
 /.idea
 **/.DS_Store
 **/.env**
+.venv

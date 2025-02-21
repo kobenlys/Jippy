@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.index.Indexed;
 
 /**
  * 실시간 출근 현황 확인용 Redis
@@ -17,5 +18,6 @@ public class AttendanceStatus {
     @Id
     private Integer id;
     private String staffName;
+    @Indexed
     private Integer storeId;
 }

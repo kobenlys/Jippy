@@ -1,11 +1,13 @@
 package com.hbhw.jippy.domain.storeuser.controller.staff;
 
 import com.hbhw.jippy.domain.storeuser.dto.request.staff.UpdateStaffRequest;
+import com.hbhw.jippy.domain.storeuser.dto.response.staff.StaffEarnSalesResponse;
 import com.hbhw.jippy.domain.storeuser.dto.response.staff.StaffResponse;
 import com.hbhw.jippy.domain.storeuser.service.staff.StoreStaffService;
 import com.hbhw.jippy.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,4 +46,12 @@ public class StoreStaffController {
         storeStaffService.deleteStaff(storeId, staffId);
         return ApiResponse.success(HttpStatus.NO_CONTENT);
     }
+
+    @Operation(summary = "직원 별 매출 발생 통계", description = "매장별 직원 매출 통계를 조회합니다")
+    @GetMapping("/staff/earn")
+    public ApiResponse<?> fetchStaffEarnSales(@RequestParam("storeId") Integer storeId, @RequestParam("yearMonth") String yearMonth) {
+        List<StaffEarnSalesResponse> responseList = storeStaffService.fetchStaffEarnSales(storeId, yearMonth);
+        return ApiResponse.success(HttpStatus.OK,responseList);
+    }
+
 }

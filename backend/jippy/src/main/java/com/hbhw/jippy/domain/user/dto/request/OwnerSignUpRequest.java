@@ -5,9 +5,11 @@ import jakarta.validation.constraints.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Schema(description = "점주 회원가입 요청")
 @Getter
+@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OwnerSignUpRequest {
     @Schema(description = "사용자 이메일", example = "user@example.com")

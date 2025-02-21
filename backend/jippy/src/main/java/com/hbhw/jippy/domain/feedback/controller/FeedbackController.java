@@ -60,7 +60,7 @@ public class FeedbackController {
     @GetMapping("/{storeId}/select")
     //@PreAuthorize("hasRole('OWNER')")
     public ApiResponse<List<FeedbackResponse>> getFeedbacks(
-            @Parameter(description = "매장 ID") @PathVariable int storeId
+            @Parameter(description = "매장 ID") @PathVariable Integer storeId
     ) {
         List<FeedbackResponse> responseList = feedbackService.getFeedbacksByStore(storeId);
         return ApiResponse.success(responseList);
@@ -70,7 +70,7 @@ public class FeedbackController {
     @GetMapping("/{storeId}/select/{category}")
     //@PreAuthorize("hasRole('OWNER')")
     public ApiResponse<List<FeedbackResponse>> getFeedbacksByCategory(
-            @Parameter(description = "매장 ID") @PathVariable int storeId,
+            @Parameter(description = "매장 ID") @PathVariable Integer storeId,
             @Parameter(description = "피드백 카테고리 (SERVICE, PRODUCT, ETC)") @PathVariable Category category
     ) {
         List<FeedbackResponse> responseList = feedbackService.getFeedbacksByCategory(storeId, category);
@@ -81,10 +81,10 @@ public class FeedbackController {
     @DeleteMapping("/{storeId}/delete/{feedbackId}")
     //@PreAuthorize("hasRole('OWNER')")
     public ApiResponse<Void> deleteFeedback(
-            @Parameter(description = "매장 ID") @PathVariable int storeId,
+            @Parameter(description = "매장 ID") @PathVariable Integer storeId,
             @Parameter(description = "삭제할 피드백 ID") @PathVariable Long feedbackId
     ) {
         feedbackService.deleteFeedback(storeId, feedbackId);
-        return ApiResponse.success(null);
+        return ApiResponse.success(HttpStatus.OK);
     }
 }

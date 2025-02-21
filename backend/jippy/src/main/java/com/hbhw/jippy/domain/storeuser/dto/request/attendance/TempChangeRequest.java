@@ -10,6 +10,10 @@ import lombok.Getter;
 @AllArgsConstructor
 @Builder
 public class TempChangeRequest {
+
+    @Schema(description = "uuid", example = "dwad-dwadgffd-28hb3j2")
+    private String uuid;
+
     @Schema(description = "변경 날짜", example = "1990-01-02")
     private String newDate;
 

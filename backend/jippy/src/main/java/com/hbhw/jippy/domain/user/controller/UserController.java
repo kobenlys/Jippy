@@ -9,11 +9,14 @@ import com.hbhw.jippy.domain.user.service.UserService;
 import com.hbhw.jippy.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @Tag(name = "User", description = "사용자 관리 API")
 @RestController
 @RequestMapping("/api/user")
@@ -24,6 +27,7 @@ public class UserController {
     @Operation(summary = "점주 회원가입", description = "점주 계정으로 회원가입을 진행합니다")
     @PostMapping("/signup/owner")
     public ApiResponse<?> ownerSignUp(@RequestBody @Valid OwnerSignUpRequest request) {
+        log.info("sigeup-owner : {}", request);
         userService.ownerSignUp(request);
         return ApiResponse.success(HttpStatus.CREATED);
     }
@@ -37,8 +41,9 @@ public class UserController {
 
     @Operation(summary = "로그인", description = "사용자 로그인을 진행합니다")
     @PostMapping("/login")
-    public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
-        LoginResponse response = userService.login(request);
+    public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest request, HttpServletResponse httpServletResponse) {
+        LoginResponse response = userService.login(request, httpServletResponse);
+
         return ApiResponse.success(response);
     }
 

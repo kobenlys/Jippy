@@ -1,21 +1,34 @@
 package com.hbhw.jippy.domain.task.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hbhw.jippy.domain.dashboard.dto.response.staff.StoreSalaryResponse;
 import com.hbhw.jippy.domain.task.dto.request.TaskRequest;
 import com.hbhw.jippy.domain.task.dto.response.TaskResponse;
 import com.hbhw.jippy.domain.task.entity.Task;
 import com.hbhw.jippy.domain.task.repository.TaskRepository;
+import com.hbhw.jippy.global.code.CommonErrorCode;
+import com.hbhw.jippy.global.error.BusinessException;
 import com.hbhw.jippy.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TaskService {
 
     private final TaskRepository taskRepository;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
+
+    private static final String CACHE_PREFIX = "task";
 
     /**
      * 매장별 할 일 등록
@@ -24,7 +37,6 @@ public class TaskService {
         Task task = Task.builder()
                 .storeId(storeId)
                 .title(request.getTitle())
-                .content(request.getContent())
                 .isComplete(request.isComplete())
                 .createdAt(DateTimeUtils.nowString())
                 .build();
@@ -36,10 +48,29 @@ public class TaskService {
      * 매장별 할 일 전체 목록 조회
      */
     public List<TaskResponse> getTasksByStore(Integer storeId) {
-        List<Task> tasks = taskRepository.findByStoreId(storeId);
-        return tasks.stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+
+        String key = CACHE_PREFIX + storeId;
+        String cashJsonData = redisTemplate.opsForValue().get(key);
+
+        try{
+            if (cashJsonData != null) {
+                log.info("task : cash hit!!");
+                return objectMapper.readValue(cashJsonData, new TypeReference<>() {
+                });
+            }
+
+            List<Task> taskList = taskRepository.findByStoreId(storeId);
+
+            List<TaskResponse> taskResponseList = taskList.stream()
+                    .map(this::toResponse)
+                    .toList();
+
+            String jsonData = objectMapper.writeValueAsString(taskResponseList); // 객체 → JSON 변환
+            redisTemplate.opsForValue().set(key, jsonData, Duration.ofSeconds(60 * 60));
+            return taskResponseList;
+        }catch (Exception e){
+            throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "ToDo 리스트 서버 에러 발생");
+        }
     }
 
     /**
@@ -56,9 +87,8 @@ public class TaskService {
     public void updateTask(Integer storeId, Long todoId, TaskRequest request) {
         Task task = findTaskByStoreAndId(storeId, todoId);
         task.setTitle(request.getTitle());
-        task.setContent(request.getContent());
         task.setIsComplete(request.isComplete());
-
+        taskRepository.save(task);
     }
 
     /**
@@ -86,7 +116,6 @@ public class TaskService {
                 .id(task.getId())
                 .storeId(task.getStoreId())
                 .title(task.getTitle())
-                .content(task.getContent())
                 .createdAt(task.getCreatedAt())
                 .isComplete(task.getIsComplete())
                 .build();

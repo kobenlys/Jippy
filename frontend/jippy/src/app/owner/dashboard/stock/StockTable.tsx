@@ -1,36 +1,105 @@
 "use client";
 
-import { RootState } from "@/redux/store";
-import React from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
-
-// ✅ Define the Stock Type
-interface StockUnit {
-  stockUnitSize: string;
-  stockUnit: string;
-  stockCount: number;
-}
-
-interface StockItem {
-  stockName: string;
-  stock: StockUnit[];
-}
+import { RootState } from "@/redux/store";
+import { StockItem } from "@/redux/slices/stockDashSlice";
+import StockRegisterModal from "@/features/dashboard/stock/components/StockRegisterModal";
+import StockUpdateModal from "@/features/dashboard/stock/components/StockUpdateModal";
+import { Edit2, Trash2 } from "lucide-react";
 
 const StockTable = () => {
-  // ✅ Explicitly type `stockData`
   const stockData = useSelector((state: RootState) => state.stock) as StockItem[];
 
-  console.log(stockData);
+  const formatUnit = (unit: string) => {
+    switch (unit.toLowerCase()) {
+      case 'l':
+        return 'L';
+      case 'ml':
+        return 'mL';
+      default:
+        return unit;
+    }
+  };
+
+  const [isRegisterModalOpen, setRegisterModalOpen] = useState(false);
+  const [isUpdateModalOpen, setUpdateModalOpen] = useState(false);
+  const [selectedStockItem, setSelectedStockItem] = useState<StockItem | null>(null);
+
+  const handleRegisterSuccess = () => {
+    window.location.reload();
+  };
+
+  const handleUpdateSuccess = () => {
+    window.location.reload();
+  };
+
+  const deleteStock = async (
+    storeId: number, 
+    stockName: string, 
+    stockUnitSize: string, 
+    stockUnit: string
+  ) => {
+    const payload = {
+      inventory: [
+        {
+          stock: [
+            {
+              stockUnitSize: Number(stockUnitSize),
+              stockUnit
+            }
+          ]
+        }
+      ]
+    };
+  
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/stock/${storeId}/delete/${encodeURIComponent(stockName)}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+      if (!response.ok) throw new Error("삭제 실패");
+      alert("재고 삭제 성공");
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      alert("재고 삭제 중 오류 발생");
+    }
+  };
+
+  const flattenedStocks = stockData.flatMap((item) =>
+    item.stock.map((unit) => ({
+      ...item,
+      unit
+    }))
+  );
 
   return (
     <div>
-      {/* Tabs */}
-      <div className="flex gap-1 mb-4">
-        <div className="bg-orange-500 text-white px-4 py-1 rounded-full">재고</div>
-        <button className="bg-gray-100 text-gray-600 px-4 py-1 rounded-full">재고 등록</button>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">재고 관리</h2>
+        <button
+          className="bg-orange-500 text-white px-4 py-1 rounded hover:bg-orange-600"
+          onClick={() => setRegisterModalOpen(true)}
+        >
+          재고 등록
+        </button>
       </div>
-
-      {/* Table Container */}
+      <StockRegisterModal
+        isOpen={isRegisterModalOpen}
+        onClose={() => setRegisterModalOpen(false)}
+        onSuccess={handleRegisterSuccess}
+      />
+      <StockUpdateModal
+        isOpen={isUpdateModalOpen}
+        onClose={() => setUpdateModalOpen(false)}
+        stockItem={selectedStockItem}
+        onSuccess={handleUpdateSuccess}
+      />
       <div className="bg-white rounded-lg">
         <div className="overflow-x-auto">
           <div className="max-h-72 overflow-y-auto relative">
@@ -42,38 +111,54 @@ const StockTable = () => {
                   <th className="p-2 text-left border-b w-32">용량(단위)</th>
                   <th className="p-2 text-left border-b w-24">수량</th>
                   <th className="p-2 text-left border-b w-32">총량</th>
+                  <th className="p-2 text-center border-b w-20">관리</th>
                 </tr>
               </thead>
               <tbody>
-                {/* ✅ Ensure `stockData` is an array before accessing it */}
-                {Array.isArray(stockData) && stockData.length > 0 ? (
-                  stockData.map((item, index) => (
+                {flattenedStocks.length > 0 ? (
+                  flattenedStocks.map((item, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="p-2 border-b">{index + 1}</td>
                       <td className="p-2 border-b">{item.stockName}</td>
                       <td className="p-2 border-b">
-                        {item.stock.map((unit, idx) => (
-                          <div key={idx} className="py-1">{unit.stockUnitSize}{unit.stockUnit}</div>
-                        ))}
+                        {item.unit.stockUnitSize}{formatUnit(item.unit.stockUnit)}
                       </td>
                       <td className="p-2 border-b">
-                        {item.stock.map((unit, idx) => (
-                          <div key={idx} className="py-1">{unit.stockCount}</div>
-                        ))}
+                        {item.unit.stockCount}
                       </td>
                       <td className="p-2 border-b">
-                        {item.stock.map((unit, idx) => (
-                          <div key={idx} className="py-1">
-                            {unit.stockCount * parseFloat(unit.stockUnitSize)}
-                            {unit.stockUnit}
-                          </div>
-                        ))}
+                        {item.unit.stockCount * parseFloat(item.unit.stockUnitSize)}{formatUnit(item.unit.stockUnit)}
+                      </td>
+                      <td className="p-2 border-b text-center">
+                        <div className="flex justify-center gap-2">
+                          <button
+                            className="text-blue-500 hover:text-blue-700"
+                            onClick={() => {
+                              setSelectedStockItem({
+                                ...item,
+                                stock: [item.unit]
+                              });
+                              setUpdateModalOpen(true);
+                            }}
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
+                            className="text-red-500 hover:text-red-700"
+                            onClick={() => {
+                              if (!window.confirm(`${item.stockName}의 ${item.unit.stockUnitSize}${formatUnit(item.unit.stockUnit)} 단위를 삭제하시겠습니까?`)) return;
+                              deleteStock(1, item.stockName, item.unit.stockUnitSize, item.unit.stockUnit);
+                            }}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="text-center py-4 text-gray-500">
+                    <td colSpan={6} className="text-center py-4 text-gray-500">
                       재고 데이터가 없습니다.
                     </td>
                   </tr>
@@ -81,16 +166,16 @@ const StockTable = () => {
               </tbody>
               <tfoot className="bg-orange-50 sticky bottom-0 z-10">
                 <tr>
-                  <td className="p-2">{Array.isArray(stockData) ? stockData.length : 0}</td>
-                  <td colSpan={2} className="p-2 text-right">전체 수량</td>
                   <td className="p-2">
-                    {Array.isArray(stockData)
-                      ? stockData.reduce((sum, item) =>
-                          sum + item.stock.reduce((s, unit) => s + unit.stockCount, 0), 0
-                        )
-                      : 0}
+                    {flattenedStocks.length}
                   </td>
-                  <td></td>
+                  <td colSpan={2} className="p-2 text-right">
+                    전체 수량
+                  </td>
+                  <td className="p-2">
+                    {flattenedStocks.reduce((sum, item) => sum + item.unit.stockCount, 0)}
+                  </td>
+                  <td colSpan={2}></td>
                 </tr>
               </tfoot>
             </table>

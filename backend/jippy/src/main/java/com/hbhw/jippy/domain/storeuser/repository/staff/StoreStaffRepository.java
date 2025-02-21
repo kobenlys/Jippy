@@ -16,11 +16,13 @@ public interface StoreStaffRepository extends JpaRepository<StoreUserStaff, Inte
     @Query("SELECT ss FROM StoreUserStaff ss JOIN FETCH ss.userStaff WHERE ss.store.id = :storeId")
     List<StoreUserStaff> findAllByStoreIdWithUserStaff(@PathVariable Integer storeId);
 
-    Optional<StoreUserStaff> findByUserStaff(UserStaff userStaff);
+    Optional<List<StoreUserStaff>> findAllByUserStaffId(Integer userStaffId);
 
     Optional<StoreUserStaff> findByUserStaffId(Integer userStaffId);
 
-    List<StoreUserStaff> findByStoreId(Integer storeId);
+    Optional<StoreUserStaff> findByStoreIdAndUserStaffId(Integer storeId, Integer userStaffId);
+
+    Optional<List<StoreUserStaff>> findByStoreId(Integer storeId);
 
     List<StoreUserStaff> findByStoreIdAndStaffSalaryType(Integer storeId, StaffSalaryType staffSalaryType);
 }

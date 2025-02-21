@@ -1,6 +1,9 @@
 # Step 1: JDK 21 Base Image
 FROM amazoncorretto:21 AS builder
 
+# TimeZone 설정
+ENV TZ Asia/Seoul
+
 # Step 2: 작업 디렉토리 설정
 WORKDIR /app
 

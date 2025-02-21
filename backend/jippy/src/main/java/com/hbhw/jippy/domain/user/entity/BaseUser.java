@@ -5,9 +5,13 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 @MappedSuperclass
 @Getter
+@ToString
+@SuperBuilder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class BaseUser {
     @Id

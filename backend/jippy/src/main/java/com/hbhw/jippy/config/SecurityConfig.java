@@ -40,7 +40,15 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:8080"));
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "http://localhost:8080",
+                "http://52.79.170.206:8000",
+                "http://52.79.170.206:5173",
+                "http://52.79.170.206:3000",
+                "https://jippy.duckdns.org"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
@@ -70,6 +78,7 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "swagger-resources/**",
                                 "/ws-chat/**",
+                                "/predictions/**",
                                 // 개발 시 임시 권한 설정
                                 "/api/**"
                         ).permitAll()

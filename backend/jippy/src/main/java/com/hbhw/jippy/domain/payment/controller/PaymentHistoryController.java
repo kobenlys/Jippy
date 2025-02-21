@@ -8,6 +8,8 @@ import com.hbhw.jippy.domain.payment.entity.PaymentHistory;
 import com.hbhw.jippy.domain.payment.enums.PaymentStatus;
 import com.hbhw.jippy.domain.payment.enums.PaymentType;
 import com.hbhw.jippy.domain.payment.service.PaymentHistoryService;
+import com.hbhw.jippy.global.pagination.dto.request.PaginationRequest;
+import com.hbhw.jippy.global.pagination.dto.response.PaginationResponse;
 import com.hbhw.jippy.global.response.ApiResponse;
 import com.hbhw.jippy.utils.DateTimeUtils;
 import com.hbhw.jippy.utils.UUIDProvider;
@@ -26,49 +28,16 @@ public class PaymentHistoryController {
     private final PaymentHistoryService paymentHistoryService;
     private final UUIDProvider uuidProvider;
 
-    /**
-     * 결제 후 결제 내역 저장하는 테스트 API
-     * 결제 도메인 완성 전까지 사용하시면 됩니다.
-     */
-    @PostMapping("/add")
-    public ApiResponse<?> addTestPaymentHistory(@RequestParam("storeId") Integer storeId) {
-
-        // 덤프 데이터 (삭제 예정)
-        BuyProduct buyProduct1 = BuyProduct.builder()
-                .productId(1L)
-                .productCategoryId(101)
-                .productQuantity(2)
-                .price(1000)
-                .build();
-
-        BuyProduct buyProduct2 = BuyProduct.builder()
-                .productId(2L)
-                .productCategoryId(102)
-                .productQuantity(1)
-                .price(500)
-                .build();
-
-        List<BuyProduct> buyProductHistories = new ArrayList<>();
-        buyProductHistories.add(buyProduct1);
-        buyProductHistories.add(buyProduct2);
-
-        PaymentHistory paymentHistory = PaymentHistory.builder()
-                .UUID(uuidProvider.generateUUID())  // 예시 UUID
-                .storeId(storeId)  // 예시 storeId
-                .paymentStatus(PaymentStatus.PURCHASE.getDescription())
-                .paymentType(PaymentType.QRCODE.getDescription())
-                .updatedAt(DateTimeUtils.nowString())
-                .buyProductHistories(buyProductHistories)
-                .totalCost(250000)
-                .build();
-        paymentHistoryService.savePaymentHistory(paymentHistory);
-        return ApiResponse.success(HttpStatus.CREATED);
-    }
-
     @GetMapping("/list")
     public ApiResponse<List<PaymentHistoryListResponse>> getAllPaymentHistory(@RequestParam("storeId") Integer storeId) {
         List<PaymentHistoryListResponse> paymentHistoryListResponses = paymentHistoryService.getPaymentHistoryList(storeId);
         return ApiResponse.success(HttpStatus.OK, paymentHistoryListResponses);
+    }
+
+    @GetMapping("/fetch")
+    public ApiResponse<PaginationResponse<PaymentHistoryListResponse>> fetchPaymentHistory(@RequestBody PaginationRequest paginationRequest,  @RequestParam("storeId") Integer storeId) {
+        PaginationResponse<PaymentHistoryListResponse> pageResponse = PaginationResponse.of(paymentHistoryService.fetchPaymentHistoryList(paginationRequest, storeId), paginationRequest);
+        return ApiResponse.success(HttpStatus.OK, pageResponse);
     }
 
     @PutMapping("/change/status")
@@ -83,7 +52,7 @@ public class PaymentHistoryController {
         return ApiResponse.success(HttpStatus.OK);
     }
 
-    @GetMapping("/detail")
+    @PostMapping("/detail")
     public ApiResponse<PaymentDetailResponse> getDetailPaymentHistory(@RequestBody PaymentUUIDRequest paymentUUIDRequest) {
         PaymentDetailResponse paymentDetailResponse = paymentHistoryService.selectDetailPaymentHistory(paymentUUIDRequest);
         return ApiResponse.success(HttpStatus.OK, paymentDetailResponse);

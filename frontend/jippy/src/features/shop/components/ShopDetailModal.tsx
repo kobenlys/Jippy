@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Shop } from "@/features/shop/types/shops";
-import { Modal } from "@/components/ui/modal/Modal";
+import { Modal } from "@/features/common/components/ui/modal/Modal";
 import { UpdateShopForm } from "./UpdateShopForm";
 import styles from "../styles/ShopDetailModal.module.css";
 

@@ -16,8 +16,9 @@ public interface EmploymentStatusRepository extends JpaRepository<EmploymentStat
     @Query("SELECT e FROM EmploymentStatus e " +
             "WHERE e.storeUserStaff.id = :storeUserStaffId " +
             "AND e.startDate LIKE :today% " +
-            "AND e.endDate = '9999-12-31 23:59:59'")
-    Optional<EmploymentStatus> findTodayAttendance(@Param("storeUserStaffId") Integer storeUserStaffId,
+            "AND e.endDate = '9999-12-31 23:59:59' " +
+            "ORDER BY e.id DESC")
+    Optional<List<EmploymentStatus>> findTodayAttendance(@Param("storeUserStaffId") Integer storeUserStaffId,
                                                    @Param("today") String today);
 
     List<EmploymentStatus> findByStoreUserStaffAndStartDateBetween(StoreUserStaff staff, String startDate, String endDate);
