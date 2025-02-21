@@ -19,7 +19,7 @@ intellij : 2023.3.1
 git clone https://lab.ssafy.com/s12-webmobile1-sub1/S12P11C107.git
 ```
 
-/backend/jippy/src/main/resources에 application.properties 복사
+/backend/jippy/src/main/resources에 /exec/env/application.properties 복사
 
 ```sh
 cd ./backend/jippy
@@ -53,7 +53,7 @@ typescript : 5.0.0
 git clone https://lab.ssafy.com/s12-webmobile1-sub1/S12P11C107.git
 ```
 
-/frontend/jippy 경로에 next-env를 복사해서 .env로 이름 변경
+/frontend/jippy 경로에 /exec/env/next-env를 복사해서 .env로 이름 변경
 
 ```sh
 cd ./frontend/jippy
@@ -87,7 +87,7 @@ typescript : 5.0.0
 git clone https://lab.ssafy.com/s12-webmobile1-sub1/S12P11C107.git
 ```
 
-/frontend/jippy 경로에 svelte-env를 복사해서 .env로 이름 변경
+/frontend/jippy-sveltekit 경로에 /exec/env/svelte-env를 복사해서 .env로 이름 변경
 
 ```sh
 cd ./frontend/jippy-sveltekit
@@ -118,6 +118,8 @@ pandas 2.2.3
 
 ## feedbackmodel:
 
+/feedbackmodel 경로에 /exec/env/feedbackmodel-env를 복사해서 .env로 이름 변경
+
 ```sh
 docker build -t feedbackmodel:latest .
 ```
@@ -128,10 +130,12 @@ docker run -d --name feedbackmodel_api --env-file .env -p 8000:8000 feedbackmode
 
 ## stockmodel:
 
+/stockmodel 경로에 /exec/env/stockmodel-env를 복사해서 .env로 이름 변경
+
 ```sh
-docker build -t feedbackmodel:latest .
+docker build -t stockmodel:latest .
 ```
 
 ```sh
-docker run -d --name feedbackmodel_api --env-file .env -p 8000:8000 feedbackmodel:latest
+docker run -d --name stockmodel --env-file .env -p 8000:8000 stockmodel:latest
 ```

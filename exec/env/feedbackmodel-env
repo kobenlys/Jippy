@@ -1,0 +1,4 @@
+DB_HOST=52.79.170.206:3306
+DB_USER=root
+DB_PASSWORD=ssafy
+DB_NAME=jippy
