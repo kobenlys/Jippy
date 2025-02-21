@@ -53,11 +53,11 @@ public class TaskService {
         String cashJsonData = redisTemplate.opsForValue().get(key);
 
         try{
-            if (cashJsonData != null) {
-                log.info("task : cash hit!!");
-                return objectMapper.readValue(cashJsonData, new TypeReference<>() {
-                });
-            }
+//            if (cashJsonData != null) {
+//                log.info("task : cash hit!!");
+//                return objectMapper.readValue(cashJsonData, new TypeReference<>() {
+//                });
+//            }
 
             List<Task> taskList = taskRepository.findByStoreId(storeId);
 
@@ -66,8 +66,7 @@ public class TaskService {
                     .toList();
 
             String jsonData = objectMapper.writeValueAsString(taskResponseList); // 객체 → JSON 변환
-            redisTemplate.opsForValue().set(key, jsonData, Duration.ofSeconds(60 * 60));
-            log.info("task: db search");
+            //redisTemplate.opsForValue().set(key, jsonData, Duration.ofSeconds(60 * 60));
             return taskResponseList;
         }catch (Exception e){
             throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "ToDo 리스트 서버 에러 발생");

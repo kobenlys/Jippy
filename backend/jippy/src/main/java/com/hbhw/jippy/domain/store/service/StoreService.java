@@ -129,18 +129,18 @@ public class StoreService {
         String cashJsonData = redisTemplate.opsForValue().get(key);
 
         try{
-            if (cashJsonData != null) {
-                log.info("store : cash hit!!");
-                return objectMapper.readValue(cashJsonData, StoreResponse.class);
-            }
+//            if (cashJsonData != null) {
+//                log.info("store : cash hit!!");
+//                return objectMapper.readValue(cashJsonData, StoreResponse.class);
+//            }
 
             Store store = storeRepository.findById(storeId)
                     .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장은 존재하지 않습니다."));
             StoreResponse storeResponse = toResponse(store);
 
             String jsonData = objectMapper.writeValueAsString(storeResponse); // 객체 → JSON 변환
-            redisTemplate.opsForValue().set(key, jsonData, Duration.ofSeconds(60 * 30));
-            log.info("store : db search");
+//            redisTemplate.opsForValue().set(key, jsonData, Duration.ofSeconds(60 * 30));
+//            log.info("store : db search");
             return storeResponse;
         } catch (Exception e){
             throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "매장 서버 에러 발생");
@@ -153,11 +153,11 @@ public class StoreService {
         String cashJsonData = redisTemplate.opsForValue().get(key);
 
         try{
-            if (cashJsonData != null) {
-                log.info("store : cash hit!!");
-                return objectMapper.readValue(cashJsonData, new TypeReference<>() {
-                });
-            }
+//            if (cashJsonData != null) {
+//                log.info("store : cash hit!!");
+//                return objectMapper.readValue(cashJsonData, new TypeReference<>() {
+//                });
+//            }
 
             List<Store> storeListByOwner = storeRepository.findByUserOwnerId(ownerId)
                     .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "해당 매장은 존재하지 않습니다."));
@@ -166,9 +166,9 @@ public class StoreService {
                     .map(this::toResponse).toList();
 
 
-            String jsonData = objectMapper.writeValueAsString(storeResponseList); // 객체 → JSON 변환
-            redisTemplate.opsForValue().set(key, jsonData, Duration.ofSeconds(60 * 30));
-            log.info("store : db search");
+//            String jsonData = objectMapper.writeValueAsString(storeResponseList); // 객체 → JSON 변환
+//            redisTemplate.opsForValue().set(key, jsonData, Duration.ofSeconds(60 * 30));
+//            log.info("store : db search");
             return storeResponseList;
         }catch(Exception e) {
             throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "매장 서버 에러 발생");

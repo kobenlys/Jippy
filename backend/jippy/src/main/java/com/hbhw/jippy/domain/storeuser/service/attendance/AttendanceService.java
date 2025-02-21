@@ -171,7 +171,7 @@ public class AttendanceService {
         log.info(value);
         log.info(ttl.toString());
 
-        redisTemplate.opsForValue().set(key, value, ttl);
+        //redisTemplate.opsForValue().set(key, value, ttl);
         attendanceMongoRepository.deleteRequestSchedule(request.getUuid());
 
         return TempChangeResponse.builder()
@@ -260,11 +260,11 @@ public class AttendanceService {
         String cashJsonData = redisTemplate.opsForValue().get(key);
 
         try {
-            if (cashJsonData != null) {
-                log.info("totalStoreSalary : cash hit!!");
-                return objectMapper.readValue(cashJsonData, new TypeReference<>() {
-                });
-            }
+//            if (cashJsonData != null) {
+//                log.info("totalStoreSalary : cash hit!!");
+//                return objectMapper.readValue(cashJsonData, new TypeReference<>() {
+//                });
+//            }
 
             List<StoreUserStaff> staffList = storeStaffRepository.findByStoreId(storeId)
                     .orElseThrow(() -> new BusinessException(CommonErrorCode.NOT_FOUND, "존재 하지 않는 직원입니다."));
@@ -291,9 +291,9 @@ public class AttendanceService {
                     response.add(changeScheduleResponse);
                 }
             }
-            String jsonData = objectMapper.writeValueAsString(response); // 객체 → JSON 변환
-            redisTemplate.opsForValue().set(key, jsonData, Duration.ofSeconds(60 * 10));
-            log.info("totalStoreSalary : db search");
+//            String jsonData = objectMapper.writeValueAsString(response); // 객체 → JSON 변환
+//            //redisTemplate.opsForValue().set(key, jsonData, Duration.ofSeconds(60 * 10));
+//            log.info("totalStoreSalary : db search");
             return response;
         } catch (Exception e) {
             throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR, "직원 근태 서버 에러");
